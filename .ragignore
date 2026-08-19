@@ -1,0 +1,26 @@
+# RAG ignore patterns for the netsdr RAG index.
+# Entries can be glob patterns or directory prefixes (ending with "/").
+# Matching files/dirs are excluded from indexing.
+#
+# Keep this minimal: only exclude generated/derived content so the index
+# stays focused on real source + docs.
+
+# Build output
+build/
+out/
+cmake-build-*/
+
+# Virtualenv / Python caches
+.venv/
+__pycache__/
+*.pyc
+
+# Tooling / editors
+node_modules/
+.vscode/
+.idea/
+
+# Runtime artifacts
+*.log
+*.db
+netsdr_rag.db

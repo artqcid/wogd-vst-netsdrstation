@@ -1,0 +1,97 @@
+# AGENTS.md
+
+## Language Rule
+
+All agent rules, instructions, and agent-facing documentation in this workspace
+**must be written in English**. This applies to AGENTS.md, skill files
+(`.opencode/skills/**/SKILL.md`), agent system prompts, and any other
+agent-facing configuration.
+
+## Project Main Notebook (NotebookLM devblogs)
+
+The main notebook for this project is **NetSDRStation-VST**.
+
+- **Notebook ID:** `8b6898aa-c3f4-4a89-8304-da9af60cf0e4`
+- **URL:** https://notebook.google.com/notebook/8b6898aa-c3f4-4a89-8304-da9af60cf0e4
+- **MCP Server:** `notebooklm_devblogs`
+- **Source count:** 19
+
+All NotebookLM work for this project (notes, research, reports, sources)
+runs through this notebook.
+
+## Autopilot Mode (Primary Agents)
+
+All primary agents run in full autopilot mode at all times:
+
+- **No permission prompts.** All tools are allowed (edit, bash, read, glob,
+  grep, task, todowrite, question, webfetch, websearch, external_directory).
+- **Work outside the workspace is always allowed** without asking.
+- **Before starting any task:** if the task involves sensitive or
+  risky actions (e.g., deleting data, modifying external systems, publishing
+  something, irreversible operations), ask for confirmation in the prompt
+  FIRST, before any task begins.
+- **Once a task has started, never ask for permissions again** - proceed
+  autonomously until the task is complete.
+
+This applies to all primary agents: `build`, `plan`, `DEV`, `DEV_OpenRouter`,
+`Build_Openrouter`.
+
+## MCP-First Workflow (RAG / Code-Wiki)
+
+The workspace provides a local RAG + Code-Wiki MCP server (`netsdr_rag`,
+see `netsdr_mcp_server.py`). Tools: `index_project_code`, `query_code_rag`,
+`query_code_wiki`, `get_rag_chunk` (called with server prefix, e.g.
+`netsdr_rag_query_code_wiki`).
+
+**Mandatory workflow (no exceptions):**
+1. `doc/checklist.md` -> take the next open task
+2. `doc/architecture.md` -> detailed architecture knowledge (manually maintained)
+3. **`query_code_wiki("<symbol>")`** -> signature, file, line number
+4. **Only if knowledge is missing:** `query_code_rag(..., format="compact")`
+5. **Only load the needed chunk:** `get_rag_chunk("<id>")`
+6. Verify in the real code (path + line)
+7. **After a change:** `index_project_code` -> wiki stays current
+
+**MCP-FIRST (no exceptions):**
+- `doc/code_wiki.md` must NEVER be loaded via `read()` - query via MCP.
+- Every agent with MCP access MUST use `query_code_wiki` / `query_code_rag` / `get_rag_chunk`.
+- Project and SDK files should be read only with `offset`/`limit` - never whole files.
+- Anything found once via MCP is never searched again.
+
+**Post-Task Sync (after each completed task):**
+- Run `index_project_code` so the wiki stays current.
+- If not possible (no MCP access): explicitly report that sync is pending.
+
+## Knowledge-Sync (Docs <-> RAG/Wiki MCP <-> NotebookLM)
+
+All project knowledge is ALWAYS kept in sync across three stores:
+
+1. **Docs:** `doc/architecture.md` (detailed), `doc/plan.md` (draft plan),
+   `doc/checklist.md` (short tasks), `doc/workspace-workflow.md` (build/debug
+   workflow).
+2. **RAG/Wiki MCP (`netsdr_rag`):** run `index_project_code` so the code
+   wiki reflects the current code.
+3. **NotebookLM (`notebooklm_devblogs`):** push relevant knowledge to the
+   **NetSDRStation-VST** notebook.
+
+This workflow applies to **all agents** and runs **either automatically after
+a task completes, or on explicit user command**.
+
+## Quick facts
+
+- RAG MCP server: `netsdr_mcp_server.py`; registered in `opencode.json` under
+  `mcp.netsdr_rag` (venv python: `.venv\Scripts\python.exe`).
+- Checklist: `doc/checklist.md` (open tasks, short descriptions).
+- Draft plan: `doc/plan.md`.
+- Detailed knowledge: `doc/architecture.md` (read directly).
+- Workflow (build/debug/hot-reload): `doc/workspace-workflow.md`.
+- Coding rules (Clean Code Developer): `doc/coding-standards.md`.
+- Licensing / framework analysis: `doc/framework-licensing.md`.
+- Auto-generated knowledge: `doc/code_wiki.md` (ONLY via MCP, never read directly).
+- Main NotebookLM notebook: **NetSDRStation-VST** (see above).
+- `netsdr_rag.db` is runtime-only (`.gitignore`).
+
+## Global rules
+
+- `~/.config/opencode/rules/no-auto-commit.md`: no git commits/pushes/PRs
+  without explicit user request.
