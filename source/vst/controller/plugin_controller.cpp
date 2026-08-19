@@ -2,6 +2,7 @@
 
 #include "vst/common/paramdefinitions.h"
 #include "vst/common/paramids.h"
+#include "vst/common/processor_state.h"
 #include "editor/plugin_editor.h"
 #include "version.h"
 
@@ -11,6 +12,8 @@
 #include "pluginterfaces/vst/ivsteditcontroller.h"
 
 #include "base/source/fstreamer.h"
+
+#include <string>
 
 namespace netsdr {
 
@@ -29,14 +32,12 @@ tresult PLUGIN_API PluginController::initialize(FUnknown* context) {
 
     for (const auto& def : registry_.definitions()) {
         int32 flags = ParameterInfo::kCanAutomate;
-        int32 stepCount = 0;
         if (def.isBypass) {
             flags |= ParameterInfo::kIsBypass;
-            stepCount = 1;
         }
         parameters.addParameter(
             USTRING(def.title.c_str()), USTRING(def.units.c_str()),
-            stepCount, registry_.value(def.id), flags, def.id);
+            def.stepCount, registry_.value(def.id), flags, def.id);
     }
     return kResultOk;
 }
@@ -46,14 +47,31 @@ tresult PLUGIN_API PluginController::terminate() {
 }
 
 tresult PLUGIN_API PluginController::setComponentState(IBStream* state) {
-    // The processor state is not needed for the sine-synth proof; accept it
-    // without modifying controller-side parameters.
+    // Deserialize the processor state (same wire format as PluginProcessor) and
+    // mirror it into the controller parameters so the UI/automation display
+    // matches the loaded preset/project.
+    if (state == nullptr) {
+        return kResultFalse;
+    }
+    char buffer[ProcessorState::kSerializedSize] = {};
+    IBStreamer streamer(state, kLittleEndian);
+    if (streamer.readRaw(buffer, ProcessorState::kSerializedSize) !=
+        static_cast<TSize>(ProcessorState::kSerializedSize)) {
+        return kResultFalse;
+    }
+    ProcessorState s;
+    if (!s.deserialize(std::string(buffer, ProcessorState::kSerializedSize))) {
+        return kResultFalse;
+    }
+    setParamNormalized(kParamFreq, registry_.toNormalized(kParamFreq, s.freqHz));
+    setParamNormalized(kParamVolume, registry_.toNormalized(kParamVolume, s.volume));
+    setParamNormalized(kParamMute, registry_.toNormalized(kParamMute, s.mute ? 1.0 : 0.0));
     return kResultOk;
 }
 
 IPlugView* PLUGIN_API PluginController::createView(FIDString name) {
     if (name && FIDStringsEqual(name, ViewType::kEditor)) {
-        return new PluginEditor(this);
+        return new PluginEditor(this, registry_);
     }
     return nullptr;
 }

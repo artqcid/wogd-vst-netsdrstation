@@ -23,6 +23,11 @@ void SineOscillator::setFrequency(double frequency) {
     phaseIncrement_ = (kTwoPi * frequency_) / sampleRate_;
 }
 
+void SineOscillator::setSampleRate(double sampleRate) {
+    sampleRate_ = std::max(1.0, sampleRate);
+    phaseIncrement_ = (kTwoPi * frequency_) / sampleRate_;
+}
+
 void SineOscillator::setVolume(double volume) {
     volume_ = std::clamp(volume, 0.0, 1.0);
 }

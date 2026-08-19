@@ -14,9 +14,9 @@ namespace netsdr {
 
 inline std::vector<ParameterDefinition> createParameterDefinitions() {
     return {
-        ParameterDefinition{kParamFreq,   "Frequency", "Hz", 20.0,  20000.0, 440.0, false},
-        ParameterDefinition{kParamVolume, "Volume",    "",   0.0,   1.0,     1.0,   false},
-        ParameterDefinition{kParamMute,   "Mute",      "",   0.0,   1.0,     0.0,   false},
+        ParameterDefinition{kParamFreq,   "Frequency", "Hz", 20.0,  20000.0, 440.0, false, 0},
+        ParameterDefinition{kParamVolume, "Volume",    "",   0.0,   1.0,     1.0,   false, 0},
+        ParameterDefinition{kParamMute,   "Mute",      "",   0.0,   1.0,     0.0,   false, 1},
     };
 }
 

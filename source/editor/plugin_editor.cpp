@@ -1,13 +1,11 @@
 #include "plugin_editor.h"
 
+#include "vst/common/bridge_protocol.h"
 #include "vst/common/paramids.h"
 
 #include "base/source/fobject.h"
 #include "pluginterfaces/base/ustring.h"
 #include "pluginterfaces/vst/ivsteditcontroller.h"
-
-#include <cstdlib>
-#include <cstring>
 
 namespace netsdr {
 
@@ -22,15 +20,23 @@ const int32 kMinWidth = 320;
 const int32 kMinHeight = 200;
 
 // Vite dev server used for hot reload in debug builds (workspace-workflow.md).
+// Release builds load the pre-built UI bundle (ui/dist) via a file:// URL,
+// baked in at configure time (NS_UI_DIST_URL, see source/entry/CMakeLists.txt).
 #ifndef NDEBUG
 constexpr const char* kUiUrl = "http://localhost:5173";
 #else
-constexpr const char* kUiUrl = "http://localhost:5173"; // TODO: serve bundled dist in release
+#ifdef NS_UI_DIST_URL
+constexpr const char* kUiUrl = NS_UI_DIST_URL;
+#else
+constexpr const char* kUiUrl = "http://localhost:5173";
+#endif
 #endif
 } // namespace
 
-PluginEditor::PluginEditor(Vst::IEditController* controller)
+PluginEditor::PluginEditor(Vst::IEditController* controller,
+                           const ParameterRegistry& registry)
     : controller_(controller)
+    , registry_(registry)
     , frame_(nullptr)
     , width_(kDefaultSize.getWidth())
     , height_(kDefaultSize.getHeight())
@@ -143,32 +149,28 @@ void PluginEditor::attachWebView(void* parentHandle) {
 }
 
 void PluginEditor::onJavaScriptMessage(const char* message) {
-    // Parse the JSON envelope and forward parameter changes to the controller.
+    // Parse the bridge envelope and forward parameter changes to the host.
     // The bridge sends messages of the form:
-    //   {"type":"setParameter","data":{"id":"freq","value":440.0}}
-    // For the sine-synth proof we forward setParameter to the host so it can
-    // automate the parameter and echo the change back to the DSP.
+    //   {"type":"setParameter","data":["<id>",<plain value>]}
+    // The value is a plain (unnormalized) value in the parameter's own units
+    // (Hz for freq, 0..1 for volume, 0/1 for mute); we normalize it via the
+    // shared registry before handing it to the controller.
     if (message == nullptr) {
         return;
     }
-    if (std::strstr(message, "\"type\":\"setParameter\"") != nullptr) {
-        // Determine the parameter id and value from the payload.
-        ParamID tag = kParamVolume;
-        double normalized = 0.0;
-        const char* idMark = std::strstr(message, "\"id\":\"");
-        const char* valueMark = std::strstr(message, "\"value\":");
-        if (idMark != nullptr && valueMark != nullptr) {
-            const char* idStart = idMark + 7;
-            const char* valueStart = valueMark + 8;
-            if (std::strncmp(idStart, "freq", 4) == 0) {
-                tag = kParamFreq;
-            } else if (std::strncmp(idStart, "mute", 4) == 0) {
-                tag = kParamMute;
-            }
-            normalized = std::strtod(valueStart, nullptr);
-        }
-        controller_->setParamNormalized(tag, normalized);
+
+    BridgeSetParameter parsed;
+    if (!parseSetParameterMessage(message, parsed)) {
+        return; // getParameters / resize / malformed -> nothing to do (M2)
     }
+
+    std::uint32_t tag = 0;
+    if (!paramIdFromUiName(parsed.id, tag)) {
+        return; // unknown parameter id
+    }
+
+    const ParamValue normalized = registry_.toNormalized(tag, parsed.value);
+    controller_->setParamNormalized(tag, normalized);
 }
 
 } // namespace netsdr

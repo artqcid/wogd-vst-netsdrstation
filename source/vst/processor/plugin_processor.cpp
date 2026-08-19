@@ -3,6 +3,7 @@
 #include "vst/common/paramdefinitions.h"
 #include "vst/common/paramids.h"
 #include "vst/common/pluginids.h"
+#include "vst/common/processor_state.h"
 #include "version.h"
 
 #include "pluginterfaces/base/funknownimpl.h"
@@ -57,27 +58,40 @@ tresult PLUGIN_API PluginProcessor::terminate() {
 }
 
 tresult PLUGIN_API PluginProcessor::setState(IBStream* state) {
+    if (state == nullptr) {
+        return kResultFalse;
+    }
+    char buffer[ProcessorState::kSerializedSize] = {};
     IBStreamer streamer(state, kLittleEndian);
-    float f = 0.f;
-    if (streamer.readFloat(f)) {
-        freqHz_.store(f);
+    if (streamer.readRaw(buffer, ProcessorState::kSerializedSize) !=
+        static_cast<TSize>(ProcessorState::kSerializedSize)) {
+        return kResultFalse;
     }
-    if (streamer.readFloat(f)) {
-        volume_.store(f);
+    ProcessorState s;
+    if (!s.deserialize(std::string(buffer, ProcessorState::kSerializedSize))) {
+        return kResultFalse;
     }
-    int32 m = 0;
-    if (streamer.readInt32(m)) {
-        mute_.store(m != 0);
-    }
+    freqHz_.store(s.freqHz);
+    volume_.store(s.volume);
+    mute_.store(s.mute);
     updateOscillatorFromParams();
     return kResultOk;
 }
 
 tresult PLUGIN_API PluginProcessor::getState(IBStream* state) {
+    if (state == nullptr) {
+        return kResultFalse;
+    }
+    ProcessorState s;
+    s.freqHz = freqHz_.load();
+    s.volume = volume_.load();
+    s.mute = mute_.load();
+    const std::string bytes = s.serialize();
     IBStreamer streamer(state, kLittleEndian);
-    streamer.writeFloat(static_cast<float>(freqHz_.load()));
-    streamer.writeFloat(static_cast<float>(volume_.load()));
-    streamer.writeInt32(mute_.load() ? 1 : 0);
+    if (streamer.writeRaw(bytes.data(), static_cast<TSize>(bytes.size())) !=
+        static_cast<TSize>(bytes.size())) {
+        return kResultFalse;
+    }
     return kResultOk;
 }
 
@@ -121,12 +135,17 @@ tresult PLUGIN_API PluginProcessor::canProcessSampleSize(int32 symbolicSampleSiz
 }
 
 tresult PLUGIN_API PluginProcessor::setupProcessing(ProcessSetup& newSetup) {
+    oscillator_.setSampleRate(newSetup.sampleRate);
     oscillator_.reset();
     return AudioEffect::setupProcessing(newSetup);
 }
 
 tresult PLUGIN_API PluginProcessor::process(ProcessData& data) {
     // (1) Apply any parameter changes from the host for this block.
+    // Block-accurate: only the last point of each queue is applied (the value
+    // that holds at the end of the block). This is correct for the M1 sine
+    // synth; sample-accurate modulation (all points, ramp in the DSP) is
+    // planned for M2.5.
     if (IParameterChanges* paramChanges = data.inputParameterChanges) {
         int32 numParams = paramChanges->getParameterCount();
         for (int32 i = 0; i < numParams; ++i) {
@@ -191,7 +210,13 @@ tresult PLUGIN_API PluginProcessor::process(ProcessData& data) {
         }
     }
 
-    data.outputs[0].silenceFlags = 0;
+    // When muted the output is all zeros; flag every channel as silent so the
+    // host can skip the block instead of wasting CPU on silent samples.
+    if (mute_.load() && numChannels > 0 && numChannels < 64) {
+        data.outputs[0].silenceFlags = (1ull << numChannels) - 1;
+    } else {
+        data.outputs[0].silenceFlags = 0;
+    }
     return kResultOk;
 }
 

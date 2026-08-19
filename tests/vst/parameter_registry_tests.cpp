@@ -40,6 +40,17 @@ TEST_CASE("ParameterRegistry: three parameters with correct ids/ranges/defaults"
     REQUIRE(mute->defaultValue == 0.0);
 }
 
+TEST_CASE("ParameterRegistry: mute is a discrete toggle, others are continuous",
+          "[vst][params]") {
+    auto registry = makeRegistry();
+
+    // FIX-07: mute must be registered as a binary toggle (stepCount == 1) so a
+    // DAW shows an on/off switch instead of a continuous knob.
+    REQUIRE(registry.definition(netsdr::kParamMute)->stepCount == 1);
+    REQUIRE(registry.definition(netsdr::kParamFreq)->stepCount == 0);
+    REQUIRE(registry.definition(netsdr::kParamVolume)->stepCount == 0);
+}
+
 TEST_CASE("ParameterRegistry: default values are stored normalized", "[vst][params]") {
     auto registry = makeRegistry();
     // freq default 440 Hz in [20,20000] -> normalized 440/19980 ~ 0.0210

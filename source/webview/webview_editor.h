@@ -7,6 +7,7 @@
 // forwards JS messages to a user-supplied callback.
 
 #include <cstdint>
+#include <memory>
 #include <string>
 
 namespace netsdr {
@@ -44,7 +45,7 @@ public:
 
 private:
     class Impl;
-    Impl* impl_;
+    std::unique_ptr<Impl> impl_;
 };
 
 } // namespace netsdr

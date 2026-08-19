@@ -10,6 +10,7 @@ Checks: >
   performance-*,
   modernize-use-override,
   modernize-use-nullptr,
+  readability-identifier-naming,
   -bugprone-easily-swappable-parameters,
   -bugprone-narrowing-conversions,
   -clang-analyzer-cplusplus.NewDeleteLeaks

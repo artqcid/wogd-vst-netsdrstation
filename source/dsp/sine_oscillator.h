@@ -24,6 +24,13 @@ public:
     // Current oscillator frequency in Hz.
     double frequency() const { return frequency_; }
 
+    // Sets the output sample rate (Hz) and recomputes the phase increment so
+    // the oscillator produces the correct pitch when the host changes rate.
+    void setSampleRate(double sampleRate);
+
+    // Current output sample rate in Hz.
+    double sampleRate() const { return sampleRate_; }
+
     // Sets the output gain (0..1). Scales the amplitude of the rendered block.
     void setVolume(double volume);
 

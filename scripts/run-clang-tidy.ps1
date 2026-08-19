@@ -24,7 +24,9 @@ $sdk = Get-ChildItem $SdkRoot -Directory |
 $sources = @(
     "$root\source\dsp\sine_oscillator.cpp",
     "$root\source\threading\worker_thread.cpp",
-    "$root\source\vst\common\parameter_registry.cpp"
+    "$root\source\vst\common\parameter_registry.cpp",
+    "$root\source\vst\common\bridge_protocol.cpp",
+    "$root\source\vst\common\processor_state.cpp"
 )
 
 $systemIncludes = @(
@@ -36,6 +38,7 @@ $systemIncludes = @(
 )
 
 $projectIncludes = @(
+    "-I", "$root",
     "-I", "$root\source",
     "-I", "$root\source\vst",
     "-I", "$root\source\dsp",

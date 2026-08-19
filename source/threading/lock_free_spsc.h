@@ -3,9 +3,13 @@
 //
 // Wraps moodycamel's ReaderWriterQueue (BSD-2-Clause, vendored in
 // third_party/moodycamel) to enforce the SPSC contract and to give the audio
-// thread a stable, allocation-free interface. The audio thread only calls
-// try_pop(); the worker thread calls push(). No locks, no allocations on
-// either side after construction.
+// thread a stable, non-blocking consumer interface.
+//
+// Real-time guarantees:
+//   - pop() (audio/consumer side) is lock-free and allocation-free.
+//   - push() (worker/producer side) is lock-free but MAY allocate if the queue
+//     grows beyond its initial capacity; size the queue large enough up front
+//     (see the constructor) so the producer never reallocates in practice.
 
 #include "third_party/moodycamel/readerwriterqueue.h"
 

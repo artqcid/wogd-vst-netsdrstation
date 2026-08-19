@@ -17,38 +17,48 @@ void WorkerThread::stop() {
     if (!running_.compare_exchange_strong(expected, false)) {
         return; // not running
     }
-    {
-        std::lock_guard<std::mutex> lock(mutex_);
-        cv_.notify_all();
-    }
+    cv_.notify_all();
     if (thread_.joinable()) {
         thread_.join();
+    }
+    // Drain anything posted concurrently with stop() so its destructor runs.
+    Message leftover;
+    while (queue_.pop(leftover)) {
+        pending_.fetch_sub(1, std::memory_order_relaxed);
+        if (leftover) {
+            leftover();
+        }
     }
 }
 
 void WorkerThread::post(Message message) {
-    {
-        std::lock_guard<std::mutex> lock(mutex_);
-        queue_.push(std::move(message));
-    }
+    // Lock-free producer side (moodycamel SPSC). The pending counter is bumped
+    // before the notify so the worker's wait predicate observes the work even
+    // when it is already asleep in the condition-variable wait.
+    queue_.push(std::move(message));
+    pending_.fetch_add(1, std::memory_order_release);
     cv_.notify_one();
 }
 
 void WorkerThread::run() {
-    while (running_.load()) {
+    while (true) {
         Message message;
-        {
-            std::unique_lock<std::mutex> lock(mutex_);
-            cv_.wait(lock, [this] { return !running_.load() || !queue_.empty(); });
-            if (!running_.load() && queue_.empty()) {
-                return;
+        // Drain everything currently queued (single consumer).
+        while (queue_.pop(message)) {
+            pending_.fetch_sub(1, std::memory_order_relaxed);
+            if (message) {
+                message();
             }
-            message = std::move(queue_.front());
-            queue_.pop();
         }
-        if (message) {
-            message();
+        if (!running_.load(std::memory_order_acquire)) {
+            return; // stopped and the queue is drained
         }
+        // Idle: wait for work or a stop request. The bounded timeout prevents
+        // a lost wake-up deadlock with the lock-free producer.
+        std::unique_lock<std::mutex> lock(mutex_);
+        cv_.wait_for(lock, std::chrono::milliseconds(5),
+                     [this] { return !running_.load(std::memory_order_acquire) ||
+                                     pending_.load(std::memory_order_acquire) != 0; });
     }
 }
 

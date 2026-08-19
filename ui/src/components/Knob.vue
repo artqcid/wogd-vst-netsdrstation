@@ -8,7 +8,7 @@
       :max="max"
       :step="step"
       :value="value"
-      aria-label="label"
+      :aria-label="label"
       @input="onInput"
     />
     <div class="knob__value">{{ displayValue }}</div>

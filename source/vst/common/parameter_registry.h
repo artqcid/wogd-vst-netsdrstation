@@ -20,7 +20,8 @@ struct ParameterDefinition {
     double min = 0.0;
     double max = 1.0;
     double defaultValue = 0.0;
-    bool isBypass = false; // whether the parameter is an on/off toggle
+    bool isBypass = false;   // whether this is the VST3 bypass parameter
+    int32_t stepCount = 0;   // 0 = continuous; 1 = binary toggle, etc. (VST3 convention)
 };
 
 // In-memory, mutable value store for the parameters. Not thread-safe; the

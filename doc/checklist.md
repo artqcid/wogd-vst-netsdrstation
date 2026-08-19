@@ -30,6 +30,143 @@ coding rules: `doc/coding-standards.md`; test strategy: `doc/test-strategy.md`._
   - Test: manual (documented) - edit component, change appears live in dev mode.
 - [x] **M1.12** Git checkpoint: forkable foundation for new VSTs (all platforms)
   - Test: fresh clone/fork builds on win/mac/linux (CI) + loads in a host.
+## M1 Corrections (found in quality review, 2026-08-19)
+
+> Severity: **Critical** = wrong runtime behaviour / broken feature;
+> **Important** = quality/reliability risk; **Minor** = cleanup/polish.
+
+### Critical – must fix before any real-use or M2 work
+
+- [x] **FIX-01** `PluginProcessor::setupProcessing` does not update `SineOscillator::sampleRate_`
+  → oscillator produces wrong pitch at every sample rate other than 48 kHz.
+  _File: `source/vst/processor/plugin_processor.cpp:123`_
+  _Fix: call `oscillator_.setSampleRate(newSetup.sampleRate)` (or reset with new rate) in `setupProcessing`._
+
+- [x] **FIX-02** JS→C++ bridge message format broken: webview/webview bind passes arguments as
+  a JSON **array** (`["<payload>"]`); `dispatchMessage` wraps it again into
+  `{"type":...,"data":["<payload>"]}`. The C++ parser in `onJavaScriptMessage` then
+  searches for `"id":"` in the outer envelope, but the actual id/value are
+  double-serialized inside an escaped string → `idMark`/`valueMark` are always `nullptr`.
+  Fallthrough then calls `setParamNormalized(kParamVolume, 0.0)` for **every** parameter
+  change → volume is forced to 0 on any UI interaction.
+  _File: `source/editor/plugin_editor.cpp:145-172`, `source/webview/webview_editor.cpp:30-41`_
+  _Fix: redesign bridge protocol – pass id/value as separate native args, or parse the
+  unwrapped array correctly; add a C++ integration test for `onJavaScriptMessage`._
+
+- [x] **FIX-03** UI sends parameter values as **plain units** (Hz, 0..1 for volume, 0/1 for mute),
+  but C++ calls `controller_->setParamNormalized(tag, value)` which expects normalized [0..1].
+  → freq = 440 (Hz) is clamped to 1.0 (≈ 20 kHz).
+  _File: `ui/src/views/PluginView.vue:26`, `source/editor/plugin_editor.cpp:168`_
+  _Fix: normalize to [0..1] in `onJavaScriptMessage` before calling `setParamNormalized`,
+  **or** have the JS side send normalized values._
+  _(Resolve together with FIX-02 in a bridge redesign.)_
+
+- [x] **FIX-04** `WorkerThread::post()` acquires a `std::mutex` lock (worker_thread.cpp:29).
+  The code comment and architecture claim `post()` is safe to call from the audio thread,
+  but mutex locking violates real-time safety (may block).
+  _File: `source/threading/worker_thread.cpp:29-35`_
+  _Fix: replace `std::queue + mutex` with the moodycamel `LockFreeSPSC<Message>` already
+  present in the project; use a condition variable only in the worker-side drain loop._
+
+- [x] **FIX-05** Release build uses the Vite dev-server URL (`http://localhost:5173`) – same as
+  debug. The `#else` branch has a `// TODO` comment but no actual path. Release plugin UI
+  is blank wherever the dev server is not running.
+  _File: `source/editor/plugin_editor.cpp:28`_
+  _Fix: implement `vite build` step into CMake (e.g. custom target) and serve the `dist/`
+  directory via an embedded HTTP server or file URL; set the release URL correctly._
+
+- [x] **FIX-06** `PluginController::setComponentState` returns `kResultOk` without reading the
+  state stream → controller-side parameter display is never synchronized after a
+  preset/project load. Host automation values and UI display will be out of sync.
+  _File: `source/vst/controller/plugin_controller.cpp:48-51`_
+  _Fix: deserialize the same fields written by `PluginProcessor::getState` and call
+  `setParamNormalized` for each parameter so the controller mirrors the processor state._
+
+### Important – correctness / quality risk
+
+- [x] **FIX-07** `mute` parameter registered with `stepCount = 0` (continuous) because its
+  `isBypass` field is `false`. DAW automation lanes will show a smooth rotary knob
+  instead of a discrete on/off switch.
+  _File: `source/vst/controller/plugin_controller.cpp:31-36`_
+  _Fix: set `stepCount = 1` for any parameter whose definition has `max – min == 1.0`
+  and whose default is 0 or 1 (i.e. a binary toggle), independent of `isBypass`._
+
+- [x] **FIX-08** `getState`/`setState` serialize `freq` and `volume` as 32-bit `float` with no
+  version byte. Precision loss (~7 decimal digits) and no forward/backward compatibility
+  when fields are added.
+  _File: `source/vst/processor/plugin_processor.cpp:59-81`_
+  _Fix: prefix state with a `uint32_t` version number (start at 1); serialize doubles or
+  use the IBStreamer double methods._
+
+- [x] **FIX-09** CI `on.push.branches` only lists `main` and `master`; the new development
+  branch `NetSDRStation` is missing → pushes on `NetSDRStation` never trigger the
+  build/test pipeline.
+  _File: `.github/workflows/ci.yml:5`_
+  _Fix: add `NetSDRStation` to the branch list, or use `branches-ignore` with exclusions._
+
+- [x] **FIX-10** Linux CI: `gcovr --fail-under 90` covers **all** compiled objects including
+  `plugin_editor.cpp` and `webview_editor.cpp` (built as part of the VST plugin, not
+  covered by any test) → coverage threshold likely fails on Linux CI.
+  _File: `.github/workflows/ci.yml:57`_
+  _Fix: scope gcovr to the test-covered sources only
+  (`--include 'source/dsp/.*' --include 'source/threading/.*' --include 'source/vst/common/.*'`),
+  or lower the threshold until the editor/webview are unit-tested._
+
+- [x] **FIX-11** `.clang-tidy`: `readability-identifier-naming.*` `CheckOptions` entries are
+  defined but the `readability-*` check family is **not listed in `Checks:`** → all
+  naming-convention rules are silently inactive.
+  _File: `.clang-tidy:6-15`_
+  _Fix: add `readability-identifier-naming` to the `Checks:` line._
+
+- [x] **FIX-12** `process()` sets `data.outputs[0].silenceFlags = 0` unconditionally, even when
+  `mute_ == true`. The host cannot skip the silent output block, wasting CPU.
+  _File: `source/vst/processor/plugin_processor.cpp:194`_
+  _Fix: set `silenceFlags = (1 << numChannels) - 1` when the oscillator is muted._
+
+- [x] **FIX-13** `Knob.vue:11` has `aria-label="label"` (string literal) instead of
+  `:aria-label="label"` (bound prop). All knobs report the accessibility label "label".
+  _File: `ui/src/components/Knob.vue:11`_
+  _Fix: change to `:aria-label="label"`._
+
+### Minor – cleanup and design hygiene
+
+- [x] **FIX-14** `pluginids.h:24-25`: `kPluginProcessorCID` and `kPluginControllerCID` are
+  unused aliases of `kProcessorUID`/`kControllerUID` (dead code). Remove them.
+
+- [x] **FIX-15** `pluginids.h:11-13`: includes `ivstcomponent.h`, `ivstaudioprocessor.h`,
+  `ivsteditcontroller.h` unnecessarily – only `funknown.h` is needed for `FUID`.
+  Remove the extra includes to reduce compilation time.
+
+- [x] **FIX-16** `WebViewHost` uses raw `new`/`delete` for the pimpl `Impl*`.
+  Replace with `std::unique_ptr<Impl>` (pimpl idiom, exception-safe).
+  _Files: `source/webview/webview_editor.h:46`, `source/webview/webview_editor.cpp:108-109`_
+
+- [x] **FIX-17** `factory.cpp:31`: subcategory is `"Instrument"` but VST3 convention for a
+  synthesizer is `"Instrument|Synth"`. Affects DAW plugin-browser categorisation.
+
+- [x] **FIX-18** `process()` takes only the **last** parameter point per parameter queue,
+  ignoring all earlier sub-block sample-accurate automation points.
+  _File: `source/vst/processor/plugin_processor.cpp:136-142`_
+  _Note: acceptable for M1 sine synth; must be fixed before any sample-accurate
+  modulation work (M2.5). Documented in code as deferred to M2.5._
+
+- [x] **FIX-19** `LockFreeSPSC` header comment claims "no allocation after construction" but
+  the underlying moodycamel queue **can** reallocate when capacity is exceeded. The
+  comment creates a false real-time safety guarantee.
+  _File: `source/threading/lock_free_spsc.h:6-8`_
+  _Fix: either document the capacity contract clearly, or call `enqueue_or_die` /
+  pre-fill capacity._
+
+- [x] **FIX-20** `CMakeLists.txt:14`: option `NS_ENABLE_UI` is declared but never consumed in
+  the file – it is dead code. Add a `find_program(NPM npm)` / custom-target block, or
+  remove the option.
+
+- [x] **FIX-21** `CMakeLists.txt`: `SMTG_ENABLE_VST3_PLUGIN_EXAMPLES=OFF` is only set inside
+  `CMakePresets.json` (the hidden `base` preset), not in `CMakeLists.txt`. Configuring
+  without presets (e.g. CMake GUI or IDE without preset support) builds all SDK examples.
+  _Fix: add `set(SMTG_ENABLE_VST3_PLUGIN_EXAMPLES OFF CACHE BOOL "" FORCE)` near
+  `SMTG_CREATE_PLUGIN_LINK`._
+
 
 ## Milestone M2 - KiwiSDR integration (project-specific)
 

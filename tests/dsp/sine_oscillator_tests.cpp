@@ -128,3 +128,32 @@ TEST_CASE("SineOscillator: unmute resumes without a phase jump", "[dsp][sine]") 
         REQUIRE(std::abs(post[i] - refBuf[postStart + i]) < 1e-6);
     }
 }
+
+TEST_CASE("SineOscillator: setSampleRate keeps the pitch correct after a rate change",
+          "[dsp][sine]") {
+    const double freq = 1000.0;
+
+    // Render at 48000 Hz, then change the sample rate to 96000 Hz. The output
+    // frequency must stay 1000 Hz (i.e. the phase increment is recomputed).
+    netsdr::SineOscillator osc(freq, 48000.0);
+    osc.setVolume(1.0);
+
+    std::vector<float> at48k(4800);
+    osc.render(at48k.data(), at48k.size());
+
+    osc.setSampleRate(96000.0);
+    REQUIRE(osc.sampleRate() == 96000.0);
+
+    std::vector<float> at96k(9600);
+    osc.render(at96k.data(), at96k.size());
+
+    const double peak48 = goertzelMagnitude(at48k, freq, 48000.0);
+    const double peak96 = goertzelMagnitude(at96k, freq, 96000.0);
+    REQUIRE(peak48 > 0.9);
+    REQUIRE(peak96 > 0.9);
+
+    // The peak must be at 1000 Hz, not at the (wrong) 2000 Hz that a
+    // non-recomputed phase increment would produce at 96 kHz.
+    const double wrong = goertzelMagnitude(at96k, 2000.0, 96000.0);
+    REQUIRE(wrong < 0.01);
+}

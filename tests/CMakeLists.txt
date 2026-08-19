@@ -8,10 +8,14 @@ add_executable(netsdrstation_tests
     threading/lock_free_spsc_tests.cpp
     threading/worker_thread_tests.cpp
     vst/parameter_registry_tests.cpp
+    vst/bridge_protocol_tests.cpp
+    vst/processor_state_tests.cpp
     # Implementation units under test (compiled directly into the test binary).
     ${CMAKE_SOURCE_DIR}/source/dsp/sine_oscillator.cpp
     ${CMAKE_SOURCE_DIR}/source/threading/worker_thread.cpp
     ${CMAKE_SOURCE_DIR}/source/vst/common/parameter_registry.cpp
+    ${CMAKE_SOURCE_DIR}/source/vst/common/bridge_protocol.cpp
+    ${CMAKE_SOURCE_DIR}/source/vst/common/processor_state.cpp
 )
 
 target_compile_features(netsdrstation_tests PRIVATE cxx_std_20)

@@ -7,6 +7,7 @@
 // WebViewHost bindings / eval.
 
 #include "pluginterfaces/gui/iplugview.h"
+#include "vst/common/parameter_registry.h"
 #include "webview/webview_editor.h"
 
 namespace Steinberg {
@@ -19,7 +20,8 @@ namespace netsdr {
 
 class PluginEditor : public Steinberg::IPlugView {
 public:
-    PluginEditor(Steinberg::Vst::IEditController* controller);
+    PluginEditor(Steinberg::Vst::IEditController* controller,
+                 const ParameterRegistry& registry);
     ~PluginEditor();
 
     DECLARE_FUNKNOWN_METHODS
@@ -50,6 +52,7 @@ private:
     void attachWebView(void* parentHandle);
 
     Steinberg::Vst::IEditController* controller_;
+    const ParameterRegistry& registry_;
     Steinberg::IPlugFrame* frame_;
     WebViewHost webView_;
 

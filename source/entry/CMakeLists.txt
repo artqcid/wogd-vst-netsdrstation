@@ -7,6 +7,10 @@ set(netsdrstation_sources
     ../vst/common/paramdefinitions.h
     ../vst/common/parameter_registry.h
     ../vst/common/parameter_registry.cpp
+    ../vst/common/bridge_protocol.h
+    ../vst/common/bridge_protocol.cpp
+    ../vst/common/processor_state.h
+    ../vst/common/processor_state.cpp
     ../vst/processor/plugin_processor.h
     ../vst/processor/plugin_processor.cpp
     ../vst/controller/plugin_controller.h
@@ -30,6 +34,19 @@ smtg_add_vst3plugin(${target} PACKAGE_NAME "NetSDRStation" SOURCES_LIST ${netsdr
 smtg_target_configure_version_file(${target})
 
 target_compile_features(${target} PRIVATE cxx_std_20)
+
+# Release builds load the pre-built UI bundle (ui/dist/index.html) via a file://
+# URL instead of the Vite dev server. The absolute path is baked in at configure
+# time (a proper embedded/shipping solution is a later task - see checklist).
+if(NS_ENABLE_UI)
+    file(TO_CMAKE_PATH "${CMAKE_SOURCE_DIR}/ui/dist/index.html" NS_UI_DIST_INDEX)
+    if(WIN32)
+        set(NS_UI_DIST_URL "file:///${NS_UI_DIST_INDEX}")
+    else()
+        set(NS_UI_DIST_URL "file://${NS_UI_DIST_INDEX}")
+    endif()
+    target_compile_definitions(${target} PRIVATE NS_UI_DIST_URL="${NS_UI_DIST_URL}")
+endif()
 
 target_include_directories(${target}
     PRIVATE

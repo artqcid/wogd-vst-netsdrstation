@@ -29,7 +29,7 @@ BEGIN_FACTORY_DEF(stringCompanyName, stringCompanyWeb, stringCompanyEmail)
                kVstAudioEffectClass,       // component category (do not change)
                stringPluginName,           // plug-in name
                Vst::kDistributable,        // component + controller can be distributed
-               "Instrument",               // subcategory (synth)
+               "Instrument|Synth",         // subcategory (synth)
                FULL_VERSION_STR,           // plug-in version
                kVstVersionString,          // VST 3 SDK version (do not change)
                PluginProcessor::createInstance) // instantiation function

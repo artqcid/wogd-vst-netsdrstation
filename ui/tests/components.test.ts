@@ -23,6 +23,13 @@ describe('Knob', () => {
     })
     expect(wrapper.text()).toContain('Volume')
   })
+
+  it('binds the accessibility label to the label prop', () => {
+    const wrapper = mount(Knob, {
+      props: { label: 'Frequency', value: 440, min: 20, max: 20000 },
+    })
+    expect(wrapper.find('input[type="range"]').attributes('aria-label')).toBe('Frequency')
+  })
 })
 
 describe('MuteButton', () => {

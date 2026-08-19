@@ -54,3 +54,23 @@ TEST_CASE("WorkerThread: start/stop are idempotent and safe", "[threading][worke
 
     REQUIRE_FALSE(worker.isRunning());
 }
+
+TEST_CASE("WorkerThread: post wakes an idle worker", "[threading][worker]") {
+    netsdr::WorkerThread worker;
+    worker.start();
+
+    // Let the worker enter the idle condition-variable wait before posting.
+    std::this_thread::sleep_for(std::chrono::milliseconds(20));
+
+    std::atomic<int> executed{0};
+    worker.post([&executed] { executed.fetch_add(1); });
+
+    // The message must run promptly (well under a generous deadline).
+    auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(2);
+    while (executed.load() == 0 && std::chrono::steady_clock::now() < deadline) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    }
+
+    REQUIRE(executed.load() == 1);
+    worker.stop();
+}

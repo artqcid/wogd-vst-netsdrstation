@@ -68,6 +68,8 @@ endif()
 # standard VST3 install folder as a post-build step, which requires admin rights
 # or Windows Developer Mode. Deployment is handled explicitly (see M1.10).
 set(SMTG_CREATE_PLUGIN_LINK OFF CACHE BOOL "Create a link to the standard VST3 folder" FORCE)
+# Keep the SDK example plugins out of every configuration (not just the presets).
+set(SMTG_ENABLE_VST3_PLUGIN_EXAMPLES OFF CACHE BOOL "Build VST3 SDK example plugins" FORCE)
 add_subdirectory("${VST3_SDK_ROOT}" "${CMAKE_BINARY_DIR}/vst3sdk")
 
 # ---------------------------------------------------------------------------
@@ -109,4 +111,27 @@ endif()
 if(NS_ENABLE_TESTS)
     enable_testing()
     add_subdirectory(tests)
+endif()
+
+# ---------------------------------------------------------------------------
+# Vue UI build (release bundles the UI into ui/dist)
+# ---------------------------------------------------------------------------
+# The release editor loads the pre-built UI bundle from ui/dist (see
+# source/editor/plugin_editor.cpp and NS_UI_DIST_INDEX). This custom target
+# produces that bundle; build it manually before a release build:
+#   cmake --build <build-dir> --target netsdrstation_ui
+if(NS_ENABLE_UI)
+    find_program(NPM_EXECUTABLE npm)
+    if(NPM_EXECUTABLE)
+        set(NS_UI_DIR "${CMAKE_CURRENT_SOURCE_DIR}/ui")
+        set(NS_UI_DIST "${NS_UI_DIR}/dist")
+        add_custom_target(netsdrstation_ui
+            COMMAND ${NPM_EXECUTABLE} run build
+            WORKING_DIRECTORY "${NS_UI_DIR}"
+            BYPRODUCTS "${NS_UI_DIST}/index.html"
+            COMMENT "Building the Vue UI (vite build -> ui/dist)"
+            VERBATIM)
+    else()
+        message(WARNING "npm not found; the netsdrstation_ui target is unavailable.")
+    endif()
 endif()

@@ -42,10 +42,15 @@ public:
 
         // Expose a stable `window.vstHost` object that wraps the flat bindings.
         // This matches the contract expected by ui/src/services/pluginService.ts.
+        //
+        // NOTE: the id/value are passed as separate native arguments (not a
+        // pre-stringified object) so webview serializes them into a single JSON
+        // array ["<id>",<value>], which the C++ bridge parses (see
+        // vst/common/bridge_protocol.h).
         const std::string bridgeJs = R"js(
 window.vstHost = {
   setParameter: function (id, value) {
-    window.vstHostSetParameter(JSON.stringify({ id: id, value: value }));
+    window.vstHostSetParameter(id, value);
   },
   getParameters: function () {
     window.vstHostGetParameters();
@@ -105,8 +110,8 @@ private:
     void* userData_ = nullptr;
 };
 
-WebViewHost::WebViewHost() : impl_(new Impl()) {}
-WebViewHost::~WebViewHost() { delete impl_; }
+WebViewHost::WebViewHost() : impl_(std::make_unique<Impl>()) {}
+WebViewHost::~WebViewHost() = default;
 
 bool WebViewHost::attach(void* parentHandle) { return impl_->attach(parentHandle); }
 void WebViewHost::detach() { impl_->detach(); }
