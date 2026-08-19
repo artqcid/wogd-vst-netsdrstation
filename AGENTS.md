@@ -87,6 +87,7 @@ a task completes, or on explicit user command**.
 - Workflow (build/debug/hot-reload): `doc/workspace-workflow.md`.
 - Coding rules (Clean Code Developer): `doc/coding-standards.md`.
 - Licensing / framework analysis: `doc/framework-licensing.md`.
+- Test strategy: `doc/test-strategy.md`.
 - Auto-generated knowledge: `doc/code_wiki.md` (ONLY via MCP, never read directly).
 - Main NotebookLM notebook: **NetSDRStation-VST** (see above).
 - `netsdr_rag.db` is runtime-only (`.gitignore`).

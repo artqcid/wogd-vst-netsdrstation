@@ -3,7 +3,8 @@
 _First draft plan (Entwurfsplan). Detailed knowledge lives in
 `doc/architecture.md`; workflow (build/debug/hot-reload) in
 `doc/workspace-workflow.md`; coding rules in `doc/coding-standards.md`;
-licensing in `doc/framework-licensing.md`; open tasks in `doc/checklist.md`._
+licensing in `doc/framework-licensing.md`; test strategy in
+`doc/test-strategy.md`; open tasks in `doc/checklist.md`._
 
 ## Goal
 
