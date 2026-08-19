@@ -1,0 +1,57 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+jobs:
+  build:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Windows (MSVC)
+            os: windows-latest
+            preset: win-msvc
+            config: Debug
+          - name: macOS (Clang)
+            os: macos-latest
+            preset: mac-clang
+            config: Debug
+          - name: Linux (GCC)
+            os: ubuntu-latest
+            preset: linux-gcc
+            config: Debug
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Checkout VST3 SDK
+        run: |
+          git clone --depth 1 --branch v3.8.0_build_66 https://github.com/steinbergmedia/vst3sdk.git "$RUNNER_TEMP/vst3sdk"
+
+      - name: Configure
+        run: |
+          if [ "${{ matrix.preset }}" = "linux-gcc" ]; then
+            cmake --preset ${{ matrix.preset }} -DVST3_SDK_ROOT="$RUNNER_TEMP/vst3sdk" -DNS_ENABLE_COVERAGE=ON
+          else
+            cmake --preset ${{ matrix.preset }} -DVST3_SDK_ROOT="$RUNNER_TEMP/vst3sdk"
+          fi
+        shell: bash
+
+      - name: Build
+        run: cmake --build build/${{ matrix.preset }} --config ${{ matrix.config }}
+
+      - name: Test
+        run: ctest --test-dir build/${{ matrix.preset }} -C ${{ matrix.config }} --output-on-failure
+
+      - name: Coverage (Linux only)
+        if: matrix.preset == 'linux-gcc'
+        run: |
+          pip install gcovr
+          gcovr -r . --object-directory build/linux-gcc --print-summary --fail-under 90

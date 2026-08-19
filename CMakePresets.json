@@ -1,0 +1,121 @@
+{
+  "version": 6,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 25,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "base",
+      "hidden": true,
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "cacheVariables": {
+        "NS_ENABLE_TESTS": "ON",
+        "NS_ENABLE_UI": "ON",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+        "SMTG_ENABLE_VST3_PLUGIN_EXAMPLES": "OFF"
+      }
+    },
+    {
+      "name": "win-msvc",
+      "displayName": "Windows (MSVC, x64)",
+      "inherits": "base",
+      "generator": "Visual Studio 18 2026",
+      "architecture": {
+        "value": "x64",
+        "strategy": "external"
+      },
+      "cacheVariables": {
+        "VST3_SDK_ROOT": "$env{VST3_SDK_ROOT}"
+      }
+    },
+    {
+      "name": "win-clang",
+      "displayName": "Windows (Clang-cl, x64)",
+      "inherits": "base",
+      "generator": "Visual Studio 18 2026",
+      "architecture": {
+        "value": "x64",
+        "strategy": "external"
+      },
+      "toolset": {
+        "value": "ClangCL",
+        "strategy": "external"
+      },
+      "cacheVariables": {
+        "VST3_SDK_ROOT": "$env{VST3_SDK_ROOT}"
+      }
+    },
+    {
+      "name": "mac-clang",
+      "displayName": "macOS (AppleClang)",
+      "inherits": "base",
+      "generator": "Xcode",
+      "cacheVariables": {
+        "VST3_SDK_ROOT": "$env{VST3_SDK_ROOT}"
+      }
+    },
+    {
+      "name": "linux-gcc",
+      "displayName": "Linux (GCC)",
+      "inherits": "base",
+      "cacheVariables": {
+        "VST3_SDK_ROOT": "$env{VST3_SDK_ROOT}"
+      }
+    },
+    {
+      "name": "win-analyze",
+      "displayName": "Windows (Ninja, clang-tidy analysis only)",
+      "inherits": "base",
+      "cacheVariables": {
+        "VST3_SDK_ROOT": "$env{VST3_SDK_ROOT}",
+        "NS_ENABLE_VST3": "OFF",
+        "SMTG_ENABLE_VST3_PLUGIN_EXAMPLES": "OFF"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "win-msvc-debug",
+      "configurePreset": "win-msvc",
+      "configuration": "Debug"
+    },
+    {
+      "name": "win-msvc-release",
+      "configurePreset": "win-msvc",
+      "configuration": "Release"
+    },
+    {
+      "name": "mac-clang-debug",
+      "configurePreset": "mac-clang",
+      "configuration": "Debug"
+    },
+    {
+      "name": "linux-gcc-debug",
+      "configurePreset": "linux-gcc",
+      "configuration": "Debug"
+    }
+  ],
+  "testPresets": [
+    {
+      "name": "win-msvc-debug",
+      "configurePreset": "win-msvc",
+      "configuration": "Debug",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "mac-clang-debug",
+      "configurePreset": "mac-clang",
+      "configuration": "Debug"
+    },
+    {
+      "name": "linux-gcc-debug",
+      "configurePreset": "linux-gcc",
+      "configuration": "Debug"
+    }
+  ]
+}

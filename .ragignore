@@ -15,6 +15,10 @@ cmake-build-*/
 __pycache__/
 *.pyc
 
+# Vendored third-party libraries (not project code; large single-headers like
+# catch2/catch.hpp also trigger duplicate-chunk collisions in the indexer)
+third_party/
+
 # Tooling / editors
 node_modules/
 .vscode/

@@ -6,29 +6,29 @@ coding rules: `doc/coding-standards.md`; test strategy: `doc/test-strategy.md`._
 
 ## Milestone M1 - Generic VST foundation (forkable checkpoint)
 
-- [ ] **M1.1** Cross-platform CMake scaffold (`CMakeLists.txt` + `CMakePresets.json`)
+- [x] **M1.1** Cross-platform CMake scaffold (`CMakeLists.txt` + `CMakePresets.json`)
   - Test: CI build matrix (win/mac/linux) configures + builds; `ctest` runs.
-- [ ] **M1.2** Modular VST shell (entry point, processor/controller base, parameter registry)
+- [x] **M1.2** Modular VST shell (entry point, processor/controller base, parameter registry)
   - Test: unit test that base classes instantiate; parameter registry add/get roundtrip.
-- [ ] **M1.3** Threading: audio thread lock-free + message/worker thread separation
+- [x] **M1.3** Threading: audio thread lock-free + message/worker thread separation
   - Test: SPSC queue stress test (order/no loss/no corruption); clang-tidy (no lock/alloc in process).
-- [ ] **M1.4** VST3 processor: sine oscillator (phase accumulator)
+- [x] **M1.4** VST3 processor: sine oscillator (phase accumulator)
   - Test: unit test Goertzel peak at expected freq; amplitude == volume; phase-continuous across blocks.
-- [ ] **M1.5** VST3 edit controller: params `freq`, `volume`, `mute`
+- [x] **M1.5** VST3 edit controller: params `freq`, `volume`, `mute`
   - Test: unit test param ranges/defaults/IDs; `validator` exercises automation.
-- [ ] **M1.6** Vue 3 + Vite GUI scaffold (mirror `wogd-juce-template-gui-vue`)
+- [x] **M1.6** Vue 3 + Vite GUI scaffold (mirror `wogd-juce-template-gui-vue`)
   - Test: Vitest smoke (App renders); `vue-tsc` type-check clean.
-- [ ] **M1.7** webview/webview editor + `pluginService.ts` bridge (no JUCE)
+- [x] **M1.7** webview/webview editor + `pluginService.ts` bridge (no JUCE)
   - Test: Vitest for pluginService with mocked `window.vstHost` (setParameter -> message, onMessage -> callback).
-- [ ] **M1.8** UI: frequency knob, volume knob, mute button
+- [x] **M1.8** UI: frequency knob, volume knob, mute button
   - Test: Vitest component tests (knob emits value, mute toggles state).
-- [ ] **M1.9** Unit tests for DSP core (CCD yellow) + static analysis
+- [x] **M1.9** Unit tests for DSP core (CCD yellow) + static analysis
   - Test: `ctest` all green; coverage >= 90%; clang-tidy clean.
-- [ ] **M1.10** Debug host (`editorhost` / `pluginval`) + load the `.vst3`
+- [x] **M1.10** Debug host (`editorhost` / `pluginval`) + load the `.vst3`
   - Test: VST3 SDK `validator`/`hostchecker` passes headlessly on all platforms.
-- [ ] **M1.11** Verify HMR: edit Vue component -> live update in plugin
+- [x] **M1.11** Verify HMR: edit Vue component -> live update in plugin
   - Test: manual (documented) - edit component, change appears live in dev mode.
-- [ ] **M1.12** Git checkpoint: forkable foundation for new VSTs (all platforms)
+- [x] **M1.12** Git checkpoint: forkable foundation for new VSTs (all platforms)
   - Test: fresh clone/fork builds on win/mac/linux (CI) + loads in a host.
 
 ## Milestone M2 - KiwiSDR integration (project-specific)

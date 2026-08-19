@@ -101,6 +101,7 @@ RAG_IGNORED_DIRS = {
     ".git", "build", ".venv", "__pycache__", ".pytest_cache",
     "node_modules", ".continue", "CMakeFiles", ".vscode",
     "max-sdk-base", "min-api", "min-lib", ".opencode",
+    "third_party",
 }
 
 # Max file size to index (bytes) - prevents large binaries
