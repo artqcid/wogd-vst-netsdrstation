@@ -12,7 +12,7 @@
 
 namespace Steinberg {
 namespace Vst {
-class IEditController;
+class EditControllerEx1;
 }
 } // namespace Steinberg
 
@@ -20,7 +20,7 @@ namespace netsdr {
 
 class PluginEditor : public Steinberg::IPlugView {
 public:
-    PluginEditor(Steinberg::Vst::IEditController* controller,
+    PluginEditor(Steinberg::Vst::EditControllerEx1* controller,
                  const ParameterRegistry& registry);
     ~PluginEditor();
 
@@ -51,7 +51,7 @@ public:
 private:
     void attachWebView(void* parentHandle);
 
-    Steinberg::Vst::IEditController* controller_;
+    Steinberg::Vst::EditControllerEx1* controller_;
     const ParameterRegistry& registry_;
     Steinberg::IPlugFrame* frame_;
     WebViewHost webView_;

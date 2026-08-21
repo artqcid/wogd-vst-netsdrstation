@@ -129,3 +129,40 @@ into three threads:
   separated from the DSP core; it is a forkable git checkpoint.
 - Project-specific (KiwiSDR) details start only at Milestone 2.
 - Follow CCD (component orientation, separation of concerns, SRP, DIP, etc.).
+
+## 8. WebView2 Bundle Deployment
+
+The plugin is self-contained — it works without any system-wide WebView2 installation.
+All WebView2 dependencies are bundled inside the VST3 package.
+
+### Fixed Version Runtime
+
+The WebView2 Fixed Version Runtime (`Microsoft.WebView2.FixedVersionRuntime.151.0.4129.93.x64/`)
+and `WebView2Loader.dll` are copied into the VST3 bundle (`Contents/x86_64-win/`)
+at build time via CMake POST_BUILD commands (`source/entry/CMakeLists.txt`).
+
+### Runtime Discovery
+
+On plugin load, `WebViewHost::Impl::attach()` (`source/webview/webview_editor.cpp`):
+1. Resolves the module directory via `GetModuleFileNameW`
+2. Sets the environment variable `WEBVIEW2_BROWSER_EXECUTABLE_FOLDER` to
+   `<moduledir>/FixedRuntime`
+3. Constructs the `webview::webview` object — WebView2 uses the env var to
+   locate the bundled runtime instead of the Windows Registry
+4. Resets the env var after construction
+
+### Release UI URL
+
+In release builds, the editor derives the UI URL at runtime from the module path:
+- `PluginEditor::buildReleaseUiUrl()` (`source/editor/plugin_editor.cpp`)
+  calls `GetModuleFileNameW`, strips the filename, and builds
+  `file:///<moduledir>/ui/index.html`
+
+### Pre-build Requirement
+
+The Vue UI must be built before the VST3 release build:
+```
+cmake --build <build-dir> --target netsdrstation_ui
+```
+This target runs `vite build` and produces `ui/dist/`, which CMake copies into
+the VST3 bundle via POST_BUILD.

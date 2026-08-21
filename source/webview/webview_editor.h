@@ -37,8 +37,11 @@ public:
     // Executes JavaScript in the webview (C++ -> JS).
     bool eval(const std::string& js);
 
-    // Sizes the webview content area.
-    void setSize(int width, int height);
+    // Sizes the embedded widget to fill the parent window's client area.
+    // (FIX-22: the webview library's embedded mode never sizes its child
+    // "widget" window itself, so we do it explicitly after attach and on every
+    // resize.)
+    void resizeToParent();
 
     // Registers the callback invoked on JS -> C++ messages.
     void setMessageHandler(MessageHandler handler, void* userData);

@@ -4,6 +4,9 @@ _Open tasks only (short descriptions). Detailed info: `doc/architecture.md`;
 draft plan: `doc/plan.md`; workflow: `doc/workspace-workflow.md`;
 coding rules: `doc/coding-standards.md`; test strategy: `doc/test-strategy.md`._
 
+> **M1 offene Punkte mit Abarbeitungsreihenfolge für Coding Agents:**
+> → `doc/m1-open-tasks.md` (effizienzoptimiert, Gruppen 1–9, Abhängigkeitsgraph)
+
 ## Milestone M1 - Generic VST foundation (forkable checkpoint)
 
 - [x] **M1.1** Cross-platform CMake scaffold (`CMakeLists.txt` + `CMakePresets.json`)
@@ -30,6 +33,144 @@ coding rules: `doc/coding-standards.md`; test strategy: `doc/test-strategy.md`._
   - Test: manual (documented) - edit component, change appears live in dev mode.
 - [x] **M1.12** Git checkpoint: forkable foundation for new VSTs (all platforms)
   - Test: fresh clone/fork builds on win/mac/linux (CI) + loads in a host.
+- [x] **M1.13** Start VST3PluginTestHost (Debug) – scan plugin folder, select plugin in VST Rack, choose ASIO driver.
+- [x] **M1.14** Stop VST3PluginTestHost (Debug) – terminate process.
+- [x] **M1.15** Start VST3PluginTestHost (Release) – scan plugin folder, select plugin in VST Rack, choose ASIO driver.
+- [x] **M1.16** Stop VST3PluginTestHost (Release) – terminate process.
+
+- [x] **M1.17** WebView2 Fixed Version herunterladen
+  - x64-Fixed-Version-Runtime + NuGet-SDK unter `C:/Users/marku/Documents/GitHub/thirdParty/WebView2SDK/` abgelegt.
+  - Status: erledigt – Dateien vorhanden (`WebView2Loader.dll`, `FixedRuntime/Microsoft.WebView2.FixedVersionRuntime.151.0.4129.93.x64/`).
+
+- [x] **M1.18** WebView2-Dateien per CMake POST_BUILD in VST3-Bundle kopieren
+  - `WebView2Loader.dll` + `FixedRuntime/`-Ordner werden nach
+    `Contents/x86_64-win/` kopiert (`source/entry/CMakeLists.txt:96-106`).
+  - Status: kopiert – Bundle enthält `WebView2Loader.dll` und `FixedRuntime/EBWebView/x64/EmbeddedBrowserWebView.dll`.
+  - **Offener Defekt → FIX-WV2-C:** `PLUGIN_DIR` ist auf `"Release"` hardcodiert
+    (`CMakeLists.txt:86`); muss `$<CONFIG>` verwenden.
+  - **Offener Defekt → FIX-WV2-D:** Pfad sollte über SMTG-Property
+    `SMTG_PLUGIN_PACKAGE_PATH` ermittelt werden, nicht hardcodiert.
+
+- [x] **FIX-WV2-A** `WEBVIEW2_BROWSER_EXECUTABLE_FOLDER` vor Webview-Konstruktion setzen
+  - **Root cause:** `webview::webview` 0.12.0 übergibt `nullptr` als `browser_dir` an
+    `CreateCoreWebView2EnvironmentWithOptions` (webview.h:4218). Dadurch sucht die
+    Bibliothek nur in der Windows-Registry – der gebündelte `FixedRuntime/`-Ordner
+    wird komplett ignoriert. Ohne system-weites WebView2 bleibt das GUI leer.
+  - **Fix:** In `WebViewHost::Impl::attach()` (`source/webview/webview_editor.cpp`)
+    vor `std::make_unique<webview::webview>(…)`:
+    1. Eigenen DLL-Pfad per `GetModuleFileNameW` ermitteln.
+    2. `WEBVIEW2_BROWSER_EXECUTABLE_FOLDER` auf `<moduledir>/FixedRuntime` setzen
+       (`_wputenv_s` / `SetEnvironmentVariableW`).
+    3. Webview-Objekt konstruieren.
+    4. Umgebungsvariable danach zurücksetzen.
+  - _Files: `source/webview/webview_editor.cpp:18-31`_
+  - Test: Release-Build in VST3PluginTestHost laden **ohne** system-weites WebView2;
+    GUI muss sichtbar sein.
+
+- [x] **FIX-WV2-B1** `ui/dist/` per CMake POST_BUILD in VST3-Bundle kopieren
+  - **Root cause:** Release-Build lädt UI über eine zur Compile-Zeit eingebettete,
+    maschinenspezifische `file://`-URL (`source/entry/CMakeLists.txt:43-49`,
+    `source/editor/plugin_editor.cpp:29`). `ui/dist/` liegt nicht im Bundle.
+  - **Fix:** POST_BUILD-Befehl in `source/entry/CMakeLists.txt` ergänzen:
+    ```cmake
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        "${CMAKE_SOURCE_DIR}/ui/dist"
+        "${PLUGIN_DIR}/ui"
+    ```
+    Setzt voraus, dass `netsdrstation_ui` (vite build) vorher ausgeführt wurde.
+  - Test: `ui/dist/`-Verzeichnis im Bundle unter `Contents/x86_64-win/ui/` vorhanden.
+
+- [x] **FIX-WV2-B2** UI-URL zur Laufzeit aus Modul-Pfad ableiten
+  - **Root cause:** `kUiUrl` in `plugin_editor.cpp:29` ist eine Compile-Konstante mit
+    absolutem Pfad zur Dev-Maschine. Auf anderen Rechnern zeigt die URL ins Leere.
+  - **Fix:** `buildReleaseUiUrl()` in `plugin_editor.cpp` implementieren:
+    1. `GetModuleFileNameW` → Verzeichnis des Plugin-DLL.
+    2. URL = `file:///<moduledir>/ui/index.html`.
+    3. `kUiUrl` durch den Rückgabewert von `buildReleaseUiUrl()` ersetzen
+       (nur im `#else`-Zweig / Release-Pfad).
+  - _Files: `source/editor/plugin_editor.cpp:24-33`_
+  - Test: Plugin auf einem Rechner ohne vorherige Build-Tree-Struktur laden; GUI erscheint.
+
+- [x] **FIX-WV2-C** POST_BUILD-Pfad von `"Release"` auf `$<CONFIG>` umstellen
+  - _File: `source/entry/CMakeLists.txt:86`_
+  - Fix: `"${CMAKE_BINARY_DIR}/VST3/Release/…"` → `"${CMAKE_BINARY_DIR}/VST3/$<CONFIG>/…"`
+  - Test: Debug-Build kopiert Dateien in `VST3/Debug/…`, Release in `VST3/Release/…`.
+
+- [x] **FIX-WV2-D** SMTG-Property für Bundle-Pfad verwenden
+  - _File: `source/entry/CMakeLists.txt:86-106`_
+  - Fix:
+    ```cmake
+    get_target_property(_BUNDLE_DIR netsdrstation SMTG_PLUGIN_PACKAGE_PATH)
+    set(PLUGIN_DIR "${_BUNDLE_DIR}/Contents/x86_64-win")
+    ```
+  - Test: Konfiguration ohne Preset (CMake GUI) erzeugt korrekte Kopier-Pfade.
+
+- [x] **BUG-01** Release-GUI zeigt `ERR_FILE_NOT_FOUND` (`file://` URL nicht gefunden)
+  - **Symptom:** Release-Build lädt `file:///C:/.../ui/index.html` im WebView2, aber Edge zeigt
+    `ERR_FILE_NOT_FOUND` ("Die Datei wurde nicht gefunden...").
+  - **Root Cause (korrigiert):** `buildReleaseUiUrl()` nutzte
+    `GetModuleFileNameW(nullptr, …)` — das liefert den Pfad der **Host-EXE**, nicht der
+    Plugin-DLL. Die URL zeigte daher auf `<hostExeDir>/ui/index.html`, das nicht existiert.
+    (WebView2 erlaubt Top-Level-`file://`-Navigation per Default; `AreFileAccessEnabled`
+    ist default `TRUE` — die ursprüngliche Analyse war falsch, kein Bibliotheks-Patch nötig.)
+  - **Fix:** `plugin_editor.cpp`: DLL-eigener Pfad über `extern "C" IMAGE_DOS_HEADER
+    __ImageBase` → `GetModuleFileNameW(reinterpret_cast<HMODULE>(&__ImageBase), …)`.
+    Zusätzlich: UTF-8-Konvertierung via `WideCharToMultiByte` + Percent-Encoding
+    (`percentEncodePath()`) für Leerzeichen/Nicht-ASCII in Installationspfaden.
+  - Entfernt: fehlerhafter CMake-Patch-Block für `--allow-file-access-from-files`
+    (zielte auf 0-Byte-`webview.cpp`; nicht erforderlich).
+  - **Root Cause 2 (nach Fix 1: weiße GUI):** Vite-Build erzeugte
+    `<script type="module" crossorigin src="./assets/…">`. Unter `file://` ist der
+    Origin `null` → Chromium blockt externe ES-Module per CORS-Policy → Vue mountet
+    nie → weiße Fläche (HTML lädt, JS nicht).
+  - **Fix 2:** `ui/vite.config.ts`: `vite-plugin-singlefile` — JS+CSS werden inline
+    in `index.html` inlined (65,9 kB, ein File). Inline-Module-Scripts laufen unter
+    `file://` ohne CORS. Bundle wird dadurch noch selbstständiger (kein assets/-Ordner).
+    Stale `assets/` im Bundle nach Rebuild manuell löschen (`copy_directory` räumt nicht).
+  - _Files: `source/editor/plugin_editor.cpp:20-90`, `CMakeLists.txt`, `ui/vite.config.ts`, `ui/package.json`_
+  - Test: Release-Build + Validator (47/47 bestanden), Unit-Tests 36/36,
+    TEST-07 nun NDEBUG-aware (Debug: Dev-Server-URL; Release: `file:///…/ui/index.html`).
+  - Acceptance: GUI lädt Vue-UI aus dem Bundle; manuelle Verifikation im
+    VST3PluginTestHost steht aus.
+
+- [x] **BUG-02** Backend reagiert nicht auf GUI-Eingaben (Ton konstant)
+  - **Symptom:** Release-GUI lädt (dunkles UI sichtbar), aber Knobs/Mute haben
+    keinen Einfluss auf den Sound; Sine-Ton läuft konstant weiter.
+  - **Root Cause:** `PluginEditor::onJavaScriptMessage` rief nur
+    `controller_->setParamNormalized(tag, value)`. Das aktualisiert ausschließlich
+    den Controller-Zustand — der Host erfährt nichts, und der Processor bekommt
+    die Änderung nie über `inputParameterChanges` in `process()`.
+  - **Fix (korrigiert):** Editor ruft jetzt direkt die **plain virtuals**
+    `EditControllerEx1::beginEdit/performEdit/endEdit(tag, normalized)` auf —
+    diese forwarden intern an den vom Host gesetzten `componentHandler`
+    (`EditController::performEdit`, vsteditcontroller.cpp:206).
+    **Wichtig:** `EditControllerEx1` erbt NICHT von `IComponentHandler`;
+    ein `queryInterface(IComponentHandler::iid)` auf dem Controller liefert
+    `kNoInterface` (erster Fix-Versuch war daher wirkungslos!).
+    PluginEditor ist nun auf `EditControllerEx1*` typisiert statt
+    `IEditController*`.
+  - _Files: `source/editor/plugin_editor.h:21-24,54-55`, `source/editor/plugin_editor.cpp:87-95,225-236`_
+  - Test: **TEST-09** (Regression, `tests/vst/plugin_editor_tests.cpp`):
+    MockController (EditControllerEx1-Ableitung) zeichnet Gestures auf;
+    `setParameter("freq",880)` → begin/perform/end mit normalisiertem Wert;
+    unbekannter Param / malformed JSON → keine Gesture. Validator 47/47,
+    Unit-Tests 37/37.
+  - Acceptance: Knob-Dreh ändert Tonhöhe/Lautstärke, Mute stummt — manuelle
+    Verifikation im VST3PluginTestHost steht aus.
+
+- [x] **M1.21** Dokumentation aktualisieren (WebView2-Bundle-Deployment)
+  - In `doc/architecture.md` Abschnitt 8 / neuen Abschnitt ergänzen:
+    - Deployment-Strategie: Fixed Version Runtime im Bundle, `WEBVIEW2_BROWSER_EXECUTABLE_FOLDER`-Trick.
+    - Release-UI-URL: Laufzeit-Ermittlung aus DLL-Pfad.
+    - Voraussetzung vor Release-Build: `cmake --build … --target netsdrstation_ui`.
+  - In `doc/workspace-workflow.md` Release-Build-Schritte ergänzen.
+  - Detailanalyse: `doc/webview2-bundle-audit.md` (bereits angelegt).
+
+- [x] **M1.22** Knowledge-Sync nach WebView2-Fixes
+  - Docs (`architecture.md`, `checklist.md`, `workspace-workflow.md`) aktuell.
+  - `index_project_code` ausgeführt → RAG/Wiki aktualisiert (47 files, 330 symbols).
+  - NotebookLM **NetSDRStation-VST** updated (M1 Completion Status, source `4afee281`).
+
 ## M1 Corrections (found in quality review, 2026-08-19)
 
 > Severity: **Critical** = wrong runtime behaviour / broken feature;
@@ -81,6 +222,22 @@ coding rules: `doc/coding-standards.md`; test strategy: `doc/test-strategy.md`._
   _File: `source/vst/controller/plugin_controller.cpp:48-51`_
   _Fix: deserialize the same fields written by `PluginProcessor::getState` and call
   `setParamNormalized` for each parameter so the controller mirrors the processor state._
+
+- [x] **FIX-22** Editor UI is invisible in the host: the webview widget stays **0x0**.
+  Root cause: webview 0.12.0 `webview::webview(debug, parentHWND)` (embedded mode) creates
+  its child "widget" window at 0x0 and only sizes it when the *parent* receives `WM_SIZE`
+  (`resize_widget()`). The plugin creates the webview inside `attached()`, i.e. *after* the
+  host has already created/sized its window, so no further `WM_SIZE` fires. Our
+  `setSize()` is ineffective because webview's `set_size()` resizes the *parent* window
+  (already at the requested size -> no change). Verified: child window `webview_widget`
+  and `Chrome_WidgetWin_0` are both 0x0 while the plugin runs (WebView2 is created, but
+  clipped to nothing).
+  _Files: `source/webview/webview_editor.cpp`, `source/editor/plugin_editor.cpp`._
+  _Fix: after `attach()`, resize the widget to fill the parent's client area using the
+  webview `window()`/`widget()` accessors (Win32: `GetClientRect(parent)` +
+  `MoveWindow(widget, ...)`); make `onSize()` resize the widget the same way instead of
+  calling `set_size()`. Keep it behind the platform wrapper (macOS/Linux need the
+  equivalent NSView/GTK resize)._
 
 ### Important – correctness / quality risk
 
@@ -167,6 +324,272 @@ coding rules: `doc/coding-standards.md`; test strategy: `doc/test-strategy.md`._
   _Fix: add `set(SMTG_ENABLE_VST3_PLUGIN_EXAMPLES OFF CACHE BOOL "" FORCE)` near
   `SMTG_CREATE_PLUGIN_LINK`._
 
+- [x] **FIX-24** VSCode `tasks.json` / `launch.json`: remove editorhost tasks and launch config
+  - **Root cause:** `tasks.json` still contains four `editorhost`-based tasks (`start-plugin-debug`,
+    `start-plugin`, `stop-plugin`, `stop-plugin-debug`) and `launch.json` launches `editorhost.exe`.
+    The project's debug workflow is exclusively via VST3PluginTestHost (tasks `start-testhost-*`,
+    `stop-testhost-*` already present). The editorhost tasks/scripts are dead weight and are
+    confusing for fork users.
+  - **Fix:**
+    1. Remove the four editorhost tasks from `.vscode/tasks.json`.
+    2. Replace the single `launch.json` configuration (`Start Plugin (Debug)` → `editorhost.exe`)
+       with a VST3PluginTestHost attach configuration (type `cppvsdbg`, request `attach`,
+       process name `VST3PluginTestHost.exe`).
+  - _Files: `.vscode/tasks.json:57-103`, `.vscode/launch.json`_
+  - Test: no `editorhost` references remain in `.vscode/`; F5 in VSCode attaches to TestHost.
+
+- [x] **FIX-25** `doc/workspace-workflow.md` still documents `editorhost` as the primary VST host
+  - **Root cause:** Section 2.2 (lines 65–77) describes building/using `editorhost`
+    and `pluginval` as the debug host strategy, but M1.13–M1.16 established
+    VST3PluginTestHost as the only supported Windows debug host.
+  - **Fix:** Rewrite section 2.2 to describe VST3PluginTestHost as the primary
+    Windows debug host (scan plugin folder, select plugin in VST Rack, ASIO driver).
+    Keep `editorhost`/`pluginval` as a note for cross-platform / CI headless use.
+  - _File: `doc/workspace-workflow.md:63-77`_
+  - Test: no misleading `editorhost`-first instructions remain in the workflow doc.
+
+- [x] **FIX-23** clangd kann Standardbibliotheks-Header nicht finden (`'cmath' file not found`)
+  **Root cause:** Der Visual-Studio-18-Generator erzeugt trotz `CMAKE_EXPORT_COMPILE_COMMANDS=ON`
+  keine `compile_commands.json` (CMake-Einschränkung: nur Ninja/Makefile-Generatoren tun das).
+  clangd findet deshalb keine Compile-Datenbank, kennt weder MSVC-Include-Pfade noch
+  `/std:c++20` und fällt auf seine Built-in-Header zurück → alle STL-Header fehlen.
+  **Fix – Ninja-Preset `win-clangd` in `CMakePresets.json` hinzufügen:**
+  1. Neues `configurePreset` `win-clangd` anlegen: `"generator": "Ninja"`, erbt `base`,
+     setzt `NS_ENABLE_VST3=ON` (damit der Plugin-Code mit seinen Includes erfasst wird).
+  2. Preset einmalig konfigurieren: `cmake --preset win-clangd`
+     → erzeugt `build/win-clangd/compile_commands.json` mit allen echten MSVC-Flags.
+  3. `compile_commands.json` per Symlink / Junction in den Workspace-Root legen:
+     `New-Item -ItemType SymbolicLink -Path compile_commands.json -Target build/win-clangd/compile_commands.json`
+     (oder Pfad in `.clangd` via `CompileFlags.CompilationDatabase` eintragen).
+  4. VSCode neu laden → clangd liest die echten Flags; alle roten Fehler verschwinden.
+  _Files: `CMakePresets.json` (Preset `win-clangd`), `compile_commands.json` (Symlink im Root)_
+  Test: `sine_oscillator.cpp` in VSCode öffnen – keine clangd-Fehler mehr (`cmath`, `std`).
+
+## M1 Test Coverage (audit 2026-08-21)
+
+> Units **already tested** (all green, no entries needed):
+> `SineOscillator` · `LockFreeSPSC` · `WorkerThread` · `ParameterRegistry` ·
+> `ProcessorState` · `bridge_protocol` (parseSetParameterMessage + paramIdFromUiName).
+>
+> Units **not yet tested** → open tasks below.
+> `WebViewHost` and `factory.cpp` require a real WebView2 runtime / host infrastructure
+> and are **explicitly deferred** to an integration-test milestone (M3+).
+
+- [x] **TEST-01** `PluginProcessor` – `setupProcessing` calls `setSampleRate` on the oscillator
+  (FIX-01 regression)
+  - **Why:** FIX-01 fixed a bug where `setupProcessing` did not update the
+    oscillator's sample rate, causing wrong pitch at any rate other than 48 kHz.
+    There is currently no automated check that prevents this regression.
+  - **Test:** Construct a `PluginProcessor`, call `setupProcessing` with
+    `sampleRate = 96000`, then call `process` with a short buffer and verify the
+    Goertzel peak is at the expected frequency (not double the expected frequency).
+  - _File: new `tests/vst/plugin_processor_tests.cpp`_
+
+- [x] **TEST-02** `PluginProcessor` – `setState`/`getState` roundtrip
+  - **Why:** State persistence is core VST3 behaviour. No test currently exercises
+    the `IBStream`-based serialization path of the processor.
+  - **Test:** Use `IBStreamer` / a `MemoryStream` stub to call `getState`, feed the
+    bytes back into `setState`, and verify that `freqHz_`, `volume_`, and `mute_`
+    atomics match the original values.
+  - _File: `tests/vst/plugin_processor_tests.cpp`_
+
+- [x] **TEST-03** `PluginProcessor` – `applyParamValue` stores normalized value in atomics
+  - **Why:** `applyParamValue` is the hot path for host automation. A regression
+    here (e.g. wrong normalization or wrong atomic) silently mis-tunes the synth.
+  - **Test:** Call `applyParamValue(kParamFreq, normalizedValue)` and read back
+    `freqHz_` via a test accessor or by rendering a short block and measuring the
+    Goertzel peak. Verify plain freq equals `registry_.toPlain(kParamFreq, normalizedValue)`.
+  - _File: `tests/vst/plugin_processor_tests.cpp`_
+
+- [x] **TEST-04** `PluginProcessor::process()` – silence flags set iff muted (FIX-12 regression)
+  - **Why:** FIX-12 fixed the missing `silenceFlags` on muted output. No test
+    currently verifies this, so the fix can silently regress.
+  - **Test:** Construct a `ProcessData` with a zeroed output buffer and 2 channels.
+    Call `process` with mute off → verify `silenceFlags == 0`.
+    Set mute on → call `process` again → verify `silenceFlags == 3` (both channels).
+  - _File: `tests/vst/plugin_processor_tests.cpp`_
+
+- [x] **TEST-05** `PluginController` – `setComponentState` mirrors processor state into params
+  (FIX-06 regression)
+  - **Why:** FIX-06 fixed `setComponentState` returning `kResultOk` without reading
+    the stream. No test verifies the controller correctly deserializes and calls
+    `setParamNormalized`.
+  - **Test:** Serialize a `ProcessorState` (freq=10000, volume=0.25, mute=true) into
+    a `MemoryStream`, call `setComponentState`, then read back `getParamNormalized`
+    for each parameter and verify it matches the expected normalized value.
+  - _File: new `tests/vst/plugin_controller_tests.cpp`_
+
+- [x] **TEST-06** `PluginEditor::onJavaScriptMessage` – correct normalized dispatch to controller
+  - **Why:** This is the JS→C++ bridge entry point. The bridge_protocol tests
+    verify the parser in isolation, but the editor's wiring (parse → paramIdFromUiName
+    → toNormalized → controller.setParamNormalized) is untested end-to-end.
+  - **Test:** Implement a mock `IEditController` that records `setParamNormalized`
+    calls. Construct a `PluginEditor` with the mock controller and the real
+    `ParameterRegistry`. Call `onJavaScriptMessage` with a well-formed envelope
+    (e.g. `{"type":"setParameter","data":["freq",440]}`). Verify the mock received
+    `setParamNormalized(kParamFreq, ~0.021)`.
+  - _File: `tests/vst/plugin_editor_tests.cpp`_
+
+- [x] **TEST-07** `PluginEditor::uiUrl()` – returns correct URL per build type
+  - **Why:** The release URL logic (`NS_UI_DIST_URL` / runtime path from FIX-WV2-B2)
+    has no test. A broken URL silently produces a blank editor in release builds.
+  - **Test:** In a debug build, verify `uiUrl()` returns `"http://localhost:5173"`.
+    In a release build (or via a compile-flag override), verify `uiUrl()` returns
+    a non-empty string starting with `"file://"`.
+  - _File: `tests/vst/plugin_editor_tests.cpp`_
+  - _Note: Implement after FIX-WV2-B2 (runtime URL) is done._
+
+- [x] **TEST-08** `PluginEditor::checkSizeConstraint` – min-size clamping
+  - **Why:** `checkSizeConstraint` clamps the resize rect to `kMinWidth` (320) ×
+    `kMinHeight` (200). Not tested; a regression would allow hosts to resize the
+    editor below its usable area.
+  - **Test:** Call `checkSizeConstraint` with a rect smaller than the minimums;
+    verify the rect is clamped. Call with a larger rect; verify it is unchanged.
+  - _File: `tests/vst/plugin_editor_tests.cpp`_
+
+## M1 Corrections – continued (found in full-pass review, 2026-08-21)
+
+> Severity: **Critical** = wrong runtime behaviour / broken feature;
+> **Important** = quality/reliability risk; **Minor** = cleanup/polish.
+
+### Important – correctness / quality risk
+
+- [x] **FIX-26** `CMakeLists.txt:47` – `VST3_SDK_ROOT` default is a hard-coded absolute path
+  - **Root cause:** The fallback value
+    `"C:/Users/marku/Documents/GitHub/thirdParty/vst3sdk"` is machine-specific.
+    A fresh clone on any other machine silently uses this non-existent path and
+    fails at configure time with a cryptic `FATAL_ERROR`.
+  - **Fix:** Remove the hard-coded default; require callers to pass
+    `-DVST3_SDK_ROOT=<path>` or set the `VST3_SDK_ROOT` environment variable.
+    Update the `FATAL_ERROR` message to mention both options. Keep
+    `NS_VENDOR_VST3_SDK` as the submodule alternative.
+  - _File: `CMakeLists.txt:46-49`_
+  - Test: `cmake --preset win-msvc` without `VST3_SDK_ROOT` set → clear error;
+    with env var set → configures cleanly.
+
+- [x] **FIX-27** `CMakeLists.txt:85` / `source/entry/CMakeLists.txt:89` – `WEBVIEW2_SDK_ROOT`
+  hard-coded in two places; `WV2_SRC` is a third redundant copy
+  - **Root cause:** The path
+    `"C:/Users/marku/Documents/GitHub/thirdParty/WebView2SDK"` appears at:
+    1. `CMakeLists.txt:85` (root – sets `WEBVIEW2_SDK_ROOT` CACHE PATH)
+    2. `source/entry/CMakeLists.txt:89` (entry – re-sets `WEBVIEW2_SDK_ROOT` CACHE PATH)
+    3. `CMakeLists.txt:158` (`WV2_SRC` INTERNAL cache var – never used by any target)
+    This is a DRY violation; changing the path requires three edits. Entry CMake
+    also shadows the cache variable set in the root.
+  - **Fix:**
+    1. Set `WEBVIEW2_SDK_ROOT` exactly once, in `CMakeLists.txt`, with no
+       hard-coded default (require env var or `-D` flag, same pattern as FIX-26).
+    2. Remove the redundant `CACHE PATH` re-set in `source/entry/CMakeLists.txt`.
+    3. Remove the unused `WV2_SRC` cache variable (`CMakeLists.txt:157-158`).
+  - _Files: `CMakeLists.txt:85,157-158`, `source/entry/CMakeLists.txt:89`_
+  - Test: single `-DWEBVIEW2_SDK_ROOT=<path>` configures both root and entry correctly.
+
+- [x] **FIX-28** `CMakePresets.json` – `win-analyze` preset has no `generator` and will fail
+  - **Root cause:** The `win-analyze` preset inherits `base`, which has no
+    `generator`. CMake requires a generator to be specified (or defaults to the
+    platform default, which on Windows is Visual Studio – not Ninja). The preset
+    description says "Ninja, clang-tidy analysis only" but there is no
+    `"generator": "Ninja"` field.
+  - **Fix:** Add `"generator": "Ninja"` to the `win-analyze` configure preset.
+    Verify that `cmake --preset win-analyze` succeeds.
+  - _File: `CMakePresets.json` (`win-analyze` configurePreset, ~line 69)_
+  - Test: `cmake --preset win-analyze` configures without error.
+
+- [x] **FIX-29** `source/entry/CMakeLists.txt:66-70` – dead `if(DEFINED webview2_sdk_SOURCE_DIR)` block
+  - **Root cause:** The condition checks for `webview2_sdk_SOURCE_DIR`, which
+    is set by FetchContent after fetching the WebView2 SDK. But WebView2 is
+    **not** fetched via FetchContent in this project – it is a local SDK pointed
+    to by `WEBVIEW2_SDK_ROOT`, and its headers are made available via the
+    `netsdr_webview2_headers` INTERFACE target linked transitively through
+    `webview::core_static`. The `if` block never evaluates to true; the
+    `target_include_directories` inside is dead code.
+  - **Fix:** Remove the dead block (`source/entry/CMakeLists.txt:65-70`).
+  - _File: `source/entry/CMakeLists.txt:65-70`_
+  - Test: build succeeds; no include-path regression.
+
+- [x] **FIX-30** `webview_editor.cpp:27` – WebView devtools enabled unconditionally (hardcoded `true`)
+  - **Root cause:** `webview::webview(/*debug=*/true, parentHandle)` is called
+    with `debug=true` in all build types. In a Release build this leaves the
+    WebView2 devtools accessible, adds overhead and exposes internals to end
+    users.
+  - **Fix:** Tie the debug flag to the build type:
+    ```cpp
+    #ifndef NDEBUG
+    constexpr bool kWebViewDebug = true;
+    #else
+    constexpr bool kWebViewDebug = false;
+    #endif
+    w_ = std::make_unique<webview::webview>(kWebViewDebug, parentHandle);
+    ```
+  - _File: `source/webview/webview_editor.cpp:27`_
+  - Test: Release build → devtools overlay absent; Debug build → devtools present.
+
+- [x] **FIX-31** `pluginids.h:13-16` – `static const FUID` in a header causes per-TU copies (ODR)
+  - **Root cause:** `kProcessorUID` and `kControllerUID` are declared
+    `static const Steinberg::FUID` inside a header. Every translation unit that
+    includes this header gets its own copy. While benign for `FUID` (value type),
+    it is an ODR violation pattern and produces unnecessary binary bloat.
+  - **Fix:** Change both declarations to `inline const` (C++17, already required
+    by the project) so there is a single definition across all TUs.
+    ```cpp
+    inline const Steinberg::FUID kProcessorUID(...);
+    inline const Steinberg::FUID kControllerUID(...);
+    ```
+  - _File: `source/vst/common/pluginids.h:13-16`_
+  - Test: no linker warnings; both IDs accessible from all TUs.
+
+- [x] **FIX-32** `netsdr_mcp_server.py` – `_cosine_similarity` norm computation is wrong after swap
+  - **Root cause:** Lines 177-183 swap `a, b` so the inner loop iterates over
+    the smaller dict. However `na` is accumulated **only** inside the `a`-items
+    loop (after the swap, `a` is the original `b`). The norm of the original `a`
+    is never computed, so the denominator is `sqrt(na * nb)` where `na` is the
+    squared-norm of what was passed as `b`, not `a`. The result is a wrong cosine
+    value whenever the input dicts have different sizes.
+  - **Fix:** Compute both norms independently before (or outside) the swap:
+    ```python
+    na = sum(v * v for v in a.values())
+    nb = sum(v * v for v in b.values())
+    dot = sum(a.get(k, 0.0) * v for k, v in b.items())
+    denom = math.sqrt(na * nb)
+    return dot / denom if denom > 0 else 0.0
+    ```
+  - _File: `netsdr_mcp_server.py:169-186`_
+  - Test: unit test with two known embeddings confirms correct cosine score.
+
+### Minor – cleanup and design hygiene
+
+- [x] **FIX-33** `CMakeLists.txt:42-49` – `NS_UI_DIST_URL` configure-time baking becomes dead code
+  after FIX-WV2-B2
+  - **Root cause:** `source/entry/CMakeLists.txt:43-49` bakes an absolute
+    configure-time `file://` path into `NS_UI_DIST_URL` and passes it as a
+    compile definition. Once FIX-WV2-B2 (runtime URL from module path) is
+    implemented, `NS_UI_DIST_URL` is no longer used by `plugin_editor.cpp` and
+    the `if(NS_ENABLE_UI)` CMake block becomes dead code.
+  - **Fix:** After FIX-WV2-B2 is done, remove the `NS_UI_DIST_URL` configure
+    block from `source/entry/CMakeLists.txt:42-50` and the corresponding
+    `#ifdef NS_UI_DIST_URL` branch from `plugin_editor.cpp:28-33`.
+  - _Files: `source/entry/CMakeLists.txt:42-50`, `source/editor/plugin_editor.cpp:25-33`_
+  - Test: Release build without `NS_UI_DIST_URL` defined loads UI from runtime path.
+
+- [x] **FIX-34** `netsdr_mcp_server.py:1` – shebang uses `python` instead of `python3`
+  - **Root cause:** `#!/usr/bin/env python` resolves to Python 2 on systems where
+    `python` is still Python 2 (e.g. older Ubuntu). The file uses Python 3 syntax
+    (f-strings, `str | None`, `ast.unparse`) throughout.
+  - **Fix:** Change to `#!/usr/bin/env python3`.
+  - _File: `netsdr_mcp_server.py:1`_
+  - Test: `python3 netsdr_mcp_server.py --help` starts without syntax errors.
+
+- [ ] **FIX-35** `ParameterRegistry` – O(n) linear scan for every parameter lookup (note for M2)
+  - **Root cause:** `value()`, `setValue()`, `toPlain()`, `toNormalized()` and
+    `definition()` all iterate the full `definitions_` vector. With 3 parameters
+    this is negligible. For M2 with more parameters, or for high-frequency calls
+    from the audio thread (via `applyParamValue`), a `std::unordered_map<uint32_t,
+    size_t>` index would reduce lookups to O(1).
+  - **Fix (deferred to M2):** Add an `id → index` map built in the constructor;
+    all lookup methods use the map instead of a loop. Document the deferred
+    decision in the code.
+  - _File: `source/vst/common/parameter_registry.h`, `parameter_registry.cpp`_
+  - Test: no regression in unit tests; lookup time constant regardless of param count.
 
 ## Milestone M2 - KiwiSDR integration (project-specific)
 

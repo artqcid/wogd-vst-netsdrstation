@@ -17,8 +17,11 @@ Checks: >
 
 WarningsAsErrors: ''
 
-HeaderFilterRegex: 'source/.*'
+# Only analyze .cpp files, not headers (headers may reference VST3 SDK)
+HeaderFilterRegex: '.*\.cpp$'
 
+# Suppress warnings from system headers
+SystemHeaders: false
 CheckOptions:
   - key: readability-identifier-naming.ClassCase
     value: CamelCase
@@ -30,3 +33,6 @@ CheckOptions:
     value: camelBack
   - key: readability-identifier-naming.EnumConstantCase
     value: CamelCase
+  # Allow TEST_CASE macro (Catch2) in test files
+  - key: readability-identifier-naming.WhitelistIdentifiers
+    value: TEST_CASE

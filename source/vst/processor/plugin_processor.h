@@ -49,9 +49,11 @@ public:
     // Worker thread used to decouple non-real-time work from the audio thread.
     WorkerThread& worker() { return worker_; }
 
+    // Applies a host automation value. Public for unit-test access.
+    void applyParamValue(Steinberg::Vst::ParamID tag, Steinberg::Vst::ParamValue value);
+
 private:
     void updateOscillatorFromParams();
-    void applyParamValue(Steinberg::Vst::ParamID tag, Steinberg::Vst::ParamValue value);
 
     ParameterRegistry registry_;
     SineOscillator oscillator_;

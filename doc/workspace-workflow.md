@@ -52,9 +52,12 @@ plan: `doc/plan.md`; open tasks: `doc/checklist.md`._
 
 **Technologies:**
 
-- VST3 SDK host samples (bundled with the SDK, no JUCE needed):
-  - `public.sdk/samples/vst-hosting/editorhost` — minimal host that loads and
-    opens a plugin editor window.
+- **VST3PluginTestHost** (Steinberg, part of VST3 SDK) — primary Windows debug
+  host. Application-style UI: scan the plugin folder, drag the plugin into the
+  VST Rack, select an ASIO driver, and the plugin loads in-process.
+- VST3 SDK headless tools for CI validation:
+  - `public.sdk/samples/vst-hosting/editorhost` — minimal host that loads a
+    plugin editor window.
   - `public.sdk/samples/vst-hosting/validator` — automated load/instantiate
     validation.
 - `pluginval` (Tracktion) — cross-platform automated validation.
@@ -62,19 +65,20 @@ plan: `doc/plan.md`; open tasks: `doc/checklist.md`._
 
 **Strategy:**
 
-- Build the SDK's `editorhost` (or use `pluginval`) as a lightweight, always
-  available debug host.
-- Debug flow: launch the host, then attach the debugger (Visual Studio / LLDB)
-  to the host process; the `.vst3` loads in-process and breakpoints hit.
-- Keep the plugin install path standard so the host finds it
+- VST3PluginTestHost is the everyday Windows debug host: launch it via
+  `.vscode/tasks.json` (`start-testhost-debug` / `start-testhost-release`),
+  then attach the Visual Studio debugger (`.vscode/launch.json` -> "Attach
+  VST3PluginTestHost (Debug)"). The `.vst3` loads in-process and breakpoints hit.
+- `editorhost`/`pluginval` are used in CI for headless smoke testing.
+- Keep the plugin install path standard so every host finds it
   (`%COMMONPROGRAMFILES%\VST3` on Windows, `~/Library/Audio/Plug-Ins/VST3` on
   macOS, `~/.vst3` on Linux).
 
 **Planned steps:**
 
-- `S5` Build/obtain a VST3 host (`editorhost` and/or `pluginval`).
-- `S6` Define the "attach debugger to host" workflow per platform.
-- `S7` Document how to load the built `.vst3` into the host.
+- `S5` Build/obtain VST3PluginTestHost from the VST3 SDK.
+- `S6` Define the "attach debugger to TestHost" workflow in .vscode/tasks.json + launch.json.
+- `S7` Document how to load the built `.vst3` into the TestHost (scan folder, VST Rack).
 
 ### 2.3 Vue UI debugging + hot reload (R3)
 
@@ -93,7 +97,13 @@ but WITHOUT JUCE):**
 - **Debug build:** the C++ WebView navigates to `http://localhost:5173`
   (Vite dev server) -> hot reload + browser devtools work.
 - **Release build:** load the bundled static `dist/index.html` (embedded
-  resource or file).
+  resource or file). **Pre-build requirement:** the `netsdrstation_ui` target
+  must be built before the release VST3 build (`cmake --build <build-dir>
+  --target netsdrstation_ui`). This target runs `vite build` and produces
+  `ui/dist/`, which CMake copies into the VST3 bundle via POST_BUILD step
+  along with `WebView2Loader.dll` and `FixedRuntime/`. No external
+  dependencies are needed at runtime — all WebView2 runtime components are
+  bundled inside the VST3 package.
 - **Bridge abstraction:** `pluginService.ts` detects the native bridge
   (`window.vstHost`) vs. browser dev mode (mock). Native side uses
   `webview::bind()` for JS -> C++ and `webview::eval()` for C++ -> JS.
@@ -123,6 +133,25 @@ Components:
 - **Editor:** `webview` WebView + Vue UI (2 knobs + 1 mute button).
 - **Bridge:** knob -> `setParameter('freq'|'volume')`, button ->
   `setParameter('mute')`; C++ -> UI state sync via `updateVueState`.
+
+## 3.5 Release Build Workflow (WebView2 Bundle)
+
+The release build produces a self-contained VST3 bundle that works without
+system-wide WebView2 or dev server:
+
+1. Build the Vue UI: `cmake --build build/win-msvc --target netsdrstation_ui`
+   (runs `vite build` → `ui/dist/`)
+2. Build the VST3: `cmake --build build/win-msvc --config Release`
+   POST_BUILD automatically copies into the bundle:
+   - `WebView2Loader.dll` and `FixedRuntime/` (from `WEBVIEW2_SDK_ROOT`)
+   - `ui/dist/` → `Contents/x86_64-win/ui/`
+3. At runtime, `WebViewHost` sets `WEBVIEW2_BROWSER_EXECUTABLE_FOLDER` to
+   the bundled FixedRuntime; `PluginEditor` derives the release UI URL from
+   the module path (`GetModuleFileNameW`).
+4. No external dependencies required — the plugin loads and renders the GUI
+   on any Windows machine.
+
+Detailed architecture: `doc/architecture.md` §8.
 
 ## 4. Reference projects (analysis only, no JUCE in this project)
 

@@ -40,10 +40,16 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 # The VST3 SDK is an external dependency (Steinberg, MIT). Point VST3_SDK_ROOT
 # at a local checkout (defaults to a sibling directory for forkability).
 if(NOT DEFINED VST3_SDK_ROOT)
-    if(NS_VENDOR_VST3_SDK)
+    if(DEFINED ENV{VST3_SDK_ROOT})
+        set(VST3_SDK_ROOT "$ENV{VST3_SDK_ROOT}" CACHE PATH "Path to the Steinberg VST3 SDK checkout")
+    elseif(NS_VENDOR_VST3_SDK)
         set(VST3_SDK_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/third_party/vst3sdk")
     else()
-        set(VST3_SDK_ROOT "" CACHE PATH "Path to the Steinberg VST3 SDK checkout")
+        message(FATAL_ERROR
+            "VST3_SDK_ROOT not set.\n"
+            "  - Set the VST3_SDK_ROOT environment variable, or\n"
+            "  - Pass -DVST3_SDK_ROOT=<path> at configure time, or\n"
+            "  - Enable NS_VENDOR_VST3_SDK to use a git submodule.")
     endif()
 endif()
 
@@ -75,9 +81,35 @@ add_subdirectory("${VST3_SDK_ROOT}" "${CMAKE_BINARY_DIR}/vst3sdk")
 # ---------------------------------------------------------------------------
 # webview/webview (MIT) - OS-native WebView for the plugin editor.
 # Fetched from GitHub; the editor module links webview::core_static.
+# WebView2 SDK is provided via workspace folder (thirdParty/WebView2SDK).
 # ---------------------------------------------------------------------------
 if(NS_ENABLE_VST3)
     include(FetchContent)
+
+    # Use local WebView2 SDK from workspace (env var or -D flag, no hard-coded default)
+    if(NOT DEFINED WEBVIEW2_SDK_ROOT)
+        if(DEFINED ENV{WEBVIEW2_SDK_ROOT})
+            set(WEBVIEW2_SDK_ROOT "$ENV{WEBVIEW2_SDK_ROOT}" CACHE PATH "Path to WebView2 SDK")
+        else()
+            message(FATAL_ERROR
+                "WEBVIEW2_SDK_ROOT not set.\n"
+                "  - Set the WEBVIEW2_SDK_ROOT environment variable, or\n"
+                "  - Pass -DWEBVIEW2_SDK_ROOT=<path> at configure time.")
+        endif()
+    endif()
+    
+    if(NOT EXISTS "${WEBVIEW2_SDK_ROOT}/build/native/include/WebView2.h")
+        message(FATAL_ERROR "WebView2 SDK headers not found at ${WEBVIEW2_SDK_ROOT}/build/native/include")
+    endif()
+    message(STATUS "WebView2 SDK headers found at: ${WEBVIEW2_SDK_ROOT}/build/native/include")
+
+    # Create interface library for WebView2 headers
+    add_library(netsdr_webview2_headers INTERFACE)
+    target_include_directories(netsdr_webview2_headers INTERFACE
+        "${WEBVIEW2_SDK_ROOT}/build/native/include"
+    )
+
+    # webview library
     FetchContent_Declare(
         webview
         GIT_REPOSITORY https://github.com/webview/webview.git
@@ -93,13 +125,10 @@ if(NS_ENABLE_VST3)
     set(WEBVIEW_INSTALL_TARGETS OFF CACHE INTERNAL "")
     set(WEBVIEW_ENABLE_PACKAGING OFF CACHE INTERNAL "")
 
-    # On Windows webview compiles against the WebView2 SDK headers. Point it at
-    # a local WebView2 SDK (vendor) or rely on the webview default discovery.
-    if(WIN32 AND DEFINED WEBVIEW2_SDK_ROOT AND EXISTS "${WEBVIEW2_SDK_ROOT}/include/WebView2.h")
-        add_library(netsdr_webview2_headers INTERFACE)
-        target_include_directories(netsdr_webview2_headers INTERFACE "${WEBVIEW2_SDK_ROOT}/include")
-        set(WEBVIEW_DEPENDENCIES netsdr_webview2_headers CACHE INTERNAL "")
-    endif()
+    # Point webview to use the local WebView2 SDK headers
+    set(WEBVIEW_DEPENDENCIES netsdr_webview2_headers CACHE INTERNAL "")
+    # Set MSWebView2_ROOT for webview's FindMSWebView2.cmake - it looks for build/native/include under this path
+    set(MSWebView2_ROOT "${WEBVIEW2_SDK_ROOT}" CACHE INTERNAL "")
 
     FetchContent_MakeAvailable(webview)
 endif()
@@ -121,13 +150,16 @@ endif()
 # produces that bundle; build it manually before a release build:
 #   cmake --build <build-dir> --target netsdrstation_ui
 if(NS_ENABLE_UI)
-    find_program(NPM_EXECUTABLE npm)
+    if(WIN32)
+        find_program(NPM_EXECUTABLE NAMES npm.cmd npm)
+    else()
+        find_program(NPM_EXECUTABLE NAMES npm)
+    endif()
     if(NPM_EXECUTABLE)
         set(NS_UI_DIR "${CMAKE_CURRENT_SOURCE_DIR}/ui")
         set(NS_UI_DIST "${NS_UI_DIR}/dist")
         add_custom_target(netsdrstation_ui
-            COMMAND ${NPM_EXECUTABLE} run build
-            WORKING_DIRECTORY "${NS_UI_DIR}"
+            COMMAND ${CMAKE_COMMAND} -E chdir "${NS_UI_DIR}" ${NPM_EXECUTABLE} run build
             BYPRODUCTS "${NS_UI_DIST}/index.html"
             COMMENT "Building the Vue UI (vite build -> ui/dist)"
             VERBATIM)

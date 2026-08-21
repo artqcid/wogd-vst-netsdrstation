@@ -10,9 +10,9 @@
 namespace netsdr {
 
 // Processor component ID.
-static const Steinberg::FUID kProcessorUID(0x3F1A9B2C, 0x5D4E4A86, 0x9C7B2F1A, 0x8D6E5C4B);
+inline const Steinberg::FUID kProcessorUID(0x3F1A9B2C, 0x5D4E4A86, 0x9C7B2F1A, 0x8D6E5C4B);
 
 // Edit controller ID.
-static const Steinberg::FUID kControllerUID(0x7A4B8C2D, 0x1E3F5A6B, 0x0D9C8B7A, 0x2F3E4D5C);
+inline const Steinberg::FUID kControllerUID(0x7A4B8C2D, 0x1E3F5A6B, 0x0D9C8B7A, 0x2F3E4D5C);
 
 } // namespace netsdr

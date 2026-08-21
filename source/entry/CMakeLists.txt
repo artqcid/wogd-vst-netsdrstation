@@ -32,21 +32,9 @@ set(target netsdrstation)
 
 smtg_add_vst3plugin(${target} PACKAGE_NAME "NetSDRStation" SOURCES_LIST ${netsdrstation_sources})
 smtg_target_configure_version_file(${target})
+message(STATUS "Created target: ${target}")
 
 target_compile_features(${target} PRIVATE cxx_std_20)
-
-# Release builds load the pre-built UI bundle (ui/dist/index.html) via a file://
-# URL instead of the Vite dev server. The absolute path is baked in at configure
-# time (a proper embedded/shipping solution is a later task - see checklist).
-if(NS_ENABLE_UI)
-    file(TO_CMAKE_PATH "${CMAKE_SOURCE_DIR}/ui/dist/index.html" NS_UI_DIST_INDEX)
-    if(WIN32)
-        set(NS_UI_DIST_URL "file:///${NS_UI_DIST_INDEX}")
-    else()
-        set(NS_UI_DIST_URL "file://${NS_UI_DIST_INDEX}")
-    endif()
-    target_compile_definitions(${target} PRIVATE NS_UI_DIST_URL="${NS_UI_DIST_URL}")
-endif()
 
 target_include_directories(${target}
     PRIVATE
@@ -66,6 +54,47 @@ target_link_libraries(${target}
         sdk
         webview::core_static
 )
+
+# ---------------------------------------------------------------------------
+# Bundle WebView2 Fixed Version Runtime into VST3 package
+# This ensures the plugin works without any external WebView2 installation.
+# WebView2Loader.dll and FixedRuntime/ are placed directly in the plugin directory
+# (Contents/x86_64-win/) so WebView2Loader.dll can find the Fixed Runtime
+# without any environment variables (DLL search order: same dir as loader).
+# ---------------------------------------------------------------------------
+if(WIN32 AND NS_ENABLE_UI)
+    get_target_property(_BUNDLE_DIR netsdrstation SMTG_PLUGIN_PACKAGE_PATH)
+    set(PLUGIN_DIR "${_BUNDLE_DIR}/Contents/x86_64-win")
+
+    # Use local WebView2 SDK from workspace (set once in root CMakeLists.txt)
+    set(WEBVIEW2_FIXED_RUNTIME_SRC "${WEBVIEW2_SDK_ROOT}/FixedRuntime/Microsoft.WebView2.FixedVersionRuntime.151.0.4129.93.x64")
+
+    if(NOT EXISTS "${WEBVIEW2_FIXED_RUNTIME_SRC}")
+        message(FATAL_ERROR "WebView2 FixedRuntime not found at: ${WEBVIEW2_FIXED_RUNTIME_SRC}. Please ensure the Fixed Runtime is extracted there.")
+    endif()
+
+    add_custom_command(TARGET ${target} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E make_directory "${PLUGIN_DIR}"
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "${WEBVIEW2_SDK_ROOT}/build/native/x64/WebView2Loader.dll"
+            "${PLUGIN_DIR}/"
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+            "${WEBVIEW2_FIXED_RUNTIME_SRC}"
+            "${PLUGIN_DIR}/FixedRuntime"
+        COMMENT "Bundling WebView2 Loader DLL and Fixed Runtime into VST3 package"
+        VERBATIM
+    )
+
+    add_custom_command(TARGET ${target} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+            "${CMAKE_SOURCE_DIR}/ui/dist"
+            "${PLUGIN_DIR}/ui"
+        COMMENT "Bundling Vue UI (ui/dist) into VST3 package"
+        VERBATIM
+    )
+
+    add_dependencies(${target} netsdrstation_ui)
+endif()
 
 if(SMTG_MAC)
     smtg_target_set_bundle(${target}

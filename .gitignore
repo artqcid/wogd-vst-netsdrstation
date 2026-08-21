@@ -17,6 +17,8 @@ cmake-build-*/
 .vscode/
 .idea/
 node_modules/
+# clangd compile-db symlink -> build/win-msvc/compile_commands.json (machine-local)
+compile_commands.json
 
 # Logs / runtime
 *.log

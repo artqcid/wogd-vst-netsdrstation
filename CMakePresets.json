@@ -9,13 +9,13 @@
     {
       "name": "base",
       "hidden": true,
-      "generator": "Ninja",
       "binaryDir": "${sourceDir}/build/${presetName}",
       "cacheVariables": {
         "NS_ENABLE_TESTS": "ON",
         "NS_ENABLE_UI": "ON",
         "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
-        "SMTG_ENABLE_VST3_PLUGIN_EXAMPLES": "OFF"
+        "SMTG_ENABLE_VST3_PLUGIN_EXAMPLES": "OFF",
+        "VST3_SDK_ROOT": "$ENV{VST3_SDK_ROOT}"
       }
     },
     {
@@ -68,11 +68,22 @@
     {
       "name": "win-analyze",
       "displayName": "Windows (Ninja, clang-tidy analysis only)",
+      "generator": "Ninja",
       "inherits": "base",
       "cacheVariables": {
         "VST3_SDK_ROOT": "$env{VST3_SDK_ROOT}",
         "NS_ENABLE_VST3": "OFF",
         "SMTG_ENABLE_VST3_PLUGIN_EXAMPLES": "OFF"
+      }
+    },
+    {
+      "name": "win-clangd",
+      "displayName": "Windows (Ninja, clangd compile_commands.json)",
+      "generator": "Ninja",
+      "inherits": "base",
+      "cacheVariables": {
+        "NS_ENABLE_VST3": "ON",
+        "VST3_SDK_ROOT": "$env{VST3_SDK_ROOT}"
       }
     }
   ],

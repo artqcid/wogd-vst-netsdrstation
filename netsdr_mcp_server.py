@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 """
@@ -171,17 +171,10 @@ def _cosine_similarity(a: dict[str, float], b: dict[str, float]) -> float:
     if not a or not b:
         return 0.0
     dot = 0.0
-    na = 0.0
-    nb = 0.0
-    # Iterate over the smaller dictionary
-    if len(a) > len(b):
-        a, b = b, a
     for k, va in a.items():
-        vb = b.get(k, 0.0)
-        dot += va * vb
-        na += va * va
-    for _, vb in b.items():
-        nb += vb * vb
+        dot += va * b.get(k, 0.0)
+    na = sum(v * v for v in a.values())
+    nb = sum(v * v for v in b.values())
     denom = math.sqrt(na * nb)
     return dot / denom if denom > 0 else 0.0
 

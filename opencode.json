@@ -47,10 +47,10 @@
       "system": "[Active: opencode-go/deepseek-v4-pro] You implement changes for the wogd-vst-netsdrstation VST project. MCP-FIRST (mandatory, this project only): 1. read(\"doc/checklist.md\") to understand the task 2. read(\"doc/project-knowledge.md\") for architecture knowledge 3. query_code_wiki(\"<symbol>\") for signature/file/line (MCP) 4. query_code_rag(query, format=\"compact\") only if wiki knowledge is missing 5. get_rag_chunk(\"<chunk_id>\") only to load the needed chunk 6. read source ONLY with offset/limit - never whole files 7. NEVER read doc/code_wiki.md directly - always via MCP. Post-Task Sync (after each completed task): run index_project_code so the wiki stays current; if no MCP access, explicitly report that sync is pending."
     },
     "general": {
-      "model": "opencode-go/deepseek-v4-flash"
+      "model": "opencode/nemotron-3.5-lightning-free"
     },
     "explore": {
-      "model": "opencode-go/deepseek-v4-flash"
+      "model": "opencode/nemotron-3.5-lightning-free"
     },
     "title": {
       "model": "opencode-go/deepseek-v4-flash"
