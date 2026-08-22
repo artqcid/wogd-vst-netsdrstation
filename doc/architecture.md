@@ -115,6 +115,17 @@ into three threads:
    rate-limiting, sample-rate conversion (libsamplerate).
 4. **Phase 4 - WebView & Vue Integration:** embed the webview container into
    the VST3 editor window + bidirectional JSON communication.
+5. **Phase 5 (M3) - Integration & Ship:** wire the full
+   `KiwiClient → ImaAdpcmDecoder → AudioSampleQueue → Resampler →
+   JitterBuffer → process()` pipeline into the processor; add the complete
+   KiwiSDR parameter set (28 VST3 parameters).
+6. **Phase 6 (M4) - UI parity:** 1:1 re-implementation of the KiwiSDR browser
+   UI in Vue; freely resizable editor window (drag bottom-right corner).
+7. **Phase 7 (M5) - Station selection:** tab-based UI ("SDR Stations" /
+   "KIWI UI") with a scrollable station directory and click-to-connect.
+
+> Phases 1–4 correspond to M1/M2; phases 5–7 to M3/M4/M5 (see
+> `doc/plan.md` / `doc/checklist.md`).
 
 ## 9. Conventions
 
@@ -128,6 +139,8 @@ into three threads:
   Violations must be justified in the task summary.
 - Licensing: see `doc/framework-licensing.md` (license-free frameworks only;
   JUCE orientation allowed for ideas/architecture, code never copied).
+- UI inventory & design: see `doc/ui-architecture.md` (complete KiwiSDR web
+  UI element list, VST3 parameter mapping, scope decisions, tab layout).
 - First milestone: generic VST foundation (forkable) + sine synth proof, see
   `doc/plan.md`.
 

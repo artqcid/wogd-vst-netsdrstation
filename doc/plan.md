@@ -62,13 +62,47 @@ This is where NetSDRStation-specific functionality begins.
 - Bidirectional JSON communication (UI <-> EditController <-> DSP).
 - **Exit criteria:** UI controls the live receiver frequency.
 
+> M2 delivered the KiwiSDR building blocks as unit/integration-tested
+> libraries, but did not wire them into the processor. The actual receiver
+> pipeline, the full UI and the station selection follow in M3–M5 (see
+> `doc/checklist.md` and `doc/ui-architecture.md`).
+
+## Milestone 3 - Integration & Ship
+
+- Wire the full `KiwiClient → ImaAdpcmDecoder → AudioSampleQueue → Resampler
+  → JitterBuffer → process()` pipeline into `PluginProcessor`.
+- Add the complete KiwiSDR parameter set (28 VST3 parameters: Core, AGC,
+  Audio, Display) so every setting is DAW-automatable.
+- Real-time safety audit + manual acceptance against a real KiwiSDR.
+- **Exit criteria:** the VST receives and plays a live KiwiSDR stream.
+
+## Milestone 4 - KiwiSDR UI parity (Vue)
+
+- 1:1 re-implementation of the KiwiSDR browser interface in Vue (see
+  `doc/ui-architecture.md` §3 for the complete element inventory).
+- **Grundbedingung:** the editor is freely resizable by dragging the
+  bottom-right corner; the UI reflows continuously at any size.
+- **Exit criteria:** the VST is operable exactly like the web UI
+  (`g8ure.ddns.net:8078`).
+
+## Milestone 5 - Station selection tab
+
+- Tab-based UI: **Tab 1 "SDR Stations"** (scrollable station directory,
+  click-to-connect) and **Tab 2 "KIWI UI"** (the M4 receiver UI).
+- Default is no station loaded; Tab 2 then shows only "please select station
+  first".
+- **Exit criteria:** picking a station connects to it and activates the
+  receiver UI.
+
 ## Milestones
 
 | Milestone | Deliverable | Scope |
 |-----------|-------------|-------|
 | M1 | Generic VST foundation + sine synth (forkable checkpoint) | generic |
-| M2 | KiwiSDR receiver in the plugin (CLI -> DSP -> UI) | project |
-| M3 | Full NetSDRStation-VST (all platforms, polished) | project |
+| M2 | KiwiSDR components (network/decode/resample/DSP, unit-tested) | project |
+| M3 | Integration & Ship (network→DSP pipeline + full parameter set) | project |
+| M4 | KiwiSDR UI parity in Vue (1:1 web interface, resizable) | project |
+| M5 | Station selection tab (SDR Stations / KIWI UI) | project |
 
 ## Open Questions / Risks
 
@@ -76,3 +110,7 @@ This is where NetSDRStation-specific functionality begins.
 - WebView <-> VST window-handle binding on Windows/macOS/Linux - resolve in M1.
 - Resampler quality/CPU trade-off at low buffer sizes - validate in M2.
 - Keep M1 fully generic (no KiwiSDR specifics) - maintain forkability.
+- Waterfall/spectrum display (M4.6) requires a dedicated spectrum data stream
+  from the server, not delivered by the audio-only M3 pipeline.
+- Station directory endpoint/format (M5.1) to be confirmed at implementation
+  time.

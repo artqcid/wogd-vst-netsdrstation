@@ -653,6 +653,224 @@ coding rules: `doc/coding-standards.md`; test strategy: `doc/test-strategy.md`._
     check via VST3PluginTestHost + real KiwiSDR; requires the full
     network→decode→resample→DSP processor integration, follow-up milestone).
 
+## Milestone M3 - Integration & Ship (project-specific)
+
+> The M2 components (`KiwiClient`, `ImaAdpcmDecoder`, `AudioSampleQueue`,
+> `Resampler`, `JitterBuffer`, `ParameterSmoother`, `RateLimiter`,
+> `KiwiBridge`) are built and unit/integration-tested but NOT yet wired into
+> the plugin. The shipped `.vst3` still renders the M1 sine oscillator. M3
+> integrates the full network→decode→resample→DSP pipeline into
+> `PluginProcessor` and adds the complete KiwiSDR parameter set.
+
+- [ ] **M3.1** Processor integration: network audio pipeline
+  - Replace `SineOscillator::render()` in `PluginProcessor::process()` with the
+    pipeline `KiwiClient → ImaAdpcmDecoder → AudioSampleQueue → Resampler →
+    JitterBuffer → process()`.
+  - Link `netsdr_network` into the plugin target (`source/entry/CMakeLists.txt`).
+  - Start WebSocket on plugin `initialize()`; disconnect on `terminate()`.
+  - _Files: `source/vst/processor/plugin_processor.cpp`,
+    `source/entry/CMakeLists.txt`_
+  - Test: integration test against a mock KiwiSDR server → decode → resample →
+    Goertzel peak at the expected frequency in the output.
+
+- [ ] **M3.2** Full KiwiSDR parameter model in the registry
+  - Add ALL KiwiSDR receiver/audio/display parameters as VST3 parameters so
+    every setting is DAW-automatable. GUI-visible subset marked below.
+  - Core (GUI): `station` (host:port), `mode`, `freqKhz`, `lowCut`, `highCut`.
+  - AGC (GUI: `agcOn` only; rest default): `agcOn`, `agcHang`, `agcThresh`,
+    `agcSlope`, `agcDecay`, `agcManGain`.
+  - Audio (default only): `squelchOn` + `squelchThreshold`, `nbOn` +
+    `nbThreshold`, `nrOn`, `deempOn`, `compOn`, `volume`.
+  - Display/Waterfall (GUI later): `wfOn`, `wfSpeed`, `wfZoom`, `wfMaxDb`,
+    `wfMinDb`, `wfComp`, `arOn`, `ovOn`.
+  - Resolve `FIX-35` (ParameterRegistry O(1) id→index lookup) as part of this.
+  - _Files: `source/vst/common/paramdefinitions.h`, `paramids.h`,
+    `parameter_registry.*`, `source/network/kiwi_commands.*`,
+    `source/network/kiwi_client.*`_
+  - Test: unit test all params register with correct range/default/ID; command
+    serializers emit the full `SET` frame for each group.
+
+- [ ] **M3.3** UI: KiwiSDR controls
+  - Replace M1 knobs with Kiwi controls: station, mode, frequency (kHz),
+    bandwidth low/high (Core); AGC on/off (rest default); waterfall on/off
+    (display params default).
+  - Verify bidirectional bridge (UI → KiwiBridge → `SET`; status echo → UI).
+  - _Files: `ui/src/views/PluginView.vue`, `ui/src/services/pluginService.ts`,
+    `source/network/kiwi_bridge.cpp`_
+  - Test: Vitest component tests (controls emit correct values); bridge
+    roundtrip integration test.
+
+- [ ] **M3.4** Real-time safety audit + performance
+  - clang-tidy: audio thread lock-free, no heap allocation.
+  - Tune jitter buffer (100–150 ms) under real network conditions.
+  - Validate resampler quality/CPU at small buffer sizes.
+  - Test: clang-tidy clean; no dropouts in manual listening test.
+
+- [ ] **M3.5** Manual acceptance (M2.10 real)
+  - Load plugin in VST3PluginTestHost against real KiwiSDR
+    (`g8ure.ddns.net:8078`); change frequency → live reception audible in DAW;
+    no zipper noise / dropouts.
+  - Test: manual (documented in `doc/workspace-workflow.md` §3.6).
+
+- [ ] **M3.6** Dev infrastructure (T1, T2)
+  - clangd MCP (semantic C++ tooling) + Playwright MCP (interactive UI debug).
+  - Test: MCP servers available and usable by the agent.
+
+- [ ] **M3.7** Documentation
+  - `doc/architecture.md`: document the actual audio pipeline + full parameter
+    list.
+  - `doc/plan.md`: mark M3 done.
+  - License audit (L2) for any new dependency.
+  - Knowledge-sync: `index_project_code` + NotebookLM **NetSDRStation-VST**.
+
+### Not in M3 (deferred)
+
+- macOS/Linux build + host load.
+- CLAP/AU format support.
+- Installer / end-user packaging.
+- Preset management / station favorites.
+
+## Milestone M4 - KiwiSDR UI parity (Vue)
+
+> Goal: the plugin UI in Vue is a 1:1 re-implementation of the KiwiSDR browser
+> interface, so the VST is operable exactly like the web UI. The complete
+> element inventory lives in `doc/ui-architecture.md` §3; each sub-step below
+> references its section. After M4 the VST exposes the same controls and
+> readouts as `g8ure.ddns.net:8078` in the browser.
+
+> **Grundbedingung (fundamental requirement, applies to all M4 UI work):** the
+> VST editor must be freely resizable by dragging the bottom-right corner
+> (standard VST3 host resize), with the UI reflowing continuously at any size.
+
+- [ ] **M4.1** Resizable window (Grundbedingung)
+  - Editor window freely resizable via bottom-right corner drag (standard VST3
+    host behaviour); only clamp is the documented `kMinWidth`/`kMinHeight`
+    floor.
+  - C++ side: forward host `onSize`/`WM_SIZE` to the webview widget so the
+    WebView2 view fills the client area on every resize (extends FIX-22); keep
+    `checkSizeConstraint` as the single clamp.
+  - UI side: fully responsive Vue layout (fluid grid/flex), no hard-coded
+    pixel dimensions; all panels reflow continuously.
+  - _Files: `source/editor/plugin_editor.cpp`,
+    `source/webview/webview_editor.cpp`, `ui/src/**`_
+  - Test: manual — drag corner in VST3PluginTestHost (and a DAW), UI reflows
+    at any size without clipping; Vitest — responsive layout at several
+    viewport sizes.
+
+- [ ] **M4.2** UI scaffold & component library
+  - Vue component primitives matching the KiwiSDR w3 widgets: slider, number
+    field, select/dropdown, checkbox/toggle, button, readout, color picker.
+  - Dark SDR theme + panel/layout shell (header, control panels, status bar).
+  - Central state store bound to the existing bridge
+    (`ui/src/services/pluginService.ts`), bidirectionally synced with the C++
+    side (setParameter → message; onMessage → state).
+  - _Files: `ui/src/components/*`, `ui/src/services/pluginService.ts`,
+    `ui/src/views/PluginView.vue`_
+  - Ref: `doc/ui-architecture.md` §3 (overview), w3 widget library.
+  - Test: Vitest for each primitive; bridge roundtrip integration test.
+
+- [ ] **M4.3** Frequency & Tuning panel
+  - Frequency input field (kHz, unit-aware), step-tuning buttons
+    (`-10`/`-1`/`-0.1`/`+0.1`/`+1`/`+10` kHz), large frequency readout,
+    passband dragger overlay on the waterfall scale.
+  - Ref: `doc/ui-architecture.md` §3.1.
+  - Test: Vitest — buttons/input emit correct `freqKhz` values.
+
+- [ ] **M4.4** Modulation & Passband panel
+  - Mode selector with all 18 modes (`AM`…`QAM`), Low Cut / High Cut /
+    Bandwidth fields, filter-reset button.
+  - Ref: `doc/ui-architecture.md` §3.2 (full 18-mode list).
+  - Test: Vitest — mode enum + passband values map to correct parameters.
+
+- [ ] **M4.5** Band presets & memory
+  - Band dropdowns (Amateur / Broadcast / Utility / time signals) and
+    bookmark list; selecting a band sets the frequency/passband.
+  - Ref: `doc/ui-architecture.md` §3.3.
+  - Test: Vitest — band selection emits the expected frequency.
+
+- [ ] **M4.6** Audio, AGC & signal processing panel
+  - Volume slider + mute, AGC (on/off, threshold, decay, hang, slope, manual
+    gain), squelch (on/off + threshold), noise blanker + noise reduction,
+    S-meter (bar + dBm readout, driven by the audio level from M3.1).
+  - Ref: `doc/ui-architecture.md` §3.5.
+  - Test: Vitest — AGC/squelch/NB/NR controls emit correct parameters;
+    S-meter updates from a mocked audio-level message.
+
+- [ ] **M4.7** Waterfall & spectrum display
+  - **Dependency:** requires a waterfall/spectrum data stream from the server
+    (separate WebSocket `STREAM_WATERFALL`), not yet present in the audio-only
+    M3.1 pipeline. Add the stream to the network layer first.
+  - Controls: zoom (`+`/`-`/`Max In`/`Max Out`, level readout), WF Max/Min dB,
+    speed, color map, display-mode toggle (WF/Spec/Both), FFT window,
+    interpolation, CIC comp, aperture auto-mode, timestamps, JPG export.
+  - Ref: `doc/ui-architecture.md` §3.4.
+  - Test: Vitest for controls; integration test that streamed FFT data renders
+    without dropped frames.
+
+- [ ] **M4.8** Status & system readouts + extension panel
+  - Status readouts: active user slots, GPS sync indicator, audio buffer /
+    stream status; extension select dropdown + dynamic panel
+    (CW / WFAX / RTTY / SSTV / tDoA / IQ / antenna switch).
+  - Ref: `doc/ui-architecture.md` §3.6, §3.7.
+  - Test: Vitest — readouts update from mocked status messages; extension
+    dropdown switches panel.
+
+- [ ] **M4.9** UI parity acceptance
+  - Side-by-side check of the Vue UI against `g8ure.ddns.net:8078` in a
+    browser: every control present, every readout live.
+  - Test: manual (documented in `doc/workspace-workflow.md`); Playwright E2E
+    for the main flows.
+
+### Not in M4 (deferred)
+
+- Decoder DSP for the extension panels (CW / WFAX / RTTY / SSTV / tDoA / IQ)
+  — panels are present, decoders are stubbed until a later DSP milestone.
+- Admin / mfg configuration pages (KiwiSDR admin.html).
+
+## Milestone M5 - Station selection tab
+
+> The UI gets a dedicated tab structure: **Tab 1 "SDR Stations" = station
+> selection**, **Tab 2 "KIWI UI" = the KiwiSDR web interface (M4)**. The user
+> picks a station from a scrollable list; clicking one connects to it. Default
+> state is **no station loaded** → Tab 2 shows only the message "please select
+> station first".
+
+- [ ] **M5.1** Station directory fetch
+  - Fetch the list of public KiwiSDR receivers (name, location, frequency
+    coverage, SNR, user count, status, connect URL) from the public station
+    directory. Confirm the exact endpoint/format during implementation
+    (KiwiSDR public list, e.g. `kiwisdr.com/public/`).
+  - _Files: `source/network/` (fetcher) or UI-side service_
+  - Test: integration test against a mocked directory endpoint → stations
+    parsed into a typed model.
+
+- [ ] **M5.2** Tab layout + routing
+  - Add a tab bar to the Vue UI: Tab 1 "SDR Stations", Tab 2 "KIWI UI".
+  - State store gains a `connectedStation` (null = none).
+  - Ref: `doc/ui-architecture.md` §1 (two responsibilities).
+  - Test: Vitest — tab switch renders the correct view.
+
+- [ ] **M5.3** Station list (scrollable)
+  - Scrollable list of stations, each row showing its content (name,
+    location, frequency coverage, SNR, users, online/offline badge).
+  - Ref: `doc/ui-architecture.md` §3.3 (memory list pattern).
+  - Test: Vitest — list renders fetched stations; virtualization/scroll
+    correctness.
+
+- [ ] **M5.4** Connect on click
+  - Clicking a station sets the connect target and triggers the connection
+    (handshake via `KiwiClient`); updates `connectedStation`.
+  - _Files: `ui/src/views/*`, `source/network/kiwi_client.*`,
+    `source/vst/processor/plugin_processor.cpp`_
+  - Test: integration test — station click → `SET auth` handshake to the
+    selected host.
+
+- [ ] **M5.5** Empty state on Tab 2
+  - When no station is loaded (default), Tab 2 shows only the message
+    "please select station first" and no receiver controls/readouts.
+  - Test: Vitest — Tab 2 renders the empty state when `connectedStation` is
+    null; renders the receiver (M4) once connected.
+
 ## Workflow Goals (standing requirements, see `doc/workspace-workflow.md`)
 
 - [ ] **W1** Cross-platform build (mac/linux/win); Windows tested locally
