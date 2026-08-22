@@ -655,6 +655,8 @@ coding rules: `doc/coding-standards.md`; test strategy: `doc/test-strategy.md`._
 
 ## Milestone M3 - Integration & Ship (project-specific)
 
+> **Implementation plan:** `doc/M3-implementation-plan.md`
+
 > The M2 components (`KiwiClient`, `ImaAdpcmDecoder`, `AudioSampleQueue`,
 > `Resampler`, `JitterBuffer`, `ParameterSmoother`, `RateLimiter`,
 > `KiwiBridge`) are built and unit/integration-tested but NOT yet wired into
@@ -731,6 +733,8 @@ coding rules: `doc/coding-standards.md`; test strategy: `doc/test-strategy.md`._
 - Preset management / station favorites.
 
 ## Milestone M4 - KiwiSDR UI parity (Vue)
+
+> **Implementation plan:** `doc/M4-implementation-plan.md`
 
 > Goal: the plugin UI in Vue is a 1:1 re-implementation of the KiwiSDR browser
 > interface, so the VST is operable exactly like the web UI. The complete
@@ -828,6 +832,8 @@ coding rules: `doc/coding-standards.md`; test strategy: `doc/test-strategy.md`._
 - Admin / mfg configuration pages (KiwiSDR admin.html).
 
 ## Milestone M5 - Station selection tab
+
+> **Implementation plan:** `doc/M5-implementation-plan.md`
 
 > The UI gets a dedicated tab structure: **Tab 1 "SDR Stations" = station
 > selection**, **Tab 2 "KIWI UI" = the KiwiSDR web interface (M4)**. The user
