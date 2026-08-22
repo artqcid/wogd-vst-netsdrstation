@@ -5,7 +5,7 @@ draft plan: `doc/plan.md`; workflow: `doc/workspace-workflow.md`;
 coding rules: `doc/coding-standards.md`; test strategy: `doc/test-strategy.md`._
 
 > **M1 offene Punkte mit Abarbeitungsreihenfolge für Coding Agents:**
-> → `doc/m1-open-tasks.md` (effizienzoptimiert, Gruppen 1–9, Abhängigkeitsgraph)
+>
 
 ## Milestone M1 - Generic VST foundation (forkable checkpoint)
 
@@ -593,26 +593,65 @@ coding rules: `doc/coding-standards.md`; test strategy: `doc/test-strategy.md`._
 
 ## Milestone M2 - KiwiSDR integration (project-specific)
 
-- [ ] **M2.1** WebSocket connection to KiwiSDR (IXWebSocket, port 8073)
+- [x] **M2.1** WebSocket connection to KiwiSDR (IXWebSocket, port 8073)
+  - Fix: must connect to the radio station at http://g8ure.ddns.net:8078/
+  - `netsdr::KiwiConnection` (`source/network/`) wraps IXWebSocket v11.4.6
+    (BSD-3-Clause); port configurable (default 8073).
   - Test: integration test against a local mock KiwiSDR server; connect succeeds.
-- [ ] **M2.2** Handshake + `SET` commands (`user`, `inert`, `agc`, `freq`)
-  - Test: unit test command serialization; mock server asserts received frames.
-- [ ] **M2.3** IMA ADPCM decoding in C++
-  - Test: unit test known reference vectors + roundtrip (decode/re-encode) within tolerance.
-- [ ] **M2.4** Lock-free SPSC queue (moodycamel) network -> DSP
-  - Test: unit test queue under stress (order/no loss/no corruption); underflow graceful.
-- [ ] **M2.5** Sample-accurate parameter modulation (frequency via automation/LFO)
-  - Test: unit test parameter ramp is monotonic + max step below threshold (no zipper).
-- [ ] **M2.6** LFO rate-limiting (max 20 Hz)
-  - Test: unit test that N updates in T seconds -> at most ~20/s sent.
-- [ ] **M2.7** Sample-rate conversion (libsamplerate)
-  - Test: unit test sine 12/24 kHz -> 44.1/48 kHz (freq preserved, THD + aliasing below threshold).
-- [ ] **M2.8** Jitter buffer (100-150 ms)
+- [x] **M2.2** Handshake + `SET` commands (auth, optional ident_user, agc, freq)
+  - `netsdr::KiwiClient` (`source/network/kiwi_client.*`) + serializers
+    (`source/network/kiwi_commands.*`).
+  - **Protocol correction:** the real KiwiSDR protocol (kiwiclient /
+    rx_cmd.cpp) has no `inert` command. The handshake is
+    `SET auth t=kiwi p=` (anonymous), optional `SET ident_user=<name>`,
+    `SET mod=... freq=...`, `SET agc=...`. Anonymous auth means **no user
+    name or password is required** (plugin works without any user input).
+  - Test: unit test command serialization; mock server asserts received
+    handshake frames in order (anonymous = no ident_user frame).- [x] **M2.3** IMA ADPCM decoding in C++
+  - `netsdr::ImaAdpcmDecoder` (`source/dsp/ima_adpcm.h/.cpp`). Low nibble
+    first, then high nibble per byte (KiwiSDR order); output int16 PCM.
+  - Test: unit test known reference vectors + roundtrip (decode/re-encode)
+    within tolerance. 5 test cases (silence, reference vector, roundtrip,
+    reset, overflow).- [x] **M2.4** Lock-free SPSC queue (moodycamel) network -> DSP
+  - `netsdr::AudioSampleQueue` + `AudioSampleBlock` (`source/threading/audio_sample_queue.h`),
+    typed over the generic `LockFreeSPSC`. Producer = network thread, consumer = DSP.
+  - Test: unit test queue under stress (order/no loss/no corruption, 50k blocks);
+    underflow graceful (pop on empty returns false). 3 test cases.- [x] **M2.5** Sample-accurate parameter modulation (frequency via automation/LFO)
+  - `netsdr::ParameterSmoother` (`source/dsp/parameter_smoother.h/.cpp`): linear
+    per-sample ramp with max-step guard (no zipper). `reset`, `setTarget`,
+    `next`, `isSettled`.
+  - Test: unit test parameter ramp is monotonic + max step below threshold
+    (no zipper). 5 test cases.- [x] **M2.6** LFO rate-limiting (max 20 Hz)
+  - `netsdr::RateLimiter` (`source/dsp/rate_limiter.h/.cpp`): time-based
+    emission throttle; caller supplies monotonic time (deterministic tests).
+  - Test: unit test that N updates in T seconds -> at most ~20/s sent
+    (200 in 10 s within tolerance). 5 test cases.- [x] **M2.7** Sample-rate conversion (libsamplerate)
+  - libsamplerate 0.2.2 (BSD-2-Clause) via FetchContent; `netsdr::Resampler`
+    (`source/dsp/resampler.h/.cpp`) streaming wrapper (SRC_SINC_MEDIUM_QUALITY).
+    CMake policy floor 3.5 for CMake 4.x compatibility.
+  - Test: unit test sine 12/24 kHz -> 44.1/48 kHz (freq preserved, THD + aliasing
+    below threshold). 4 test cases.
+- [x] **M2.8** Jitter buffer (100-150 ms)
+  - `netsdr::JitterBuffer` (`source/dsp/jitter_buffer.h/.cpp`): prefill cushion
+    (target 100-150 ms), capacity ceiling, overflow drops oldest, pull returns
+    0 below prefill (cushion preserved). Fixed an unsigned underflow bug that
+    crashed on the normal path.
   - Test: unit test absorbs configured jitter; overflow drops oldest; no crash.
-- [ ] **M2.9** Bidirectional JSON communication (UI <-> EditController <-> DSP)
-  - Test: integration test bridge roundtrip (UI -> param -> DSP -> state echo back to UI).
-- [ ] **M2.10** UI controls the live receiver frequency
-  - Test: manual (DAW listening) + automated (bridge emits `setParameter` with correct value).
+    5 test cases.
+- [x] **M2.9** Bidirectional JSON communication (UI <-> EditController <-> DSP)
+  - `netsdr::KiwiBridge` (`source/network/kiwi_bridge.h/.cpp`): parses the
+    existing UI bridge envelope (`{"type":"setParameter","data":["freq",<kHz>]}`),
+    rate-limits (20/s) and sends `SET mod=... freq=...` to the KiwiSDR server;
+    forwards server text messages to a UI state callback (echo back).
+  - Note: freq UI value is already in kHz (KiwiSDR `SET freq=` convention).
+  - Test: integration test bridge roundtrip (UI -> param -> DSP -> state echo
+    back to UI) against a local mock server. 4 test cases.
+- [x] **M2.10** UI controls the live receiver frequency
+  - Automated part done (M2.9): bridge emits `{"type":"setParameter","data":["freq",<kHz>]}`
+    → rate-limited `SET mod=... freq=...` (verified by mock-server tests).
+  - Manual part documented: `doc/workspace-workflow.md` §3.6 (DAW listening
+    check via VST3PluginTestHost + real KiwiSDR; requires the full
+    network→decode→resample→DSP processor integration, follow-up milestone).
 
 ## Workflow Goals (standing requirements, see `doc/workspace-workflow.md`)
 

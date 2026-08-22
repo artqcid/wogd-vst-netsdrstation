@@ -66,13 +66,24 @@ analysis (JUCE/KFR/HISE are excluded; iPlug2/DPF are permissive alternatives).
 
 ## 6. Protocol / Handshake
 
-Connection via WebSocket on **port 8073**:
+Connection via WebSocket on **port 8073** (the concrete test station
+`g8ure.ddns.net` uses port 8078). The protocol is ASCII `SET ...` text frames
+(reference: `jks-prv/kiwiclient` and the KiwiSDR server `rx/rx_cmd.cpp`).
 
-- **Handshake:** send text frame `SET user=NetSDRStation-VST`.
-- **Configuration:** send `SET inert=0`, `SET agc=1`.
-- **Frequency tuning:** send `SET freq=14100.00` (in kHz).
-- **Audio stream:** receive binary frames with IMA ADPCM-encoded sub-frames,
-  decode them and write to the audio buffer.
+- **Authentication (anonymous):** send `SET auth t=kiwi p=`. This needs no user
+  name and no password, so the plugin works without any user configuration.
+- **Optional user identity:** `SET ident_user=<name>` — only sent when a user
+  name is explicitly configured.
+- **Tuning:** `SET mod=<mode> low_cut=<lc> high_cut=<hc> freq=<kHz>` (e.g.
+  `SET mod=am low_cut=-4900 high_cut=4900 freq=14100.000`).
+- **AGC:** `SET agc=<0|1> hang=<0|1> thresh=<dB> slope=<dB> decay=<ms> manGain=<dB>`.
+- **Keepalive:** `SET keepalive` (periodic; the server drops idle connections).
+- **Audio stream:** receive binary `SND` frames with IMA ADPCM-encoded
+  sub-frames, decode them and write to the audio buffer.
+
+> Note: the earlier draft mentioned `SET user`/`SET inert`; those are not part
+> of the real protocol. The implemented commands are `auth`, optional
+> `ident_user`, `mod ... freq`, `agc`, `keepalive`.
 
 ## 7. Multi-Threaded Architecture (Real-Time Safety)
 

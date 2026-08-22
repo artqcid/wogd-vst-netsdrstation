@@ -137,6 +137,49 @@ if(NS_ENABLE_VST3)
     add_subdirectory(source/entry)
 endif()
 
+# ---------------------------------------------------------------------------
+# IXWebSocket (BSD-3-Clause) - WebSocket client library for KiwiSDR connection
+# ---------------------------------------------------------------------------
+# Fetch IXWebSocket regardless of NS_ENABLE_VST3 because the test target
+# also needs it. Options are set to keep the build lean: no TLS, no zlib,
+# no install, no demos — the KiwiSDR connection is plain ws:// and does
+# not need compression or TLS.
+include(FetchContent)
+
+set(USE_TLS OFF CACHE BOOL "" FORCE)
+set(USE_ZLIB OFF CACHE BOOL "" FORCE)
+set(IXWEBSOCKET_INSTALL OFF CACHE BOOL "" FORCE)
+set(BUILD_DEMO OFF CACHE BOOL "" FORCE)
+
+FetchContent_Declare(
+    ixwebsocket
+    GIT_REPOSITORY https://github.com/machinezone/IXWebSocket.git
+    GIT_TAG        v11.4.6
+)
+FetchContent_MakeAvailable(ixwebsocket)
+
+add_subdirectory(source/network)
+
+# ---------------------------------------------------------------------------
+# libsamplerate (BSD-2-Clause) - high-quality sample-rate conversion.
+# Converts the KiwiSDR 12 kHz / 24 kHz audio stream to the DAW sample rate.
+# The library is C99; its CMake target is `samplerate` (alias
+# SampleRate::samplerate). Tests are disabled to keep the build lean.
+# libsamplerate 0.2.2 declares cmake_minimum_required(3.1..3.18), which CMake
+# 4.x rejects; the policy floor keeps it buildable under CMake 4.
+# ---------------------------------------------------------------------------
+set(CMAKE_POLICY_VERSION_MINIMUM 3.5)
+set(BUILD_TESTING OFF CACHE BOOL "" FORCE)
+set(LIBSAMPLERATE_EXAMPLES OFF CACHE BOOL "" FORCE)
+set(LIBSAMPLERATE_INSTALL OFF CACHE BOOL "" FORCE)
+
+FetchContent_Declare(
+    libsamplerate
+    GIT_REPOSITORY https://github.com/libsndfile/libsamplerate.git
+    GIT_TAG        0.2.2
+)
+FetchContent_MakeAvailable(libsamplerate)
+
 if(NS_ENABLE_TESTS)
     enable_testing()
     add_subdirectory(tests)

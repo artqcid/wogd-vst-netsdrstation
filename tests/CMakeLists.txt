@@ -5,16 +5,31 @@
 add_executable(netsdrstation_tests
     test_main.cpp
     dsp/sine_oscillator_tests.cpp
-    threading/lock_free_spsc_tests.cpp
+    dsp/parameter_smoother_tests.cpp
+    dsp/jitter_buffer_tests.cpp
+    dsp/ima_adpcm_tests.cpp
+    dsp/rate_limiter_tests.cpp
+    dsp/resampler_tests.cpp
+threading/lock_free_spsc_tests.cpp
     threading/worker_thread_tests.cpp
+    threading/audio_sample_queue_tests.cpp
     vst/parameter_registry_tests.cpp
     vst/bridge_protocol_tests.cpp
     vst/processor_state_tests.cpp
     vst/plugin_processor_tests.cpp
     vst/plugin_controller_tests.cpp
     vst/plugin_editor_tests.cpp
+    network/kiwi_connection_tests.cpp
+    network/kiwi_commands_tests.cpp
+    network/kiwi_client_tests.cpp
+    network/kiwi_bridge_tests.cpp
     # Implementation units under test (compiled directly into the test binary).
     ${CMAKE_SOURCE_DIR}/source/dsp/sine_oscillator.cpp
+    ${CMAKE_SOURCE_DIR}/source/dsp/parameter_smoother.cpp
+    ${CMAKE_SOURCE_DIR}/source/dsp/jitter_buffer.cpp
+    ${CMAKE_SOURCE_DIR}/source/dsp/rate_limiter.cpp
+    ${CMAKE_SOURCE_DIR}/source/dsp/ima_adpcm.cpp
+    ${CMAKE_SOURCE_DIR}/source/dsp/resampler.cpp
     ${CMAKE_SOURCE_DIR}/source/threading/worker_thread.cpp
     ${CMAKE_SOURCE_DIR}/source/vst/common/parameter_registry.cpp
     ${CMAKE_SOURCE_DIR}/source/vst/common/bridge_protocol.cpp
@@ -41,6 +56,7 @@ target_include_directories(netsdrstation_tests
         ${CMAKE_SOURCE_DIR}/source/threading
         ${CMAKE_SOURCE_DIR}/source/editor
         ${CMAKE_SOURCE_DIR}/source/webview
+        ${CMAKE_SOURCE_DIR}/source/network
         ${CMAKE_SOURCE_DIR}/third_party/catch2
         ${CMAKE_BINARY_DIR}/source/entry
         # VST3 SDK include paths (needed for plugin_editor.h and IEditController)
@@ -54,4 +70,4 @@ target_include_directories(netsdrstation_tests
 include(CTest)
 add_test(NAME netsdrstation_tests COMMAND netsdrstation_tests)
 
-target_link_libraries(netsdrstation_tests PRIVATE sdk_common sdk webview::core_static)
+target_link_libraries(netsdrstation_tests PRIVATE sdk_common sdk webview::core_static netsdr_network samplerate)

@@ -153,6 +153,33 @@ system-wide WebView2 or dev server:
 
 Detailed architecture: `doc/architecture.md` §8.
 
+## 3.6 M2.10 Manual Test — UI controls the live receiver frequency
+
+_Automated part (bridge emits `setParameter` with the correct value) is covered
+by the M2.9 integration tests; this section documents the manual DAW listening
+check (see `doc/checklist.md` M2.10)._
+
+**Prerequisites for the manual check:** the full network→decode→resample→DSP
+audio pipeline wired into the plugin (the M2 components exist as modules:
+`KiwiConnection`, `KiwiClient`, `ImaAdpcmDecoder`, `AudioSampleQueue`,
+`Resampler`, `JitterBuffer`, `KiwiBridge`; the processor integration is a
+follow-up milestone).
+
+1. Build the Vue UI and the Release VST3 (see §3.5).
+2. Start VST3PluginTestHost (Debug or Release, `.vscode/tasks.json`), scan the
+   plugin folder, load `NetSDRStation.vst3` into the VST Rack, choose an ASIO
+   driver.
+3. In the plugin UI, enter/tune a frequency (e.g. 14100 kHz) via the frequency
+   control and confirm the receiver retunes:
+   - automated: the bridge emits `{"type":"setParameter","data":["freq",<kHz>]}`
+     → rate-limited `SET mod=... freq=...` to the server (verified by tests).
+   - manual: listen in the DAW — a real KiwiSDR station signal should appear /
+     change when the frequency is changed; no zipper noise during retune.
+4. Confirm mute/volume still behave and no clicks/dropouts occur.
+
+**Acceptance:** the UI frequency control changes the live receiver frequency
+and the audio reflects the retune.
+
 ## 4. Reference projects (analysis only, no JUCE in this project)
 
 - `C:\Users\marku\Documents\GitHub\artqcid\juce-projects\wogd-juce-template-gui-vue`

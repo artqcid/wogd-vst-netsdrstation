@@ -36,6 +36,16 @@ All primary agents run in full autopilot mode at all times:
 This applies to all primary agents: `build`, `plan`, `DEV`, `DEV_OpenRouter`,
 `Build_Openrouter`.
 
+## Subagent Rules (Build & Test Ownership)
+
+- **Subagents must NEVER build or run tests.** This is always the job of the
+  primary agent.
+- When a subagent has finished implementing, the **primary agent** takes over
+  building and/or running the tests.
+- If build or test errors occur, the fix is delegated **back to a subagent**.
+- Give subagents small, focused tasks; the primary agent always verifies the
+  result (code review + build + test).
+
 ## MCP-First Workflow (RAG / Code-Wiki)
 
 The workspace provides a local RAG + Code-Wiki MCP server (`netsdr_rag`,
