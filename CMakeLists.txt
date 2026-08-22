@@ -79,6 +79,27 @@ set(SMTG_ENABLE_VST3_PLUGIN_EXAMPLES OFF CACHE BOOL "Build VST3 SDK example plug
 add_subdirectory("${VST3_SDK_ROOT}" "${CMAKE_BINARY_DIR}/vst3sdk")
 
 # ---------------------------------------------------------------------------
+# VSTGUI (Steinberg VST3 SDK, third-party): suppress benign MSVC warnings
+# ---------------------------------------------------------------------------
+# The VSTGUI sources are vendored third-party code and not part of the
+# NetSDRStation codebase. Under MSVC/clang-cl they emit a few warnings that
+# are not actionable in our own code:
+#   C4996 - deprecated onWheel API (overridden in ctextlabel.h/cviewcontainer.h)
+#   C4388 - signed/unsigned comparison (cshadowviewcontainer.cpp)
+#   C4267 - size_t narrowing conversion (ctexteditor.cpp)
+# They are suppressed for the VSTGUI library targets only, never for our own
+# sources (which stay warning-clean).
+if(MSVC)
+    foreach(vstgui_target IN ITEMS vstgui vstgui_support vstgui_uidescription
+                                  vstgui_uiscripting vstgui_standalone
+                                  VST3Inspector editorhost)
+        if(TARGET ${vstgui_target})
+            target_compile_options(${vstgui_target} PRIVATE /wd4996 /wd4388 /wd4267)
+        endif()
+    endforeach()
+endif()
+
+# ---------------------------------------------------------------------------
 # webview/webview (MIT) - OS-native WebView for the plugin editor.
 # Fetched from GitHub; the editor module links webview::core_static.
 # WebView2 SDK is provided via workspace folder (thirdParty/WebView2SDK).
