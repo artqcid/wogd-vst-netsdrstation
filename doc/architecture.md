@@ -104,8 +104,8 @@ _Files: `source/network/kiwi_client.h` (StateCallback), `source/vst/processor/pl
 > `connection_hang`), SND-Frame-Format, Keepalive-Regeln und die
 > Server-Policy-Analyse des ~11-s-Kicks.
 
-Connection via WebSocket on **port 8073** (the default API-ready test station
-`kphsdr.com:8073` uses the standard port; the port is configurable via
+Connection via WebSocket (the default API-ready test station is
+`kphsdr.com:8072`; the port is configurable via
 `setServer()`, e.g. some Kiwis use non-standard ports). The protocol is ASCII
 `SET ...` text frames (reference: `jks-prv/kiwiclient` and the KiwiSDR server
 `rx/rx_cmd.cpp`).

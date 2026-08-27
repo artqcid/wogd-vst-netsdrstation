@@ -1144,7 +1144,7 @@ implementation plans: `doc/M3-implementation-plan.md` (M3),
 > interface, so the VST is operable exactly like the web UI. The complete
 > element inventory lives in `doc/ui-architecture.md` §3; each sub-step below
 > references its section. After M4 the VST exposes the same controls and
-> readouts as `g8ure.ddns.net:8078` in the browser.
+> readouts as `kphsdr.com:8072` in the browser.
 
 > **Grundbedingung (fundamental requirement, applies to all M4 UI work):** the
 > VST editor must be freely resizable by dragging the bottom-right corner
@@ -1224,7 +1224,7 @@ implementation plans: `doc/M3-implementation-plan.md` (M3),
     dropdown switches panel.
 
 - [ ] **M4.9** UI parity acceptance
-  - Side-by-side check of the Vue UI against `g8ure.ddns.net:8078` in a
+  - Side-by-side check of the Vue UI against `kphsdr.com:8072` in a
     browser: every control present, every readout live.
   - Test: manual (documented in `doc/workspace-workflow.md`); Playwright E2E
     for the main flows.

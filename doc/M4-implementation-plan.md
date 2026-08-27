@@ -5,7 +5,7 @@ _Cross-reference: `doc/checklist.md` M4 · `doc/ui-architecture.md` §3–§6 ·
 
 ## Overview
 
-M4 is a 1:1 re-implementation of the KiwiSDR browser interface (`g8ure.ddns.net:8078`)
+M4 is a 1:1 re-implementation of the KiwiSDR browser interface (`kphsdr.com:8072`)
 inside the Vue 3 plugin UI. After M4 the VST is operable exactly like the web
 UI — same controls, same readouts, same visual language.
 
@@ -516,7 +516,7 @@ The waterfall frame is a compressed FFT bin array (typically 1024 bins).
 
 ### Step 9 — M4.9: UI parity acceptance
 
-Side-by-side comparison of the Vue UI against `g8ure.ddns.net:8078`:
+Side-by-side comparison of the Vue UI against `kphsdr.com:8072`:
 
 1. Open the real KiwiSDR in Chrome.
 2. Open the VST plugin in VST3PluginTestHost.

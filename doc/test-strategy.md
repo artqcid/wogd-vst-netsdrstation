@@ -114,7 +114,7 @@ all milestones; per-item test points are listed in `doc/checklist.md`._
 - **HMR:** edit a Vue component -> change appears live in the plugin (dev mode).
 - **Resize (M4.1 Grundbedingung):** drag the editor bottom-right corner in a
   host — the UI reflows continuously at any size without clipping.
-- **UI parity (M4.8):** side-by-side against `g8ure.ddns.net:8078` — every
+- **UI parity (M4.8):** side-by-side against `kphsdr.com:8072` — every
   control present, every readout live.
 - **Station flow (M5):** Tab 1 "SDR Stations" lists the directory; clicking a
   station connects and activates Tab 2 "KIWI UI"; with no station, Tab 2 shows

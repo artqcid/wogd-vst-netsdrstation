@@ -188,7 +188,7 @@ only API-connectable stations.
 // ui/src/models/station.ts
 export interface StationInfo {
   name: string;
-  url: string;       // host:port, e.g. "g8ure.ddns.net:8078"
+  url: string;       // host:port, e.g. "kphsdr.com:8072"
   location: string;
   users: number;
   usersMax: number;

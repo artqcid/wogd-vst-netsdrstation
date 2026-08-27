@@ -35,7 +35,7 @@ TEST_CASE("ProcessorState: serializes a version byte first", "[vst][state]") {
 TEST_CASE("ProcessorState: roundtrips full station + all 27 parameters",
           "[vst][state]") {
     netsdr::ProcessorState s;
-    s.station = "g8ure.ddns.net:8078";
+    s.station = "kphsdr.com:8072";
     s.mode = 3;
     s.freqKhz = 7100.5;
     s.lowCut = -100;
@@ -67,7 +67,7 @@ TEST_CASE("ProcessorState: roundtrips full station + all 27 parameters",
     netsdr::ProcessorState restored;
     REQUIRE(restored.deserialize(s.serialize()));
 
-    REQUIRE(restored.station == "g8ure.ddns.net:8078");
+    REQUIRE(restored.station == "kphsdr.com:8072");
     REQUIRE(restored.mode == 3);
     REQUIRE(restored.freqKhz == 7100.5);
     REQUIRE(restored.lowCut == -100);

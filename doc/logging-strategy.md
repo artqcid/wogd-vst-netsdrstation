@@ -113,7 +113,7 @@ if (count == 1) {
 
 Example:
 ```
-[06:07:34.436] [INFO ] Connecting to station: g8ure.ddns.net:8078
+[06:07:34.436] [INFO ] Connecting to station: kphsdr.com:8072
 [06:07:34.631] [INFO ] KiwiSDR connected
 [06:07:34.958] [INFO ] Server sample rate: 12000.0 Hz
 [06:07:35.334] [DEBUG] renderPipeline: blocksPopped=0 inputSamples=0 queueDepth=0 bufferMs=0.0

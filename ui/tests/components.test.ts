@@ -129,27 +129,27 @@ describe('Slider', () => {
 describe('StationInput', () => {
   it('emits connect with the station string when Connect clicked', async () => {
     const wrapper = mount(StationInput, {
-      props: { station: 'g8ure.ddns.net:8078' },
+      props: { station: 'kphsdr.com:8072' },
     })
 
     await wrapper.find('button').trigger('click')
     expect(wrapper.emitted('connect')).toBeTruthy()
-    expect(wrapper.emitted('connect')![0]).toEqual(['g8ure.ddns.net:8078'])
+    expect(wrapper.emitted('connect')![0]).toEqual(['kphsdr.com:8072'])
   })
 
   it('emits connect with trimmed station string', async () => {
     const wrapper = mount(StationInput, {
-      props: { station: '  g8ure.ddns.net:8078  ' },
+      props: { station: '  kphsdr.com:8072  ' },
     })
 
     await wrapper.find('button').trigger('click')
     expect(wrapper.emitted('connect')).toBeTruthy()
-    expect(wrapper.emitted('connect')![0]).toEqual(['g8ure.ddns.net:8078'])
+    expect(wrapper.emitted('connect')![0]).toEqual(['kphsdr.com:8072'])
   })
 
   it('focus input and press Enter emits connect', async () => {
     const wrapper = mount(StationInput, {
-      props: { station: 'g8ure.ddns.net:8078' },
+      props: { station: 'kphsdr.com:8072' },
     })
 
     const input = wrapper.find('input[type="text"]')

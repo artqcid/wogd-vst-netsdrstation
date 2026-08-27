@@ -36,7 +36,7 @@ so the Vue UI can be implemented against a complete reference.
   `doc/architecture.md` §6.
 
 > The list below is exhaustive for the standard browser UI. The concrete test
-> station (`g8ure.ddns.net:8078`) serves the same standard interface.
+> station (`kphsdr.com:8072`) serves the same standard interface.
 
 ## 3. UI Elements
 

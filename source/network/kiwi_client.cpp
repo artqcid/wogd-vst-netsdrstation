@@ -100,7 +100,7 @@ bool KiwiClient::connect(const KiwiClientConfig& config) {
 // IMPORTANT: keepalive is only sent AFTER the handshake (phase 2) has completed
 // (`handshakePhase2Done_`). Sending `SET keepalive` before the audio channel is
 // initialised makes the KiwiSDR server place the connection in "monitor" mode
-// and never start the SND audio stream (observed against kphsdr.com:8073,
+// and never start the SND audio stream (observed against kphsdr.com:8072,
 // firmware v1.900). The reference client only sends keepalive after
 // `sample_rate`/`audio_rate` and in the SND binary callback.
 void KiwiClient::keepaliveLoop() {

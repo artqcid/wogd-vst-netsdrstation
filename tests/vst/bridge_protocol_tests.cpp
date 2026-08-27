@@ -57,8 +57,8 @@ TEST_CASE("Bridge: parseSetStationMessage extracts host:port", "[vst][bridge]") 
 
     // Valid setStation message.
     REQUIRE(netsdr::parseSetStationMessage(
-                "{\"type\":\"setStation\",\"data\":[\"g8ure.ddns.net:8078\"]}", out));
-    REQUIRE(out.hostPort == "g8ure.ddns.net:8078");
+                "{\"type\":\"setStation\",\"data\":[\"kphsdr.com:8072\"]}", out));
+    REQUIRE(out.hostPort == "kphsdr.com:8072");
 
     // Malformed: empty data array.
     netsdr::BridgeSetStation out2;

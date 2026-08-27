@@ -164,7 +164,7 @@ This is where NetSDRStation-specific functionality begins.
 - **Grundbedingung:** the editor is freely resizable by dragging the
   bottom-right corner; the UI reflows continuously at any size.
 - **Exit criteria:** the VST is operable exactly like the web UI
-  (`g8ure.ddns.net:8078`).
+  (`kphsdr.com:8072`).
 
 ## Milestone 5 - Station selection tab
 
