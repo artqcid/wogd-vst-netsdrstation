@@ -868,12 +868,125 @@ implementation plans: `doc/M3-implementation-plan.md` (M3),
   - **Tests:** 87/87 grün (Debug + Release), Validator 47/47.
   - _Files: `source/network/kiwi_client.cpp` (`keepaliveLoop`), `source/network/kiwi_client.h` (`handshakePhase2Done_` atomic)_
 
+- [x] **FIX-43** Connect-Klick erzeugt keine Verbindung — `setStation`-IMessage wird im Processor verworfen — **BEHOBEN 2026-08-27**
+  - **Symptom (M3 Debug-Test):** Im VST3PluginTestHost Klick auf Connect mit
+    `kphsdr.com:8072` → **nichts passiert**. `netsdrstation.log` zeigt im
+    laufenden Prozess keine Zeile `Connecting to station: …`; das `StatusBadge`
+    bleibt bei `Connecting...`.
+  - **Beweis (diag-Log):** `controller setStation: hostPort=kphsdr.com:8072` →
+    `controller setStation: message sent` — danach **kein** `processor notify`.
+  - **Root Cause:** Message-ID- und Attribut-Mismatch zwischen Controller und
+    Processor. `PluginController::setStation()` sendet `IMessage` mit ID
+    `"NetSDRStation:SetStation"` und Attribut `"HostPort"`
+    (`plugin_controller.cpp:135-137`), aber `PluginProcessor::notify()` prüfte
+    auf `"setStation"` und las `"station"` (`plugin_processor.cpp:175,179`).
+    Die Nachricht matchte nie → `connectToStation()` wurde nie aufgerufen.
+  - **Fix (2 Teile):**
+    1. `plugin_processor.cpp` `notify()`: Message-ID `"NetSDRStation:SetStation"`
+       + Attribut `"HostPort"`; `connectToStation()` wird über `worker_.post()`
+       ausgeführt (Netzwerk-I/O nicht auf dem Message/UI-Thread).
+    2. `emitStatus()` sendet die Status-Strings (`Connecting`/`Connected`/
+       `Error`/`Disconnected`) zusätzlich als `IMessage` `"NetSDRStation:Status"`
+       an den Controller-Peer (`sendMessage`), damit das GUI-`StatusBadge`
+       tatsächlich aktualisiert wird (vorher hing `onStatus_` nur als Test-Hook
+       in der Luft — `setOnStatus` wurde nie im Produktionspfad verdrahtet).
+  - _Files: `source/vst/processor/plugin_processor.cpp` (`notify`, `emitStatus`)_
+  - Test: Debug + Release Build grün, VST3-Validator 47/47, `ctest` grün.
+    **Manuell verifiziert 2026-08-27:** Connect → `Connected`, Verbindung
+    stabil (`kphsdr.com:8072`). → Folge-Bugs: BUG-06/BUG-07 + FEATURE-01.
+
+- [x] **BUG-06** Frequenz / Low Cut / High Cut reagieren nach Connect nicht (nicht gesendet) — **BEHOBEN 2026-08-27**
+  - **Symptom (M3 Debug-Test):** Verbindung steht (stabil), aber Ändern von
+    `Frequency` (z.B. 14021.501 kHz), `Low Cut` (−5900 Hz) oder `High Cut`
+    (3400 Hz) hat **keine Wirkung** — der Receiver bleibt auf der alten
+    Frequenz/Passband.
+  - **Root Cause:** `applyParamValue()`
+    (`plugin_processor.cpp:321-346`) schreibt die Werte in die Atomics und
+    setzt `paramsDirty_ = true`, aber **nichts** stößt danach
+    `sendPendingParams()` an. Diese Methode (die `SET mod=… freq=…` via
+    `setTuning()` an den Server sendet) wurde **nur ein einziges Mal** im
+    `setOnOpen`-Callback ausgelöst. Nach dem Connect verpufften
+    Parameter-Änderungen folglich ungesendet. Der deklarierte
+    `RateLimiter freqLimiter_` war deklariert, aber nie benutzt.
+  - **Fix:** In `process()` (Schritt 1b) wird nach den Param-Changes geprüft,
+    ob `paramsDirty_` gesetzt ist; falls ja, wird `sendPendingParams()`
+    **rate-limitiert** (20/s über den umbenannten `paramSendLimiter_`) auf den
+    Worker-Thread gepostet. Da `paramsDirty_` erst im Worker (`exchange`) gelöscht
+    wird, ist die Trailing-Edge garantiert (letzte Änderung wird sicher gesendet).
+  - _Files: `source/vst/processor/plugin_processor.cpp` (`process`), `plugin_processor.h` (`paramSendLimiter_`)_
+  - Test: Integrationstest „sends updated tuning to server after connect (BUG-06)"
+    (neuer `HandshakeCaptureServer` in `plugin_processor_pipeline_tests.cpp`).
+
+- [x] **BUG-07** Volume reagiert nicht (nicht im Render-Pfad angewendet) — **BEHOBEN 2026-08-27**
+  - **Symptom (M3 Debug-Test):** `Volume`-Slider ändert die Lautstärke nicht.
+  - **Root Cause:** `applyParamValue()` speichert den Wert in
+    `volume_` (`plugin_processor.cpp:334`), aber `renderPipeline()`
+    wendete `volume_` **nirgends** auf die Ausgabe-Samples an.
+    (Volume ist als lokaler Gain gedacht — es gibt kein KiwiSDR-`SET vol=`;
+    `sendPendingParams()` sendet es korrekt nicht.)
+  - **Fix:** In `renderPipeline()` (Schritt e) werden die Ausgabe-Samples mit
+    `volume_.load()` multipliziert (übersprungen bei `volume == 1.0`).
+  - _Files: `source/vst/processor/plugin_processor.cpp` (`renderPipeline`)_
+  - Test: Integrationstest „volume gain scales the output (BUG-07)"
+    (`plugin_processor_pipeline_tests.cpp`): volume=0 → Stille, volume=1 → Audio.
+
+- [x] **FEATURE-01** Connect-Button → Disconnect bei `Connected` — **UMSETZEN 2026-08-27**
+  - **Wunsch:** Sobald der Status auf `Connected` wechselt, soll der
+    Connect-Button zu `Disconnect` wechseln (oder ein 2. Button), damit ein
+    aktives Disconnect abgesetzt werden kann.
+  - **Umsetzung (Ende-zu-Ende-Disconnect-Pfad):**
+    1. C++ Bridge: `window.vstHost.disconnect()` + `vstHostDisconnect`-Binding
+       (`webview_editor.cpp`); Envelope `{"type":"disconnect","data":null}`.
+    2. `bridge_protocol`: `parseDisconnectMessage()` (neu).
+    3. Editor: `onJavaScriptMessage` leitet `disconnect` an
+       `controller->disconnect()` weiter.
+    4. Controller: `disconnect()` sendet `IMessage` `"NetSDRStation:Disconnect"`.
+    5. Processor: `notify()` fängt `"NetSDRStation:Disconnect"` → `worker_.post(disconnectStation)`.
+       `disconnectStation()` zerstört `kiwiClient_` (Destruktor setzt `destroying_`
+       → **kein** Auto-Reconnect), leert `station_`, setzt `resetPipelineFlag_`
+       (Audio geht sofort still) und emittiert `"Disconnected"`.
+    6. UI: `PluginService.disconnect()`, `PluginView.onDisconnect()`,
+       `StationInput`-Button-Label/Aktion abhängig vom `status`
+       (`Connected` → `Disconnect`).
+  - _Files: `source/webview/webview_editor.cpp`, `source/vst/common/bridge_protocol.*`, `source/editor/plugin_editor.cpp`, `source/vst/controller/plugin_controller.*`, `source/vst/processor/plugin_processor.*`, `ui/src/services/pluginService.ts`, `ui/src/views/PluginView.vue`, `ui/src/components/StationInput.vue`_
+  - Test: Unit-Test `parseDisconnectMessage`; Disconnect-Pfad folgt dem (manuell
+    verifizierten) `setStation`-Mechanismus.
+
+- [x] **FIX-44** RT-sicheres Logging + Log-Rausch-Reduktion (Debug hörbar halten) — **UMSETZEN 2026-08-27**
+  - **Motivation:** Debug-Build knakst, weil `FileLogger` (`mutex` + `fprintf`/
+    `fflush`/`localtime_s`) direkt im Audio-Callback lief. Zusätzlich Log-Rauschen:
+    UNDERRUN-Spam beim Prefill, `keepalive sent` 1×/s, Clock-drift CRITICAL bei
+    ~600 ms (normal), Doppel-Disconnect im Destruktor.
+  - **1. `FileLogger` RT-sicher (`source/util/file_logger.h`):**
+    - Produzenten (inkl. Audio-Thread) formatieren per `vsnprintf` in einen
+      **lock-freien SPSC-Ring-Puffer** (feste Slots) — kein `mutex`, keine
+      Allokation, kein Datei-I/O, kein Clock-Call im Hot-Path.
+    - Dedizierter Logger-Thread drained den Ring, stempelt die Zeit
+      (`localtime_s`) und schreibt die Datei (DEBUG-Flush 500 ms gedrosselt).
+    - `NETSDR_LOG_DEBUG` ist im Release ein Compile-No-op (`((void)0)`) →
+      Audio-Thread macht im Release null Arbeit.
+  - **2. UNDERRUN-Prefill unterdrückt:** `JitterBuffer::hasStarted()` neu;
+    `renderPipeline` loggt/zählt `UNDERRUN (COMPLETE)` nur noch nach dem ersten
+    „armed pull" (Start-Latch), nicht während der 0→500 ms-Prefill.
+  - **3. Clock-drift CRITICAL:** Schwelle von `>300 ms` Abweichung auf
+    **genuinen Overflow/Underflow** geändert (`>1600 ms` oder `<20 ms`) +
+    **Hysterese** (loggt einmal pro Episode statt jeden Tick).
+  - **4. `keepalive sent`** → **`keepalive started`** (einmal pro Verbindung,
+    Atomic `keepaliveLogged_`), statt 1×/s.
+  - **5. Destruktor/`terminate()`:** nur noch `kiwiClient_.reset()` (KiwiClient-
+    Destruktor setzt `destroying_` → kein spurious onClose/Reconnect).
+  - **Beibehalten:** alle INFO-Events (Connect/Disconnect/Error, Handshake),
+    first-5 UNDERRUN (INFO), DEBUG-Details, Clock-drift-DEBUG-Statistik.
+  - _Files: `source/util/file_logger.h`, `source/dsp/jitter_buffer.h`,
+    `source/vst/processor/plugin_processor.{h,cpp}`, `source/network/kiwi_client.{h,cpp}`_
+  - Test: Debug+Release Build grün, VST3-Validator 47/47, ctest grün (92/92).
+
 - [x] **M3.5** Manual acceptance (M2.10 real) — **Handshake-verifiziert, GUI-Host-Test offen**  - **Status 2026-08-27:** FIX-41 behoben; der Netzwerk-Handshake ist per Live-Probe gegen
     einen echten KiwiSDR (kphsdr.com:8073) verifiziert (SND-Frames fließen). Der letzte
     manuelle Test im VST3PluginTestHost (GUI + hörbares Audio) ist eine Nutzer-Aufgabe.
   - **Ziel:** Load plugin in VST3PluginTestHost against real KiwiSDR
-    (`kphsdr.com:8073`); change frequency → live reception audible in DAW;
-    no zipper noise / dropouts.
+    (`kphsdr.com:8072`, UI-Default, STABLE); change frequency → live reception
+    audible in DAW; no zipper noise / dropouts.
   - **Technische Voraussetzungen (alle erfüllt):**
     - BUG-04 (Winsock): behoben 2026-08-25
     - BUG-05 (Task-Dependency): behoben 2026-08-25
@@ -887,7 +1000,7 @@ implementation plans: `doc/M3-implementation-plan.md` (M3),
     1. Release-Build: `cmake --build build/win-msvc --config Release`
     2. VST3PluginTestHost starten: `.vscode/tasks.json` → `start-testhost-release`
     3. Plugin laden: NetSDRStation.vst3 aus `build/win-msvc/VST3/Release/`
-    4. Station verbinden: `kphsdr.com:8073` (UI-Default, API-ready)
+    4. Station verbinden: `kphsdr.com:8072` (UI-Default, STABLE)
     5. Frequenz ändern: Live-Reception prüfen
     6. Audio-Qualität bewerten: keine Knackser/Zipper-Geräusche
   - **Test-Suite:** 87/87 Tests grün (Debug + Release), `ctest -C Debug` Passed,

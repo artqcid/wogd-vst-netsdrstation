@@ -22,6 +22,7 @@
 
 #include "public.sdk/source/vst/vstaudioprocessoralgo.h"
 #include "base/source/fstreamer.h"
+#include "base/source/fstring.h"
 
 #include <algorithm>
 #include <array>
@@ -49,12 +50,10 @@ PluginProcessor::PluginProcessor()
 
 PluginProcessor::~PluginProcessor() {
     // Stop worker first so no pending callbacks can access members after they
-    // are destroyed.
+    // are destroyed. Destroying the client (instead of an explicit disconnect)
+    // sets `destroying_` first, so the auto-reconnect/onClose path never fires.
     worker_.stop();
-    if (kiwiClient_) {
-        kiwiClient_->disconnect();
-        kiwiClient_.reset();
-    }
+    kiwiClient_.reset();
 }
 
 // ---------------------------------------------------------------------------
@@ -87,10 +86,9 @@ tresult PLUGIN_API PluginProcessor::initialize(FUnknown* context) {
 
 tresult PLUGIN_API PluginProcessor::terminate() {
     worker_.stop();
-    if (kiwiClient_) {
-        kiwiClient_->disconnect();
-        kiwiClient_.reset();
-    }
+    // Destroy the client directly (KiwiClient's destructor sets `destroying_`
+    // first, so the onClose/reconnect path does not fire a spurious disconnect).
+    kiwiClient_.reset();
     return AudioEffect::terminate();
 }
 
@@ -171,11 +169,11 @@ tresult PLUGIN_API PluginProcessor::notify(IMessage* message) {
         return kResultFalse;
     }
 
-    if (std::strcmp(msgId, "setStation") == 0) {
+    if (std::strcmp(msgId, "NetSDRStation:SetStation") == 0) {
         // Read UTF-16 TChar buffer from message attributes.
         std::array<TChar, 256> buf{};
         if (message->getAttributes()->getString(
-                "station", buf.data(),
+                "HostPort", buf.data(),
                 static_cast<uint32>(buf.size() * sizeof(TChar))) != kResultOk) {
             return kResultFalse;
         }
@@ -184,7 +182,14 @@ tresult PLUGIN_API PluginProcessor::notify(IMessage* message) {
             if (c == 0) break;
             stationStr += static_cast<char>(c);
         }
-        connectToStation(stationStr);
+        // connectToStation performs network I/O; run it on the worker thread
+        // (notify() is invoked on the host's message/UI thread).
+        worker_.post([this, stationStr]() { connectToStation(stationStr); });
+        return kResultOk;
+    }
+
+    if (std::strcmp(msgId, "NetSDRStation:Disconnect") == 0) {
+        worker_.post([this]() { disconnectStation(); });
         return kResultOk;
     }
 
@@ -244,12 +249,26 @@ tresult PLUGIN_API PluginProcessor::process(ProcessData& data) {
         }
     }
 
+    // (1b) Flush pending parameter changes to the KiwiSDR server, rate-limited
+    // to avoid flooding it with SET commands (freq automation can fire many
+    // changes per block). sendPendingParams() runs on the worker thread and
+    // sends only the latest atomics values; the trailing edge is guaranteed
+    // because paramsDirty_ stays set until the worker drains it.
+    if (paramsDirty_.load(std::memory_order_acquire)) {
+        const double nowSeconds = std::chrono::duration<double>(
+            std::chrono::steady_clock::now().time_since_epoch()).count();
+        if (paramSendLimiter_.shouldEmit(nowSeconds)) {
+            worker_.post([this]() { sendPendingParams(); });
+        }
+    }
+
     // (2) Handle pipeline reset request (posted after reconnect).
     if (resetPipelineFlag_.exchange(false)) {
         if (jitterBuffer_) jitterBuffer_->reset();
         if (adpcmDecoder_) adpcmDecoder_->reset();
         telemetry_.reset();
         lastSequence_ = 0;
+        criticalActive_ = false;
         NETSDR_LOG_DEBUG("Pipeline reset");
     }
 
@@ -433,6 +452,16 @@ void PluginProcessor::emitStatus(const std::string& status) {
                 onStatus_(status);
             }
         });
+    }
+
+    // Forward the status to the controller peer via IConnectionPoint so the
+    // editor UI reflects "Connecting"/"Connected"/"Error"/"Disconnected".
+    // (No-op when the host has not connected controller<->processor.)
+    if (auto msg = IPtr<IMessage>(allocateMessage())) {
+        msg->setMessageID("NetSDRStation:Status");
+        Steinberg::String tmp(status.c_str(), Steinberg::kCP_Utf8);
+        msg->getAttributes()->setString("Status", tmp.text16());
+        sendMessage(msg);
     }
 }
 
@@ -653,15 +682,25 @@ void PluginProcessor::renderPipeline(float* out, std::size_t numSamples) {
                 smoothedRatio_        = nominalRatio * newAdjustment;
                 resampler_->setRatio(smoothedRatio_);
 
-                // BUG-3 fix: log CRITICAL only for genuine overflow/underflow
-                // (>300 ms from target). Normal network jitter (±200 ms) must
-                // not flood the log.
-                if (std::fabs(bufferedMs - targetMs) > 300.0) {
+                // CRITICAL only for genuine overflow/underflow (near capacity
+                // or near empty), with hysteresis so a persistent condition is
+                // logged once per episode instead of every adjust tick. Normal
+                // network jitter (buffer oscillating ~0..600 ms around the
+                // 300 ms target) must not fire CRITICAL.
+                constexpr double kCriticalOverflowMs = 1600.0;  // near 2000 ms ceiling
+                constexpr double kCriticalUnderflowMs = 20.0;   // near empty
+                const bool critical = (bufferedMs > kCriticalOverflowMs) ||
+                                      (bufferedMs < kCriticalUnderflowMs);
+                if (critical && !criticalActive_) {
+                    criticalActive_ = true;
                     criticalDriftCount_.fetch_add(1);
                     NETSDR_LOG_INFO(
                         "Clock-drift CRITICAL: bufferMs=%.1f target=%.1f ratio=%.6f",
                         bufferedMs, targetMs, smoothedRatio_);
-                } else if (shouldLog) {
+                } else if (!critical) {
+                    criticalActive_ = false;
+                }
+                if (shouldLog) {
                     NETSDR_LOG_DEBUG(
                         "Clock-drift: bufferMs=%.1f target=%.1f ratio=%.6f->%.6f",
                         bufferedMs, targetMs, oldRatio, smoothedRatio_);
@@ -710,20 +749,26 @@ void PluginProcessor::renderPipeline(float* out, std::size_t numSamples) {
                              underrunCount);
         }
     } else if (got == 0) {
-        const int underrunCount = static_cast<int>(telemetry_.underruns.fetch_add(1)) + 1;
         std::fill(out, out + numSamples, 0.0f);
-        if (underrunCount <= 5) {
-            NETSDR_LOG_INFO(
-                "UNDERRUN (COMPLETE): requested %zu samples, bufferMs=%.1f (count=%d)",
-                numSamples,
-                jitterBuffer_ ? jitterBuffer_->bufferedMs() : 0.0,
-                underrunCount);
-        } else {
-            NETSDR_LOG_DEBUG(
-                "UNDERRUN (COMPLETE): requested %zu samples, bufferMs=%.1f (count=%d)",
-                numSamples,
-                jitterBuffer_ ? jitterBuffer_->bufferedMs() : 0.0,
-                underrunCount);
+        // During the initial pre-fill the buffer is intentionally empty (the
+        // start latch has not engaged yet); that is expected silence, not an
+        // underrun, so do not log/count it (avoids startup log spam).
+        const bool prefill = jitterBuffer_ && !jitterBuffer_->hasStarted();
+        if (!prefill) {
+            const int underrunCount = static_cast<int>(telemetry_.underruns.fetch_add(1)) + 1;
+            if (underrunCount <= 5) {
+                NETSDR_LOG_INFO(
+                    "UNDERRUN (COMPLETE): requested %zu samples, bufferMs=%.1f (count=%d)",
+                    numSamples,
+                    jitterBuffer_ ? jitterBuffer_->bufferedMs() : 0.0,
+                    underrunCount);
+            } else {
+                NETSDR_LOG_DEBUG(
+                    "UNDERRUN (COMPLETE): requested %zu samples, bufferMs=%.1f (count=%d)",
+                    numSamples,
+                    jitterBuffer_ ? jitterBuffer_->bufferedMs() : 0.0,
+                    underrunCount);
+            }
         }
     }
 
@@ -731,6 +776,15 @@ void PluginProcessor::renderPipeline(float* out, std::size_t numSamples) {
     for (std::size_t i = 0; i < numSamples; ++i) {
         if (std::fabs(out[i]) < 1e-30f) {
             out[i] = 0.0f;
+        }
+    }
+
+    // (e) Apply local volume gain (0..1). Volume is a client-side gain (there is
+    // no KiwiSDR `SET vol=` command), so it must be applied here on the output.
+    const float vol = static_cast<float>(volume_.load());
+    if (vol != 1.0f) {
+        for (std::size_t i = 0; i < numSamples; ++i) {
+            out[i] *= vol;
         }
     }
 }
@@ -815,6 +869,26 @@ void PluginProcessor::connectToStation(const std::string& hostPort) {
         emitStatus("Error");
         kiwiClient_.reset();
     }
+}
+
+// ---------------------------------------------------------------------------
+// disconnectStation — worker thread
+// ---------------------------------------------------------------------------
+
+void PluginProcessor::disconnectStation() {
+    // Destroying the client disconnects cleanly: KiwiClient's destructor sets
+    // `destroying_` before closing, so the auto-reconnect path does NOT fire.
+    if (kiwiClient_) {
+        kiwiClient_.reset();
+    }
+    {
+        std::lock_guard<std::mutex> lock(stationMutex_);
+        station_.clear();
+    }
+    // Flush buffered audio so the output goes silent immediately.
+    resetPipelineFlag_.store(true);
+    NETSDR_LOG_INFO("Station disconnected by user");
+    emitStatus("Disconnected");
 }
 
 } // namespace netsdr

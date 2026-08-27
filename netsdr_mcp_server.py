@@ -115,14 +115,20 @@ RAG_IGNORED_FILENAMES = {"code_wiki.md"}
 # Structural chunking (AST / brace-based / headings)
 # ---------------------------------------------------------------------------
 
-def _stable_chunk_id(file_path: str, line_start: int, symbol_name: str | None) -> str:
-    """Generate a stable chunk ID from file path, start line and symbol name.
+def _stable_chunk_id(file_path: str, line_start: int, symbol_name: str | None,
+                     line_end: int | None = None) -> str:
+    """Generate a stable chunk ID from file path, start/end line and symbol name.
 
     Hash-based (SHA-256, first 12 hex chars = 48 bits), so the ID stays stable
     across sessions and re-indexes (unlike AUTOINCREMENT). The format matches
     `[netsdr_<hash>]` and is compatible with get_rag_chunk.
+
+    `line_end` is included so that two chunks which share a start line and
+    symbol name (e.g. overlapping member-declaration blocks emitted by the brace
+    scanner) still get distinct IDs — otherwise the UNIQUE(chunk_id) constraint
+    aborts incremental indexing.
     """
-    raw = f"{file_path}::{line_start}::{symbol_name or ''}"
+    raw = f"{file_path}::{line_start}::{line_end}::{symbol_name or ''}"
     h = hashlib.sha256(raw.encode("utf-8")).hexdigest()[:12]
     return f"netsdr_{h}"
 
@@ -226,7 +232,7 @@ def _emit_chunk(lines, start, end, symbol_type, symbol_name, signature, docstrin
         "symbol_name": symbol_name,
         "signature": (signature or "").strip() or None,
         "docstring": docstring,
-        "chunk_id": _stable_chunk_id(file_path, line_start, symbol_name),
+        "chunk_id": _stable_chunk_id(file_path, line_start, symbol_name, end + 1),
     }
 
 

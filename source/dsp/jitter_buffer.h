@@ -52,6 +52,11 @@ public:
     // True when buffered duration >= targetDurationMs.
     bool isReady() const;
 
+    // True once the pre-fill latch has engaged (first audio delivered after the
+    // pre-fill). Used to distinguish the initial pre-fill silence from a real
+    // mid-stream underflow (so pre-fill does not spam the underrun log).
+    bool hasStarted() const { return started_; }
+
     // Number of buffered samples.
     std::size_t available() const;
 

@@ -18,6 +18,7 @@ export interface VstHost {
   setParameter(id: string, value: number): void
   getParameters(): void
   setStation(hostPort: string): void
+  disconnect(): void
 }
 
 declare global {
@@ -56,6 +57,18 @@ class PluginService {
       window.vstHost!.setStation(hostPort)
     } else {
       console.log('[Dev Mode] setStation', hostPort)
+    }
+  }
+
+  /**
+   * Requests the plugin to disconnect from the current station. No-op (logged)
+   * in dev mode.
+   */
+  disconnect(): void {
+    if (this.isInNative()) {
+      window.vstHost!.disconnect()
+    } else {
+      console.log('[Dev Mode] disconnect')
     }
   }
 

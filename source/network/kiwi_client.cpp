@@ -58,6 +58,7 @@ bool KiwiClient::connect(const KiwiClientConfig& config) {
         [this]() {
             handshakePhase2Done_.store(false);
             reconnectAttempts_.store(0); // Reset reconnect counter on successful connection
+            keepaliveLogged_.store(false); // Log keepalive once per (re)connect
             // Phase 1: mark the connection as external, then authenticate
             // (anonymous). `SET options` must precede `SET auth` (kiwiclient ref).
             connection_.sendText(kiwiOptionsCommand());
@@ -287,7 +288,9 @@ void KiwiClient::sendKeepaliveThrottled() {
         lastKeepaliveSecs_.store(secs);
         if (connection_.isConnected()) {
             connection_.sendText(kiwiKeepaliveCommand());
-            NETSDR_LOG_DEBUG("keepalive sent (secs=%lld)", static_cast<long long>(secs));
+            if (!keepaliveLogged_.exchange(true)) {
+                NETSDR_LOG_DEBUG("keepalive started");
+            }
         }
     }
 }
@@ -323,6 +326,7 @@ void KiwiClient::reconnectLoop() {
         [this]() {
             handshakePhase2Done_.store(false);
             reconnectAttempts_.store(0);
+            keepaliveLogged_.store(false); // Log keepalive once per (re)connect
             connection_.sendText(kiwiOptionsCommand());
             connection_.sendText(kiwiAuthCommand());
             if (onOpen_) {

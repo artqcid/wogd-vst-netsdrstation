@@ -6,8 +6,12 @@ The project uses a two-level file logger that writes to `%TEMP%/netsdrstation.lo
 
 - **Location:** `C:\Users\marku\AppData\Local\Temp\netsdrstation.log`
 - **Implementation:** `source/util/file_logger.h`
-- **Thread-safe:** Yes (mutex-protected)
-- **Auto-flush:** Yes (prevents log loss on crash)
+- **Thread-safe & real-time-safe:** Yes. Producers (including the audio thread)
+  push a formatted line into a **lock-free SPSC ring buffer** (no `mutex`, no
+  allocation, no file I/O, no clock call on the hot path). A dedicated
+  background thread drains the ring, stamps the wall-clock time and writes the
+  file.
+- **Auto-flush:** Yes (INFO always flushed, DEBUG throttled to 500 ms)
 
 ## Log Levels
 
@@ -119,8 +123,13 @@ Example:
 
 - Log file is opened in **append mode** (logs accumulate across sessions)
 - Each plugin instance logs to the same file (timestamps distinguish instances)
-- File handle is closed on plugin destruction
-- Logs are flushed immediately (no buffering)
+- The file handle is owned by the process-wide `FileLogger` singleton and closed
+  on destruction (program exit); the background logger thread is joined there.
+- Producers never block: `log()` drops the message when the ring buffer is full
+  (never on the audio thread in practice — the ring holds 2048 slots).
+- Flush is throttled: INFO lines flush immediately (critical, never lose),
+  DEBUG lines flush at most every 500 ms (avoids disk stalls on the logger thread).
+- Timestamp (`localtime_s`) is computed on the logger thread, not in `log()`.
 
 ## Macros
 

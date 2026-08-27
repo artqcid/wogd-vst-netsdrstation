@@ -4,7 +4,7 @@
     <p class="subtitle">KiwiSDR Receiver - Milestone M3</p>
 
     <div class="station-section">
-      <StationInput :station="station" :status="status" @connect="onStation" />
+      <StationInput :station="station" :status="status" @connect="onStation" @disconnect="onDisconnect" />
       <StatusBadge :status="status" />
     </div>
 
@@ -86,7 +86,7 @@ import MuteButton from '@/components/MuteButton.vue'
 import { pluginService, type PluginMessage } from '@/services/pluginService'
 
 // State refs
-const station = ref('kphsdr.com:8073')
+const station = ref('kphsdr.com:8072')
 const status = ref('Idle')
 const mode = ref(0)
 const freqKhz = ref(14100)
@@ -106,6 +106,11 @@ function onStation(hostPort: string) {
   if (!pluginService.isInNative()) {
     status.value = 'Connected (dev)'
   }
+}
+
+function onDisconnect() {
+  pluginService.disconnect()
+  status.value = 'Disconnecting...'
 }
 
 function onFreqKhz(value: number) {

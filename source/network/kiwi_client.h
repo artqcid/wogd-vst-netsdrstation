@@ -102,6 +102,9 @@ private:
     // Keepalive throttling: send at most once per second (matches kiwirecorder.py).
     std::atomic<std::int64_t> lastKeepaliveSecs_{0};
 
+    // Log the keepalive once per connection (avoids a 1 Hz DEBUG log flood).
+    std::atomic<bool> keepaliveLogged_{false};
+
     // Reconnect logic with exponential backoff (max 3 attempts).
     void scheduleReconnect();
     void reconnectLoop();

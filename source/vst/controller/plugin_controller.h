@@ -37,6 +37,10 @@ public:
     // the host peer (IConnectionPoint messaging). No-op when no peer/host context.
     void setStation(const std::string& hostPort);
 
+    // Sends a disconnect message to the processor through the host peer.
+    // No-op when no peer/host context.
+    void disconnect();
+
     // Status sink: receives connection status strings ("Connecting"/"Connected"/
     // "Error"/"Disconnected") from the controller and forwards them UI-wards.
     void setStatusSink(const std::function<void(const std::string&)>& sink);

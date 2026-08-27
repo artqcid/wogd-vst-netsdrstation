@@ -74,6 +74,13 @@ bool parseSetParameterMessage(const std::string& message, BridgeSetParameter& ou
 // Returns false for any other message type or a malformed payload.
 bool parseSetStationMessage(const std::string& message, BridgeSetStation& out);
 
+// Returns true for a disconnect envelope:
+//
+//   {"type":"disconnect","data":null}
+//
+// Returns false for any other message type.
+bool parseDisconnectMessage(const std::string& message);
+
 // Maps a UI parameter name to its stable VST3 ParamID (see vst/common/paramids.h).
 // Returns false when the name is unknown.
 bool paramIdFromUiName(const std::string& id, std::uint32_t& outId);

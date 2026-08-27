@@ -881,3 +881,28 @@ wurde er an die kiwiclient-Referenz angeglichen:
 Der letzte manuelle Test im VST3PluginTestHost (hörbares Audio über ASIO) bleibt
 eine Nutzer-Aufgabe — der Netzwerk-Handshake ist verifiziert, das GUI-gesteuerte
 Anhören nicht automatisierbar (M3.5-Workflow in `doc/checklist.md`).
+
+## Post-manual-test findings (2026-08-27)
+
+Manueller Test im VST3PluginTestHost (Debug): **Verbindung erfolgreich & stabil**
+(FIX-43 wirkt). Dabei zwei Funktionsfehler + ein Feature-Wunsch identifiziert
+und anschließend **behoben** (Details + Tests in `doc/checklist.md`):
+
+1. **BUG-06 — Frequenz/LowCut/HighCut reagieren nicht.** ✅ BEHOBEN
+   `applyParamValue()` setzte `paramsDirty_`, aber `sendPendingParams()` lief
+   nur einmal beim Connect. Fix: `process()` flusht `paramsDirty_` rate-limitiert
+   (20/s, `paramSendLimiter_`) auf den Worker.
+
+2. **BUG-07 — Volume reagiert nicht.** ✅ BEHOBEN
+   `volume_` wurde gespeichert, aber `renderPipeline()` wendete den Gain nie an.
+   Fix: Ausgabe-Samples werden mit `volume_.load()` multipliziert.
+
+3. **FEATURE-01 — Connect-Button → Disconnect bei `Connected`.** ✅ UMSETZEN
+   Ende-zu-Ende-Disconnect-Pfad: `window.vstHost.disconnect()` → `disconnect`
+   Envelope → `PluginController::disconnect()` → `IMessage
+   "NetSDRStation:Disconnect"` → `PluginProcessor::disconnectStation()`
+   (`kiwiClient_.reset()` = kein Auto-Reconnect) → `emitStatus("Disconnected")`.
+   UI-Button toggelt `Connect`/`Disconnect` anhand des Status.
+
+4. **Default-Station** auf `kphsdr.com:8072` umgestellt (STABLE, Marconi-T):
+   `ui/src/views/PluginView.vue`, `ui/src/components/StationInput.vue`.

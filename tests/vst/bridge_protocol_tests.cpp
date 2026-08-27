@@ -70,6 +70,13 @@ TEST_CASE("Bridge: parseSetStationMessage extracts host:port", "[vst][bridge]") 
                       "{\"type\":\"setParameter\",\"data\":[\"freqKhz\",440]}", out2));
 }
 
+TEST_CASE("Bridge: parseDisconnectMessage detects the disconnect envelope", "[vst][bridge]") {
+    REQUIRE(netsdr::parseDisconnectMessage("{\"type\":\"disconnect\",\"data\":null}"));
+    REQUIRE(netsdr::parseDisconnectMessage("{\"type\":\"disconnect\"}"));
+    REQUIRE_FALSE(netsdr::parseDisconnectMessage("{\"type\":\"setStation\",\"data\":[\"h:8072\"]}"));
+    REQUIRE_FALSE(netsdr::parseDisconnectMessage("{\"type\":\"setParameter\",\"data\":[\"volume\",0.5]}"));
+}
+
 TEST_CASE("Bridge: paramIdFromUiName maps the stable UI names", "[vst][bridge]") {
     std::uint32_t id = 0;
 

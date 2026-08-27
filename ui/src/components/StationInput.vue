@@ -8,7 +8,7 @@
       @keydown.enter="onConnect"
     />
     <span class="status-label" :class="statusClass">{{ statusLabel }}</span>
-    <button @click="onConnect">Connect</button>
+    <button @click="onConnect">{{ buttonLabel }}</button>
   </div>
 </template>
 
@@ -21,12 +21,17 @@ const props = withDefaults(
     station: string
     status?: string
   }>(),
-  { label: 'Station', station: 'kphsdr.com:8073', status: '' }
+  { label: 'Station', station: 'kphsdr.com:8072', status: '' }
 )
 
 const emit = defineEmits<{
   (e: 'connect', value: string): void
+  (e: 'disconnect'): void
 }>()
+
+const isConnected = computed(() => props.status.toLowerCase() === 'connected')
+
+const buttonLabel = computed(() => (isConnected.value ? 'Disconnect' : 'Connect'))
 
 const statusClass = computed(() => {
   const s = props.status.toLowerCase()
@@ -52,7 +57,11 @@ watch(
 )
 
 function onConnect() {
-  emit('connect', editable.value.trim())
+  if (isConnected.value) {
+    emit('disconnect')
+  } else {
+    emit('connect', editable.value.trim())
+  }
 }
 </script>
 

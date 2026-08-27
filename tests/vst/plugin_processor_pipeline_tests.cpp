@@ -656,3 +656,204 @@ TEST_CASE("PluginProcessor: clock-drift CRITICAL does not fire on normal jitter"
 
     proc.terminate();
 }
+
+// ---------------------------------------------------------------------------
+// BUG-06: parameter changes after connect must be flushed to the KiwiSDR
+// server (SET mod=... freq=...). Regression test for the bug where
+// sendPendingParams() was only triggered once on connect, so tuning changes
+// were silently dropped.
+// ---------------------------------------------------------------------------
+namespace {
+
+// Text-capturing mock server: records every text frame and, on the auth frame,
+// replies with `audio_rate=` so the KiwiClient handshake completes (phase 2).
+class HandshakeCaptureServer {
+public:
+    HandshakeCaptureServer() {
+        ix::initNetSystem();
+        port_ = static_cast<std::uint16_t>(ix::getFreePort());
+        server_ = std::make_unique<ix::WebSocketServer>(port_, "127.0.0.1");
+        server_->setOnClientMessageCallback(
+            [this](std::shared_ptr<ix::ConnectionState> /*state*/,
+                   ix::WebSocket& socket, const ix::WebSocketMessagePtr& msg) {
+                if (msg->type != ix::WebSocketMessageType::Message || msg->binary) {
+                    return;
+                }
+                {
+                    std::lock_guard<std::mutex> lock(mutex_);
+                    frames_.push_back(msg->str);
+                }
+                if (msg->str == "SET auth t=kiwi p=") {
+                    socket.sendBinary("MSG audio_rate=12000");
+                }
+                cv_.notify_all();
+            });
+        thread_ = std::thread([this] { server_->listenAndStart(); });
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    }
+
+    ~HandshakeCaptureServer() {
+        server_->stop();
+        if (thread_.joinable()) {
+            thread_.join();
+        }
+    }
+
+    std::uint16_t port() const { return port_; }
+
+    bool waitForFrames(std::size_t n, std::chrono::milliseconds timeout) {
+        std::unique_lock<std::mutex> lock(mutex_);
+        return cv_.wait_for(lock, timeout, [this, n] { return frames_.size() >= n; });
+    }
+
+    // Returns true once a captured frame contains `needle`.
+    bool waitForFrameContaining(const std::string& needle, std::chrono::milliseconds timeout) {
+        std::unique_lock<std::mutex> lock(mutex_);
+        return cv_.wait_for(lock, timeout, [this, &needle] {
+            for (const auto& f : frames_) {
+                if (f.find(needle) != std::string::npos) {
+                    return true;
+                }
+            }
+            return false;
+        });
+    }
+
+    std::vector<std::string> frames() const {
+        std::lock_guard<std::mutex> lock(mutex_);
+        return frames_;
+    }
+
+private:
+    std::uint16_t port_ = 0;
+    std::unique_ptr<ix::WebSocketServer> server_;
+    std::thread thread_;
+    mutable std::mutex mutex_;
+    std::condition_variable cv_;
+    std::vector<std::string> frames_;
+};
+
+} // namespace
+
+// BUG-06: after connect, changing the frequency flushes a new SET mod/freq
+// frame to the server.
+TEST_CASE("PluginProcessor: sends updated tuning to server after connect (BUG-06)",
+          "[vst][processor][pipeline][integration]") {
+    HandshakeCaptureServer server;
+
+    netsdr::PluginProcessor proc;
+    proc.initialize(nullptr);
+
+    constexpr int kBlock = 128;
+    Steinberg::Vst::ProcessSetup setup;
+    setup.sampleRate = 48000.0;
+    setup.maxSamplesPerBlock = kBlock;
+    setup.processMode = Steinberg::Vst::kRealtime;
+    setup.symbolicSampleSize = Steinberg::Vst::kSample32;
+    proc.setupProcessing(setup);
+
+    netsdr::ProcessorState state;
+    state.station = "127.0.0.1:" + std::to_string(server.port());
+    state.freqKhz = 14100.0;
+    state.volume = 1.0;
+    state.mute = 0.0;
+    state.agcOn = 1.0;
+    proc.applyState(state);
+
+    // Wait for the initial handshake (options/auth/AR OK/squelch/genattn/gen/
+    // mod/freq/agc/keepalive => 9 frames).
+    REQUIRE(server.waitForFrames(9, std::chrono::seconds(5)));
+
+    // Change the frequency (plain kHz -> normalized) and render a block to
+    // trigger the rate-limited flush in process().
+    const double newFreqKhz = 14021.5;
+    proc.applyParamValue(netsdr::kParamFreqKhz,
+                         proc.registry().toNormalized(netsdr::kParamFreqKhz, newFreqKhz));
+    std::array<float, kBlock> scratch{};
+    renderBlock(proc, kBlock, scratch.data());
+
+    // The server must receive a new SET mod frame carrying the updated freq.
+    REQUIRE(server.waitForFrameContaining("freq=14021.500", std::chrono::seconds(5)));
+
+    proc.terminate();
+}
+
+// BUG-07: the local volume gain must actually scale the audio output.
+TEST_CASE("PluginProcessor: volume gain scales the output (BUG-07)",
+          "[vst][processor][pipeline][integration]") {
+    constexpr double kSourceRate = 12000.0;
+    constexpr double kDawRate = 48000.0;
+    constexpr int kBlock = 128;
+
+    SineStreamServer server(1000.0, kSourceRate, 1200000);
+
+    netsdr::PluginProcessor proc;
+    proc.initialize(nullptr);
+
+    netsdr::ProcessorState state;
+    state.station = "127.0.0.1:" + std::to_string(server.port());
+    state.freqKhz = 14100.0;
+    state.volume = 1.0;
+    state.mute = 0.0;
+    state.agcOn = 1.0;
+    proc.applyState(state);
+
+    {
+        bool streaming = false;
+        for (int attempt = 0; attempt < 100 && !streaming; ++attempt) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            streaming = server.framesSent() > 0;
+        }
+        REQUIRE(streaming);
+    }
+
+    Steinberg::Vst::ProcessSetup setup;
+    setup.sampleRate = kDawRate;
+    setup.maxSamplesPerBlock = kBlock;
+    setup.processMode = Steinberg::Vst::kRealtime;
+    setup.symbolicSampleSize = Steinberg::Vst::kSample32;
+    proc.setupProcessing(setup);
+
+    // Warm up so the jitter buffer has audible samples.
+    std::array<float, kBlock> scratch{};
+    for (int i = 0; i < 50; ++i) {
+        for (int b = 0; b < 50; ++b) {
+            renderBlock(proc, kBlock, scratch.data());
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(20));
+    }
+
+    // Render ~0.4 s of audio at near-real-time pace and report the peak. The
+    // mock server streams at ~real-time, so pacing the render lets the jitter
+    // buffer stay non-empty (a single block could hit a momentary underrun).
+    auto maxPeak = [&]() {
+        float p = 0.0f;
+        for (int i = 0; i < 200; ++i) {
+            renderBlock(proc, kBlock, scratch.data());
+            for (float s : scratch) {
+                p = (std::max)(p, std::fabs(s));
+            }
+            std::this_thread::sleep_for(std::chrono::milliseconds(2));
+        }
+        return p;
+    };
+
+    // Baseline: audible output at volume = 1.
+    const float peakAtFull = maxPeak();
+    REQUIRE(peakAtFull > 0.0f);
+
+    // Volume -> 0: the output must go silent immediately (local gain).
+    proc.applyParamValue(netsdr::kParamVolume, 0.0);
+    for (int i = 0; i < 5; ++i) {
+        renderBlock(proc, kBlock, scratch.data());
+        for (float s : scratch) {
+            REQUIRE(s == 0.0f);
+        }
+    }
+
+    // Volume back to 1: audio returns.
+    proc.applyParamValue(netsdr::kParamVolume, 1.0);
+    REQUIRE(maxPeak() > 0.0f);
+
+    proc.terminate();
+}

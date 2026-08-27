@@ -86,6 +86,10 @@ bool parseSetStationMessage(const std::string& message, BridgeSetStation& out) {
     return true;
 }
 
+bool parseDisconnectMessage(const std::string& message) {
+    return message.find("\"disconnect\"") != std::string::npos;
+}
+
 bool paramIdFromUiName(const std::string& id, std::uint32_t& outId) {
     if (id == kUiParamMode) {
         outId = kParamMode;

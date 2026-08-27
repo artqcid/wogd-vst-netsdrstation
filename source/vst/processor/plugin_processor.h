@@ -92,6 +92,7 @@ public:
 
 private:
     void connectToStation(const std::string& hostPort);   // worker thread
+    void disconnectStation();                             // worker thread
     void emitStatus(const std::string& status);           // network thread -> worker -> UI
     void sendPendingParams();                             // worker thread
     void decodeAndQueue(const std::string& data);         // network thread
@@ -104,7 +105,10 @@ private:
     netsdr::AudioSampleQueue audioQueue_{512};
     std::unique_ptr<netsdr::Resampler> resampler_;
     std::unique_ptr<netsdr::JitterBuffer> jitterBuffer_;
-    netsdr::RateLimiter freqLimiter_{20.0};
+    // Rate-limits pushing of pending parameter changes to the KiwiSDR server
+    // (~20 sends/s max). Prevents flooding the server when the host delivers
+    // dense automation (esp. frequency). Accessed only from the audio thread.
+    netsdr::RateLimiter paramSendLimiter_{20.0};
 
     // Status callback for UI binding.
     StatusCallback onStatus_;
@@ -152,6 +156,10 @@ private:
 
     // For testing only: counts CRITICAL clock-drift log events (|bufferMs-target|>300ms).
     std::atomic<int> criticalDriftCount_{0};
+
+    // Hysteresis latch for CRITICAL logging (audio-thread only): stays true while
+    // the buffer is in the critical band so CRITICAL is logged once per episode.
+    bool criticalActive_{false};
 };
 
 } // namespace netsdr

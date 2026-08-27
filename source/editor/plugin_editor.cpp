@@ -238,6 +238,17 @@ void PluginEditor::onJavaScriptMessage(const char *message) {
     return;
   }
 
+  // disconnect message: {"type":"disconnect","data":null}
+  if (parseDisconnectMessage(message)) {
+    diagLog("editor onJavaScriptMessage: disconnect");
+    if (auto* controller = dynamic_cast<PluginController*>(controller_)) {
+      controller->disconnect();
+    } else {
+      diagLog("editor onJavaScriptMessage: controller_ is NOT PluginController");
+    }
+    return;
+  }
+
   BridgeSetParameter parsed;
   if (!parseSetParameterMessage(message, parsed)) {
     return; // getParameters / resize / malformed -> nothing to do (M2)

@@ -76,6 +76,10 @@ public:
       dispatchMessage("setStation", req);
       return std::string{};
     });
+    w_->bind("vstHostDisconnect", [this](const std::string & /*req*/) {
+      dispatchMessage("disconnect", "");
+      return std::string{};
+    });
     w_->bind("vstHostResize", [this](const std::string &req) {
       dispatchMessage("resize", req);
       return std::string{};
@@ -98,6 +102,9 @@ window.vstHost = {
   },
   setStation: function (hostPort) {
     window.vstHostSetStation(hostPort);
+  },
+  disconnect: function () {
+    window.vstHostDisconnect();
   }
 };
 )js";

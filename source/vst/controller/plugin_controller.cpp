@@ -142,6 +142,17 @@ void PluginController::setStation(const std::string& hostPort) {
     }
 }
 
+void PluginController::disconnect() {
+    diagLog("controller disconnect");
+    if (auto msg = IPtr<IMessage>(allocateMessage())) {
+        msg->setMessageID("NetSDRStation:Disconnect");
+        sendMessage(msg);
+        diagLog("controller disconnect: message sent");
+    } else {
+        diagLog("controller disconnect: allocateMessage returned NULL (no IHostApplication context?)");
+    }
+}
+
 void PluginController::setStatusSink(const std::function<void(const std::string&)>& sink) {
     statusSink_ = sink;
 }
