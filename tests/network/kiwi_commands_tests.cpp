@@ -41,3 +41,26 @@ TEST_CASE("Kiwi commands: mod/freq command formats frequency with 3 decimals",
 TEST_CASE("Kiwi commands: keepalive is a fixed frame", "[network][kiwi]") {
     REQUIRE(kiwiKeepaliveCommand() == "SET keepalive");
 }
+
+TEST_CASE("Kiwi commands: options marks the connection as external", "[network][kiwi]") {
+    REQUIRE(kiwiOptionsCommand() == "SET options=1");
+}
+
+TEST_CASE("Kiwi commands: AR OK acknowledges the server rate and requests the same output",
+          "[network][kiwi]") {
+    REQUIRE(kiwiArOkCommand(12000, 12000) == "SET AR OK in=12000 out=12000");
+    REQUIRE(kiwiArOkCommand(11025, 11025) == "SET AR OK in=11025 out=11025");
+}
+
+TEST_CASE("Kiwi commands: squelch max gate uses the reference format", "[network][kiwi]") {
+    REQUIRE(kiwiSquelchMaxCommand(false, 0) == "SET squelch=0 max=0");
+    REQUIRE(kiwiSquelchMaxCommand(true, 1) == "SET squelch=1 max=1");
+}
+
+TEST_CASE("Kiwi commands: generator is disabled with freq=0 mix=-1", "[network][kiwi]") {
+    REQUIRE(kiwiGenCommand(0, -1) == "SET gen=0 mix=-1");
+}
+
+TEST_CASE("Kiwi commands: generator attenuation", "[network][kiwi]") {
+    REQUIRE(kiwiGenAttnCommand(0) == "SET genattn=0");
+}

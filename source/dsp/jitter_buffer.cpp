@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstring>
 
 namespace netsdr {
 
@@ -10,8 +11,7 @@ namespace netsdr {
 //////////////////////////////////////////////////////////////////////////////
 
 JitterBuffer::JitterBuffer(double sampleRate, double targetDurationMs, double maxCapacityMs)
-    : sampleRate_(sampleRate),
-      buffer_()
+    : sampleRate_(sampleRate)
 {
     // Clamp targetDurationMs > 0
     if (targetDurationMs <= 0.0) {
@@ -30,10 +30,16 @@ JitterBuffer::JitterBuffer(double sampleRate, double targetDurationMs, double ma
     // Pre-compute sample capacities (rounded).
     maxCapacitySamples_ = msToSamples(maxCapacityMs_, sampleRate_);
     targetDurationSamples_ = msToSamples(targetDurationMs_, sampleRate_);
+
+    // Pre-allocate the ring storage exactly once. All allocation happens here;
+    // push()/pull()/reset() never allocate.
+    buffer_.resize(maxCapacitySamples_);
 }
 
 void JitterBuffer::reset() {
-    buffer_.clear();
+    head_ = 0;
+    count_ = 0;
+    started_ = false;
 }
 
 void JitterBuffer::push(const float* samples, std::size_t numSamples) {
@@ -41,14 +47,30 @@ void JitterBuffer::push(const float* samples, std::size_t numSamples) {
         return;
     }
 
-    // Append new samples at the end (newest).
-    buffer_.insert(buffer_.end(), samples, samples + numSamples);
+    // Input larger than the whole ring: keep only the newest `capacity` samples
+    // (everything currently buffered plus the older incoming samples are dropped).
+    if (numSamples >= maxCapacitySamples_) {
+        const std::size_t keep = maxCapacitySamples_;
+        std::memcpy(buffer_.data(), samples + (numSamples - keep), keep * sizeof(float));
+        head_ = 0;
+        count_ = keep;
+        return;
+    }
 
-    // Trim from the front if we exceed max capacity.
-    // "overflow drops the oldest samples so the buffer never exceeds capacity".
-    if (buffer_.size() > maxCapacitySamples_) {
-        const std::size_t tooMany = buffer_.size() - maxCapacitySamples_;
-        buffer_.erase(buffer_.begin(), buffer_.begin() + tooMany);
+    // Append new samples at the logical end (newest), wrapping around the ring.
+    const std::size_t writePos = (head_ + count_) % maxCapacitySamples_;
+    const std::size_t first = std::min(numSamples, maxCapacitySamples_ - writePos);
+    std::memcpy(buffer_.data() + writePos, samples, first * sizeof(float));
+    if (numSamples > first) {
+        std::memcpy(buffer_.data(), samples + first, (numSamples - first) * sizeof(float));
+    }
+    count_ += numSamples;
+
+    // Overflow: drop the oldest samples so only the newest `capacity` remain.
+    if (count_ > maxCapacitySamples_) {
+        const std::size_t drop = count_ - maxCapacitySamples_;
+        head_ = (head_ + drop) % maxCapacitySamples_;
+        count_ = maxCapacitySamples_;
     }
 }
 
@@ -57,20 +79,31 @@ std::size_t JitterBuffer::pull(float* out, std::size_t maxSamples) {
         return 0;
     }
 
-    // If not enough buffered for the target prefill, return 0 (not ready yet).
-    if (bufferedMs() < targetDurationMs_) {
+    // Pre-fill gate: only before the buffer has started playing. Once started,
+    // the gate never re-arms, so a mid-stream dip below the target produces at
+    // most one silent block instead of bursts of silence.
+    if (!started_ && bufferedMs() < targetDurationMs_) {
         return 0;
     }
 
-    // Copy min(buffered, maxSamples) samples out and remove them.
-    const std::size_t n = std::min(available(), maxSamples);
-
+    // Copy min(buffered, maxSamples) samples out, oldest first, wrapping around.
+    const std::size_t n = std::min(count_, maxSamples);
     if (n > 0 && out != nullptr) {
-        std::copy(buffer_.begin(), buffer_.begin() + n, out);
+        const std::size_t first = std::min(n, maxCapacitySamples_ - head_);
+        std::memcpy(out, buffer_.data() + head_, first * sizeof(float));
+        if (n > first) {
+            std::memcpy(out + first, buffer_.data(), (n - first) * sizeof(float));
+        }
     }
 
     // Remove the copied samples from the front (oldest).
-    buffer_.erase(buffer_.begin(), buffer_.begin() + n);
+    head_ = (head_ + n) % maxCapacitySamples_;
+    count_ -= n;
+
+    // Engage the start latch on the first delivered samples.
+    if (n > 0) {
+        started_ = true;
+    }
 
     return n;
 }
@@ -80,11 +113,11 @@ bool JitterBuffer::isReady() const {
 }
 
 std::size_t JitterBuffer::available() const {
-    return buffer_.size();
+    return count_;
 }
 
 double JitterBuffer::bufferedMs() const {
-    return samplesToMs(buffer_.size(), sampleRate_);
+    return samplesToMs(count_, sampleRate_);
 }
 
 // msToSamples: (ms * sampleRate) / 1000.0  -> rounded to nearest std::size_t

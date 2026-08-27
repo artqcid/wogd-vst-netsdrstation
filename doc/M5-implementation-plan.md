@@ -181,6 +181,9 @@ origins). Verify in practice; if CORS blocks the request, proxy via C++.
 
 #### 3b. Station model
 
+The model carries the **API readiness** of each receiver so the UI can show
+only API-connectable stations.
+
 ```ts
 // ui/src/models/station.ts
 export interface StationInfo {
@@ -193,23 +196,54 @@ export interface StationInfo {
   minFreqKhz: number;
   maxFreqKhz: number;
   online: boolean;
+  extApi: number;    // operator's external-API channel allowance (ext_api)
+  get apiReady(): boolean { return this.extApi > 0; }
 }
 ```
 
+> **API-readiness (`extApi`):** every public-directory entry publishes `ext_api`
+> (also present in each receiver's `/status`). It is the operator's allowance of
+> non-browser "external API" channels. `extApi === 0` → Browser-only (no native
+> API); `1 … usersMax-1` → API allowed with some web channels reserved;
+> `>= usersMax` → all channels open to API. Our client connects exclusively over
+> the native WebSocket external API, so we only ever load/offer stations with
+> `extApi > 0`. (Reference: AetherSDR `KiwiPublicDirectory.{h,cpp}`, predicate
+> `mayConnectViaApi()` / `apiPolicy()`.)
+>
+> If the chosen directory feed does not carry `ext_api`, it must be fetched
+> per-station from `<url>/status` (JSON) and merged in during the fetch pass.
+
 #### 3c. Station service
+
+> **Filter (User requirement 2026-08-27):** only **API-ready** stations
+> (`extApi > 0`) are loaded/stored/displayed. `extApi === 0` (Browser-only
+> receivers) are **filtered out entirely**.
 
 ```ts
 // ui/src/services/stationService.ts
-const API_URL = 'https://www.rx-888.com/api/rx/list';
+const API_URL = 'https://www.rx-888.com/api/rx/list';  // re-confirm — 404 as of 2026-08-27
 const FALLBACK = 'https://sdr.hu/api.php?do=getSdrList';
+const DIRECTORY = 'http://kiwisdr.com/public';          // behind anti-bot gate
+const STATUS_PATH = '/status';                           // per-station JSON ext_api
 
 export async function fetchStations(): Promise<StationInfo[]> {
   const resp = await fetch(API_URL);
   if (!resp.ok) throw new Error(`Station list fetch failed: ${resp.status}`);
   const data = await resp.json();
-  return data.map(mapRx888ToStation);
+  return data
+    .map(mapRx888ToStation)
+    .filter((s) => s.extApi > 0)   // <-- only API-ready stations
+    .sort((a, b) => b.snr - a.snr);
 }
 ```
+
+> **Endpoint re-confirmation required during implementation:** the directory
+> endpoints documented earlier are stale — `rx-888.com/api/rx/list` returns 404
+> and `kiwisdr.com/public/` is behind an anti-bot click-gate. Candidates to
+> verify in order: (a) current Rx-888 community feed, (b) `sdr.hu`, (c)
+> `kiwisdr.com/public` HTML-comment entries + per-station `/status`. If the feed
+> lacks `ext_api`, enrich per-station from `<url>/status` (this also gives live
+> `users`/`snr`) and filter on `extApi > 0`.
 
 Normalize the raw API response to `StationInfo` in `mapRx888ToStation`.
 
@@ -237,6 +271,10 @@ store.
   returns normalized `StationInfo[]`.
 - Integration: malformed/empty response → error stored in `stationsError`.
 - Unit: `mapRx888ToStation` correctly maps every field.
+- **Unit (API filter): `fetchStations()` excludes every station with
+  `extApi === 0`; only `extApi > 0` remains. A response containing a
+  Browser-only receiver (`extApi: 0`) must NOT appear in the result.**
+- Unit: `StationInfo.apiReady` reflects `extApi > 0`.
 
 ---
 

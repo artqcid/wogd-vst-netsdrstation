@@ -1,7 +1,7 @@
 // Unit tests for netsdr::Resampler (Milestone M2.7).
 // Covers: sample-rate conversion frequency preservation, identity pass,
-// and reset behaviour.  Uses Goertzel magnitude test helper (same style as
-// sine_oscillator_tests.cpp).  No real audio hardware required.
+// and reset behaviour. Uses Goertzel magnitude test helper.
+// No real audio hardware required.
 
 #include "catch.hpp"
 
@@ -12,7 +12,6 @@
 #include <vector>
 
 // Goertzel single-bin magnitude for a given frequency and sample rate.
-// Copied from tests/dsp/sine_oscillator_tests.cpp.
 double goertzelMagnitude(const std::vector<float>& samples, double freq, double sampleRate) {
     const double kPi = 3.14159265358979323846;
     const double w = 2.0 * kPi * freq / sampleRate;
@@ -125,6 +124,80 @@ TEST_CASE("[dsp][resampler] identity resampler passes samples through", "[dsp][r
     // Goertzel at 1000 Hz should be > 0.9 (frequency and phase preserved).
     const double peak = goertzelMagnitude(outBuf, 1000.0, outRate);
     REQUIRE(peak > 0.9);
+}
+
+TEST_CASE("[dsp][resampler] setRatio changes currentRatio and process output", "[dsp][resampler]") {
+    // 12 kHz -> 48 kHz: nominal ratio = 4.0, clamped range [2.0, 8.0].
+    const double inRate  = 12000.0;
+    const double outRate = 48000.0;
+    netsdr::Resampler resampler(inRate, outRate);
+    REQUIRE(resampler.isValid() == true);
+
+    // --- Verify default currentRatio is nominal ---
+    CHECK(resampler.currentRatio() == 4.0);
+
+    // --- Verify setRatio clamps to [0.5*nominal, 2.0*nominal] = [2.0, 8.0] ---
+    // At the upper bound, no clamping.
+    resampler.setRatio(8.0);
+    CHECK(resampler.currentRatio() == 8.0);
+
+    // At the lower bound, no clamping.
+    resampler.setRatio(2.0);
+    CHECK(resampler.currentRatio() == 2.0);
+
+    // Below the lower bound -> clamped to 2.0.
+    resampler.setRatio(1.0);
+    CHECK(resampler.currentRatio() == 2.0);
+
+    // Way below the lower bound -> still clamped to 2.0.
+    resampler.setRatio(0.5);
+    CHECK(resampler.currentRatio() == 2.0);
+
+    // --- Verify that setRatio changes the output sample count ---
+    // Feed a 1 kHz sine at 12 kHz for 1 second (12000 input frames).
+    std::vector<float> inSamples = generateSine1kHz(12000, inRate);
+
+    // Process with nominal ratio 4.0.
+    resampler.setRatio(4.0);
+    resampler.reset();
+    std::vector<float> outBuf4;
+    outBuf4.resize(200000);  // generous upper bound
+    size_t numProduced4 = resampler.process(inSamples.data(), 12000UL,
+                                            outBuf4.data(), outBuf4.size());
+
+    // Process with double ratio 8.0 -> should produce roughly twice as many output samples.
+    resampler.setRatio(8.0);
+    resampler.reset();
+    std::vector<float> outBuf8;
+    outBuf8.resize(200000);
+    size_t numProduced8 = resampler.process(inSamples.data(), 12000UL,
+                                            outBuf8.data(), outBuf8.size());
+
+    // Process with half ratio 2.0 -> should produce roughly half as many output samples.
+    resampler.setRatio(2.0);
+    resampler.reset();
+    std::vector<float> outBuf2;
+    outBuf2.resize(200000);
+    size_t numProduced2 = resampler.process(inSamples.data(), 12000UL,
+                                            outBuf2.data(), outBuf2.size());
+
+    INFO("numProduced ratio=4.0: " << numProduced4
+          << " ratio=8.0: " << numProduced8
+          << " ratio=2.0: " << numProduced2);
+
+    // Ratio 8.0 should produce significantly more output than ratio 2.0.
+    // libsamplerate output is approximately input_frames * ratio,
+    // so 8.0/2.0 = 4x expected in theory; loosen the check since SRC
+    // has filter padding and the ratio also affects the internal FIFO.
+    CHECK(numProduced8 > numProduced2);             // strictly more
+    CHECK(numProduced8 >= numProduced2 * 1.5);     // at least 50% more
+
+    // Ratio 4.0 should produce more output than ratio 2.0.
+    CHECK(numProduced4 > numProduced2);             // strictly more
+    CHECK(numProduced4 >= numProduced2 * 1.5);     // at least 50% more
+
+    // Ratio 8.0 should produce at least as many as ratio 4.0 (monotonic in ratio).
+    CHECK(numProduced8 >= numProduced4);
 }
 
 TEST_CASE("[dsp][resampler] reset clears state", "[dsp][resampler]") {

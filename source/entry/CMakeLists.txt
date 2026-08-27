@@ -15,8 +15,15 @@ set(netsdrstation_sources
     ../vst/processor/plugin_processor.cpp
     ../vst/controller/plugin_controller.h
     ../vst/controller/plugin_controller.cpp
-    ../dsp/sine_oscillator.h
-    ../dsp/sine_oscillator.cpp
+    ../dsp/ima_adpcm.h
+    ../dsp/ima_adpcm.cpp
+    ../dsp/resampler.h
+    ../dsp/resampler.cpp
+    ../dsp/jitter_buffer.h
+    ../dsp/jitter_buffer.cpp
+    ../dsp/rate_limiter.h
+    ../dsp/rate_limiter.cpp
+    ../threading/audio_sample_queue.h
     ../threading/lock_free_spsc.h
     ../threading/worker_thread.h
     ../threading/worker_thread.cpp
@@ -53,6 +60,8 @@ target_link_libraries(${target}
     PRIVATE
         sdk
         webview::core_static
+        netsdr_network
+        samplerate
 )
 
 # ---------------------------------------------------------------------------

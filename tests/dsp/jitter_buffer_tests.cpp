@@ -64,17 +64,17 @@ TEST_CASE("[dsp][jitter] pull returns contiguous buffered samples in order",
 
     REQUIRE(buffer.isReady() == true);
 
-    // Push samples 0..999 (float values equal to index).
+    // Push distinct samples 4800..5799 so the whole buffer content is a single
+    // contiguous run 0..5799 once drained.
     std::vector<float> newSamples(1000);
     for (std::size_t i = 0; i < 1000; ++i) {
-        newSamples[i] = static_cast<float>(i);
+        newSamples[i] = static_cast<float>(4800 + i);
     }
     buffer.push(newSamples.data(), newSamples.size());
 
-    // Drain: pull in chunks and verify order.
-    // With the jitter buffer's prefill cushion, pull() returns 0 when
-    // buffered duration < targetDurationMs (100 ms = 4800 samples at 48 kHz).
-    // The loop stops when pull returns 0, leaving ~4800 samples retained.
+    // Drain: the pre-fill gate latches on the first pull, so pull() keeps
+    // delivering until the buffer is fully empty (0 on underflow) — the buffer
+    // is NOT re-armed to the prefill target mid-stream.
     std::vector<float> allPulled;
     allPulled.reserve(5800);
 
@@ -87,10 +87,12 @@ TEST_CASE("[dsp][jitter] pull returns contiguous buffered samples in order",
         }
     }
 
-    // Verify all pulled samples are exactly 0, 1, 2, ... in order.
+    // All 5800 samples come out, in FIFO order (0, 1, 2, ...).
+    REQUIRE(allPulled.size() == 5800);
     for (std::size_t i = 0; i < allPulled.size(); ++i) {
         REQUIRE(allPulled[i] == static_cast<float>(i));
     }
+    REQUIRE(buffer.available() == 0);
 }
 
 TEST_CASE("[dsp][jitter] overflow drops the oldest samples",
@@ -119,10 +121,8 @@ TEST_CASE("[dsp][jitter] overflow drops the oldest samples",
     REQUIRE(buffer.available() <= 1800 + 2);       // margin for rounding
 
     // Drain everything: the retained samples must be the NEWEST (last pushed).
-    // First pulled sample should equal 4000 - available (oldest dropped count).
-    // The buffer retains the prefill cushion (~100 ms = 1200 samples at 12 kHz),
-    // so pull stops when buffered < target. The drained samples are the oldest
-    // retained ones, starting at sample 2200.
+    // The start latch engages on the first pull, so pull() delivers until the
+    // buffer is empty. The oldest dropped count = 4000 - 1800 = 2200.
     std::vector<float> drained;
     drained.reserve(buffer.available());
 
@@ -135,11 +135,10 @@ TEST_CASE("[dsp][jitter] overflow drops the oldest samples",
         }
     }
 
-    // The drained samples are the oldest retained ones, starting at
-    // 4000 - (availableAfter + drained.size()) = 4000 - 1800 = 2200.
+    // All 1800 retained samples come out: 2200..3999 (the newest capacity worth).
+    REQUIRE(drained.size() == 1800);
     REQUIRE(drained[0] == 2200.0f);
-    // The last pulled sample should be 3999 (the very last sample pushed).
-    REQUIRE(drained.back() == 3223.0f);
+    REQUIRE(drained.back() == 3999.0f);
 }
 
 TEST_CASE("[dsp][jitter] reset clears the buffer",
@@ -168,7 +167,7 @@ TEST_CASE("[dsp][jitter] reset clears the buffer",
     REQUIRE(buffer.bufferedMs() == 0.0);
 }
 
-TEST_CASE("[dsp][jitter] pull preserves the prefill cushion",
+TEST_CASE("[dsp][jitter] prefill gate latches: once started, pull drains fully",
           "[dsp][jitter]") {
     const double sampleRate = 48000.0;
     const double targetMs = 100.0;
@@ -176,7 +175,7 @@ TEST_CASE("[dsp][jitter] pull preserves the prefill cushion",
 
     netsdr::JitterBuffer buffer(sampleRate, targetMs, maxMs);
 
-    // Prefill.
+    // Prefill to ready.
     std::vector<float> prefill(5760);  // 120 ms at 48 kHz
     for (std::size_t i = 0; i < 5760; ++i) {
         prefill[i] = static_cast<float>(i);
@@ -185,19 +184,34 @@ TEST_CASE("[dsp][jitter] pull preserves the prefill cushion",
 
     REQUIRE(buffer.isReady() == true);
 
-    // Repeatedly pull small chunks until pull returns 0.
+    // Gate before start: with only a sub-target amount buffered and no pull yet,
+    // pull returns 0. Simulate a fresh buffer below the target prefill.
+    netsdr::JitterBuffer cold(sampleRate, targetMs, maxMs);
+    std::vector<float> few(100);  // ~2 ms << 100 ms target
+    for (std::size_t i = 0; i < 100; ++i) {
+        few[i] = static_cast<float>(i);
+    }
+    cold.push(few.data(), few.size());
+    float cbuf[128];
+    REQUIRE(cold.pull(cbuf, 128) == 0);  // not started, below target -> gated
+
+    // Once started, pull keeps delivering until the buffer is empty (underflow
+    // returns 0), even far below the 100 ms prefill target. No re-arm gaps.
+    std::size_t total = 0;
     float chunk[128];
-    while (true) {
-        std::size_t n = buffer.pull(chunk, 128);
-        if (n == 0) {
-            break;
-        }
+    std::size_t n;
+    while ((n = buffer.pull(chunk, 128)) != 0) {
+        total += n;
         (void)chunk;  // avoid unused warning
     }
 
-    // The cushion is preserved: pull() stops below the 100 ms target (4800 samples
-    // at 48 kHz). The buffer must still hold ~4800 samples (within one chunk).
-    REQUIRE(buffer.available() >= 4800 - 128);
-    REQUIRE(buffer.available() <= 4800);
+    // Full drain (5760 samples in FIFO order), no cushion retained mid-stream.
+    REQUIRE(total == 5760);
+    REQUIRE(buffer.available() == 0);
     REQUIRE(buffer.isReady() == false);
+
+    // reset() re-arms the start latch: a fresh push below target is gated again.
+    buffer.reset();
+    buffer.push(few.data(), few.size());
+    REQUIRE(buffer.pull(cbuf, 128) == 0);
 }

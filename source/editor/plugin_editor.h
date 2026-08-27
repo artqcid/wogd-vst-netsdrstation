@@ -17,6 +17,7 @@ class EditControllerEx1;
 } // namespace Steinberg
 
 namespace netsdr {
+class PluginController;
 
 class PluginEditor : public Steinberg::IPlugView {
 public:
@@ -45,6 +46,9 @@ public:
     // Invoked by WebViewHost when the JS side posts a message.
     void onJavaScriptMessage(const char* message);
 
+    // Push a status string to the UI (e.g. "Connecting", "Connected", "Error").
+    void pushStatus(const std::string& status);
+
     // Returns the UI URL the editor should load (dev server in debug builds).
     static const char* uiUrl();
 
@@ -59,6 +63,8 @@ private:
     Steinberg::int32 width_;
     Steinberg::int32 height_;
     bool attached_;
+
+    PluginController* pluginController_ = nullptr;
 };
 
 } // namespace netsdr

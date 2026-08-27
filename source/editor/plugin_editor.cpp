@@ -1,7 +1,9 @@
 #include "plugin_editor.h"
 
+#include "common/diag.h"
 #include "vst/common/bridge_protocol.h"
 #include "vst/common/paramids.h"
+#include "vst/controller/plugin_controller.h"
 
 #include <windows.h>
 #include <string>
@@ -91,6 +93,10 @@ PluginEditor::PluginEditor(Vst::EditControllerEx1 *controller,
       width_(kDefaultSize.getWidth()), height_(kDefaultSize.getHeight()),
       attached_(false) {
   FUNKNOWN_CTOR
+  pluginController_ = dynamic_cast<PluginController*>(controller_);
+  if (pluginController_) {
+      pluginController_->setStatusSink([this](const std::string& s) { pushStatus(s); });
+  }
   webView_.setMessageHandler(
       [](const char *message, void *userData) {
         static_cast<PluginEditor *>(userData)->onJavaScriptMessage(message);
@@ -98,7 +104,12 @@ PluginEditor::PluginEditor(Vst::EditControllerEx1 *controller,
       this);
 }
 
-PluginEditor::~PluginEditor() { removed(); }
+PluginEditor::~PluginEditor() {
+  if (pluginController_) {
+      pluginController_->setStatusSink({});
+  }
+  removed();
+}
 
 const char *PluginEditor::uiUrl() {
 #ifndef NDEBUG
@@ -122,6 +133,7 @@ tresult PLUGIN_API PluginEditor::attached(void *parent, FIDString /*type*/) {
   if (attached_) {
     return kResultFalse;
   }
+  diagLog("editor attached: parent=%p", parent);
   attachWebView(parent);
   attached_ = true;
   return kResultOk;
@@ -191,7 +203,9 @@ tresult PLUGIN_API PluginEditor::checkSizeConstraint(ViewRect *rect) {
 }
 
 void PluginEditor::attachWebView(void *parentHandle) {
+  diagLog("editor attachWebView: parent=%p", parentHandle);
   if (!webView_.attach(parentHandle)) {
+    diagLog("editor attachWebView: webView_.attach FAILED");
     return;
   }
   webView_.resizeToParent();
@@ -203,9 +217,24 @@ void PluginEditor::onJavaScriptMessage(const char *message) {
   // The bridge sends messages of the form:
   //   {"type":"setParameter","data":["<id>",<plain value>]}
   // The value is a plain (unnormalized) value in the parameter's own units
-  // (Hz for freq, 0..1 for volume, 0/1 for mute); we normalize it via the
-  // shared registry before handing it to the controller.
+  // (kHz for freqKhz, 0..1 for volume, 0/1 for mute/bools); we normalize it
+  // via the shared registry before handing it to the controller.
   if (message == nullptr) {
+    return;
+  }
+  diagLog("editor onJavaScriptMessage: %s",
+          std::string(message).substr(0, 160).c_str());
+
+  // setStation message: {"type":"setStation","data":["host:port"]}
+  BridgeSetStation station;
+  if (parseSetStationMessage(message, station)) {
+    diagLog("editor onJavaScriptMessage: setStation hostPort=%s",
+            station.hostPort.c_str());
+    if (auto* controller = dynamic_cast<PluginController*>(controller_)) {
+      controller->setStation(station.hostPort);
+    } else {
+      diagLog("editor onJavaScriptMessage: controller_ is NOT PluginController");
+    }
     return;
   }
 
@@ -230,6 +259,21 @@ void PluginEditor::onJavaScriptMessage(const char *message) {
   controller_->beginEdit(tag);
   controller_->performEdit(tag, normalized);
   controller_->endEdit(tag);
+}
+
+void PluginEditor::pushStatus(const std::string& status) {
+    diagLog("editor pushStatus: %s attached=%d", status.c_str(), (int)attached_);
+    if (!attached_) { return; }
+    // Escape for a JSON string literal inside the eval'd JS.
+    std::string escaped;
+    escaped.reserve(status.size());
+    for (char c : status) {
+        if (c == '\\' || c == '"') { escaped += '\\'; }
+        escaped += c;
+    }
+    const std::string js =
+        "window.updateVueState({\"type\":\"status\",\"data\":\"" + escaped + "\"})";
+    webView_.eval(js);
 }
 
 } // namespace netsdr

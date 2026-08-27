@@ -46,6 +46,20 @@ This applies to all primary agents: `build`, `plan`, `DEV`, `DEV_OpenRouter`,
 - Give subagents small, focused tasks; the primary agent always verifies the
   result (code review + build + test).
 
+## Subagent Rules (MCP Access)
+
+- **Subagents have NO MCP access.** The `netsdr_rag`, `clangd_mcp`, and
+  `notebooklm_devblogs` MCP servers are only available to the primary agent.
+- **Before delegating to a subagent**, the primary agent MUST:
+  1. Run all needed `query_code_wiki` / `query_code_rag` / `get_rag_chunk`
+     calls itself.
+  2. Include the relevant symbol locations (file path + line number),
+     type signatures, and code snippets directly in the subagent prompt.
+- **After a subagent finishes**, the primary agent runs `index_project_code`
+  to keep the wiki current (subagents cannot do this themselves).
+- Subagents that need code context must receive it verbatim in their prompt —
+  they must never be told "use the RAG" or "query the wiki".
+
 ## MCP-First Workflow (RAG / Code-Wiki)
 
 The workspace provides a local RAG + Code-Wiki MCP server (`netsdr_rag`,
@@ -87,6 +101,58 @@ All project knowledge is ALWAYS kept in sync across three stores:
 This workflow applies to **all agents** and runs **either automatically after
 a task completes, or on explicit user command**.
 
+## Ad-hoc / scratch compilation (no artifacts in the repo root)
+
+Ad-hoc/scratch compile checks (single-file type-checks, throwaway "probe"
+programs) are allowed during debugging, but must NEVER leave compiler
+artifacts (`*.obj`, `*.exe`, `*.pdb`, `*.ilk`, `*.iobj`, `*.ipdb`) in the
+workspace root or under `source/`.
+
+- Always direct compiler output to a scratch directory via `/Fo` (MSVC) or
+  `-o`/`--output` (clang-cl), e.g. the pre-approved temp dir
+  `C:\Users\marku\AppData\Local\Temp\opencode`.
+- Run the compiler with the scratch dir as the working directory (or use the
+  `workdir` parameter) so the CWD is never the repo root.
+- Prefer the real CMake build (`cmake --build`) and the existing test suite
+  over ad-hoc compile-only checks.
+- Delete scratch sources and outputs when done.
+
+Background: MSVC `cl.exe` / `clang-cl` write `.obj` (and on link `.exe`/`.pdb`)
+into the current working directory when no output path is given. Running such a
+command from the repo root dumps the artifacts there — this is how the stray
+`*_probe.obj` / `<source>.obj` files in the repo root appeared during M3
+debugging.
+
+## Logging Strategy (Two-Level)
+
+The project uses a two-level file logger (`source/util/file_logger.h`) writing
+to `%TEMP%/netsdrstation.log`:
+
+**INFO Level (always enabled, Release + Debug):**
+- Connection events (connect/disconnect/error)
+- Server configuration (sample rate, handshake)
+- Critical errors and exceptions
+- First occurrence of issues (first underrun, first overflow, etc.)
+- Performance-neutral, minimal overhead
+
+**DEBUG Level (Debug builds only, disabled in Release):**
+- Frame-by-frame decoding details
+- Pipeline statistics every N frames
+- Clock-drift adjustments
+- Buffer levels, queue depth
+- Verbose diagnostics
+
+**Usage:**
+```cpp
+NETSDR_LOG_INFO("Critical event: %s", message);   // Always logged
+NETSDR_LOG_DEBUG("Frame %d details", frame);      // Debug builds only
+```
+
+**Debug workflow:**
+- All errors and bugs MUST be analyzed in Debug builds (full logging)
+- Release builds log only critical events (production-safe)
+- Log file location: `C:\Users\marku\AppData\Local\Temp\netsdrstation.log`
+
 ## Quick facts
 
 - RAG MCP server: `netsdr_mcp_server.py`; registered in `opencode.json` under
@@ -101,6 +167,7 @@ a task completes, or on explicit user command**.
 - Auto-generated knowledge: `doc/code_wiki.md` (ONLY via MCP, never read directly).
 - Main NotebookLM notebook: **NetSDRStation-VST** (see above).
 - `netsdr_rag.db` is runtime-only (`.gitignore`).
+- Log file: `%TEMP%/netsdrstation.log` (INFO in Release, INFO+DEBUG in Debug).
 
 ## Global rules
 

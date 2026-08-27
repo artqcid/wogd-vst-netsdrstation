@@ -2,7 +2,6 @@
 
 #include <algorithm>
 #include <cmath>
-#include <stdexcept>
 #include <utility>
 
 namespace netsdr {
@@ -10,37 +9,38 @@ namespace netsdr {
 ParameterRegistry::ParameterRegistry(std::vector<ParameterDefinition> definitions)
     : definitions_(std::move(definitions)) {
     values_.reserve(definitions_.size());
-    for (const auto& def : definitions_) {
+    index_.reserve(definitions_.size());
+    for (std::size_t i = 0; i < definitions_.size(); ++i) {
+        const auto& def = definitions_[i];
         // Defaults are stored normalized in [0,1].
         const double norm = (def.max > def.min) ? (def.defaultValue - def.min) / (def.max - def.min) : 0.0;
         values_.push_back(std::clamp(norm, 0.0, 1.0));
+        // O(1) id -> index map (FIX-35). Duplicate ids keep the first entry.
+        if (index_.find(def.id) == index_.end()) {
+            index_.emplace(def.id, i);
+        }
     }
+}
+
+std::size_t ParameterRegistry::indexOf(uint32_t id) const {
+    const auto it = index_.find(id);
+    return it == index_.end() ? definitions_.size() : it->second;
 }
 
 const ParameterDefinition* ParameterRegistry::definition(uint32_t id) const {
-    for (const auto& def : definitions_) {
-        if (def.id == id) {
-            return &def;
-        }
-    }
-    return nullptr;
+    const std::size_t i = indexOf(id);
+    return i < definitions_.size() ? &definitions_[i] : nullptr;
 }
 
 double ParameterRegistry::value(uint32_t id) const {
-    for (std::size_t i = 0; i < definitions_.size(); ++i) {
-        if (definitions_[i].id == id) {
-            return values_[i];
-        }
-    }
-    return 0.0;
+    const std::size_t i = indexOf(id);
+    return i < definitions_.size() ? values_[i] : 0.0;
 }
 
 void ParameterRegistry::setValue(uint32_t id, double normalized) {
-    for (std::size_t i = 0; i < definitions_.size(); ++i) {
-        if (definitions_[i].id == id) {
-            values_[i] = std::clamp(normalized, 0.0, 1.0);
-            return;
-        }
+    const std::size_t i = indexOf(id);
+    if (i < definitions_.size()) {
+        values_[i] = std::clamp(normalized, 0.0, 1.0);
     }
 }
 

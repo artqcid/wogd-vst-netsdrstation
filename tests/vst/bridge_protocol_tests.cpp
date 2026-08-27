@@ -11,8 +11,6 @@
 
 #include <cmath>
 
-namespace {
-
 // Reproduces the exact envelope built by WebViewHost::dispatchMessage for a
 // setParameter binding call (webview serializes the JS args as a JSON array).
 std::string setParameterEnvelope(const std::string& id, double value) {
@@ -21,14 +19,12 @@ std::string setParameterEnvelope(const std::string& id, double value) {
     return "{\"type\":\"setParameter\",\"data\":" + payload + "}";
 }
 
-} // namespace
-
 TEST_CASE("Bridge: parseSetParameterMessage extracts id and integer value",
           "[vst][bridge]") {
     netsdr::BridgeSetParameter out;
-    REQUIRE(netsdr::parseSetParameterMessage(setParameterEnvelope("freq", 440), out));
-    REQUIRE(out.id == "freq");
-    REQUIRE(out.value == 440.0);
+    REQUIRE(netsdr::parseSetParameterMessage(setParameterEnvelope("freqKhz", 14100), out));
+    REQUIRE(out.id == "freqKhz");
+    REQUIRE(out.value == 14100.0);
 }
 
 TEST_CASE("Bridge: parseSetParameterMessage extracts a fractional value",
@@ -53,34 +49,79 @@ TEST_CASE("Bridge: parseSetParameterMessage rejects malformed payloads",
     netsdr::BridgeSetParameter out;
     REQUIRE_FALSE(netsdr::parseSetParameterMessage("{\"type\":\"setParameter\"}", out));          // no data
     REQUIRE_FALSE(netsdr::parseSetParameterMessage("{\"type\":\"setParameter\",\"data\":null}", out)); // no array
-    REQUIRE_FALSE(netsdr::parseSetParameterMessage("{\"type\":\"setParameter\",\"data\":[\"freq\"]}", out)); // missing value
+    REQUIRE_FALSE(netsdr::parseSetParameterMessage("{\"type\":\"setParameter\",\"data\":[\"freqKhz\"]}", out)); // missing value
+}
+
+TEST_CASE("Bridge: parseSetStationMessage extracts host:port", "[vst][bridge]") {
+    netsdr::BridgeSetStation out;
+
+    // Valid setStation message.
+    REQUIRE(netsdr::parseSetStationMessage(
+                "{\"type\":\"setStation\",\"data\":[\"g8ure.ddns.net:8078\"]}", out));
+    REQUIRE(out.hostPort == "g8ure.ddns.net:8078");
+
+    // Malformed: empty data array.
+    netsdr::BridgeSetStation out2;
+    REQUIRE_FALSE(netsdr::parseSetStationMessage(
+                      "{\"type\":\"setStation\",\"data\":[]}", out2));
+
+    // Not a setStation message.
+    REQUIRE_FALSE(netsdr::parseSetStationMessage(
+                      "{\"type\":\"setParameter\",\"data\":[\"freqKhz\",440]}", out2));
 }
 
 TEST_CASE("Bridge: paramIdFromUiName maps the stable UI names", "[vst][bridge]") {
     std::uint32_t id = 0;
-    REQUIRE(netsdr::paramIdFromUiName("freq", id));
-    REQUIRE(id == netsdr::kParamFreq);
+
+    // "mode" -> kParamMode
+    REQUIRE(netsdr::paramIdFromUiName("mode", id));
+    REQUIRE(id == netsdr::kParamMode);
+
+    // "lowCut" -> kParamLowCut
+    REQUIRE(netsdr::paramIdFromUiName("lowCut", id));
+    REQUIRE(id == netsdr::kParamLowCut);
+
+    // "highCut" -> kParamHighCut
+    REQUIRE(netsdr::paramIdFromUiName("highCut", id));
+    REQUIRE(id == netsdr::kParamHighCut);
+
+    // "agcOn" -> kParamAgcOn
+    REQUIRE(netsdr::paramIdFromUiName("agcOn", id));
+    REQUIRE(id == netsdr::kParamAgcOn);
+
+    // "wfOn" -> kParamWfOn
+    REQUIRE(netsdr::paramIdFromUiName("wfOn", id));
+    REQUIRE(id == netsdr::kParamWfOn);
+
+    // "volume" -> kParamVolume
     REQUIRE(netsdr::paramIdFromUiName("volume", id));
     REQUIRE(id == netsdr::kParamVolume);
+
+    // "mute" -> kParamMute
     REQUIRE(netsdr::paramIdFromUiName("mute", id));
     REQUIRE(id == netsdr::kParamMute);
+
+    // "unknown" returns false
     REQUIRE_FALSE(netsdr::paramIdFromUiName("unknown", id));
+
+    // "freq" is no longer a valid UI name (replaced by "freqKhz")
+    REQUIRE_FALSE(netsdr::paramIdFromUiName("freq", id));
 }
 
 TEST_CASE("Bridge: plain frequency normalizes through the registry (FIX-03)",
           "[vst][bridge]") {
     netsdr::ParameterRegistry registry(netsdr::createParameterDefinitions());
 
-    // The UI sends 440 Hz (plain); the registry must normalize it to
-    // (440 - 20) / (20000 - 20) ~= 0.021, not clamp it to 1.0.
+    // The UI sends 14100 kHz (plain); the registry must normalize it to
+    // (14100 - 0.001) / (30000 - 0.001)
     netsdr::BridgeSetParameter parsed;
-    REQUIRE(netsdr::parseSetParameterMessage(setParameterEnvelope("freq", 440), parsed));
+    REQUIRE(netsdr::parseSetParameterMessage(setParameterEnvelope("freqKhz", 14100), parsed));
 
     std::uint32_t tag = 0;
     REQUIRE(netsdr::paramIdFromUiName(parsed.id, tag));
 
     const double normalized = registry.toNormalized(tag, parsed.value);
-    const double expected = (440.0 - 20.0) / (20000.0 - 20.0);
+    const double expected = (14100.0 - 0.001) / (30000.0 - 0.001);
     REQUIRE(std::abs(normalized - expected) < 1e-9);
 
     // Volume is already 0..1: plain == normalized.

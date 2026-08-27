@@ -50,8 +50,8 @@ bool KiwiBridge::handleUiMessage(const std::string& envelope, double nowSeconds)
         return false;
     }
 
-    // 2. Only the "freq" parameter is handled in M2.9; all other ids are out of scope.
-    if (parsed.id != kUiParamFreq) {
+    // 2. Only the "freqKhz" parameter is handled; all other ids are out of scope.
+    if (parsed.id != kUiParamFreqKhz) {
         return false;
     }
 

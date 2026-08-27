@@ -13,6 +13,16 @@ build/
 out/
 cmake-build-*/
 
+# Compiler artifacts (MSVC/clang-cl). Never commit these; ad-hoc probe
+# compilations used to dump them into the repo root.
+*.obj
+*.exe
+*.pdb
+*.ilk
+*.idb
+*.iobj
+*.ipdb
+
 # Editor / tooling
 .vscode/
 .idea/

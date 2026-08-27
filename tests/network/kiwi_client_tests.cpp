@@ -31,13 +31,18 @@ public:
 
         server_->setOnClientMessageCallback(
             [this](std::shared_ptr<ix::ConnectionState> /*state*/,
-                   ix::WebSocket& /*socket*/, const ix::WebSocketMessagePtr& msg) {
+                   ix::WebSocket& socket, const ix::WebSocketMessagePtr& msg) {
                 if (msg->type != ix::WebSocketMessageType::Message || msg->binary) {
                     return;
                 }
                 {
                     std::lock_guard<std::mutex> lock(mutex_);
                     frames_.push_back(msg->str);
+                }
+                // After recording, check if this is the auth frame and send audio_rate
+                // to trigger Phase 2 of the KiwiClient handshake.
+                if (msg->str == "SET auth t=kiwi p=") {
+                    socket.sendBinary("MSG audio_rate=12000");
                 }
                 cv_.notify_all();
             });
@@ -51,7 +56,8 @@ public:
         if (thread_.joinable()) {
             thread_.join();
         }
-        ix::uninitNetSystem();
+        // Note: no ix::uninitNetSystem() here — the test runner initialises the
+        // net system once for the whole process (see tests/test_main.cpp).
     }
 
     std::uint16_t port() const { return port_; }
@@ -90,16 +96,24 @@ TEST_CASE("KiwiClient handshake: anonymous connection sends auth, mod/freq, agc"
 
     REQUIRE(client.connect(config) == true);
 
-    // Wait for the handshake: auth, mod/freq, agc (3 frames, no ident_user).
-    REQUIRE(server.waitForFrames(3, std::chrono::seconds(5)));
+    // Wait for the handshake: options, auth, AR OK, squelch, genattn, gen,
+    // mod/freq, agc, keepalive (9 frames).
+    REQUIRE(server.waitForFrames(9, std::chrono::seconds(5)));
 
     const std::vector<std::string> frames = server.frames();
-    REQUIRE(frames.size() >= 3);
+    REQUIRE(frames.size() >= 9);
 
-    // Frame order is deterministic: auth -> mod/freq -> agc.
-    REQUIRE(frames[0] == "SET auth t=kiwi p=");
-    REQUIRE(frames[1] == "SET mod=am low_cut=-4900 high_cut=4900 freq=14100.000");
-    REQUIRE(frames[2] == "SET agc=1 hang=0 thresh=-100 slope=6 decay=1000 manGain=50");
+    // Frame order is deterministic: options -> auth -> AR OK -> squelch ->
+    // genattn -> gen -> mod/freq -> agc -> keepalive.
+    REQUIRE(frames[0] == "SET options=1");
+    REQUIRE(frames[1] == "SET auth t=kiwi p=");
+    REQUIRE(frames[2] == "SET AR OK in=12000 out=12000");
+    REQUIRE(frames[3] == "SET squelch=0 max=0");
+    REQUIRE(frames[4] == "SET genattn=0");
+    REQUIRE(frames[5] == "SET gen=0 mix=-1");
+    REQUIRE(frames[6] == "SET mod=iq low_cut=-5980 high_cut=5980 freq=14100.000");
+    REQUIRE(frames[7] == "SET agc=1 hang=0 thresh=-130 slope=6 decay=1000 manGain=20");
+    REQUIRE(frames[8] == "SET keepalive");
 
     client.disconnect();
 }
@@ -116,15 +130,22 @@ TEST_CASE("KiwiClient handshake: configured user name adds an ident_user frame",
 
     REQUIRE(client.connect(config) == true);
 
-    // auth, ident_user, mod/freq, agc (4 frames).
-    REQUIRE(server.waitForFrames(4, std::chrono::seconds(5)));
+    // options, auth, AR OK, ident_user, squelch, genattn, gen, mod/freq, agc,
+    // keepalive (10 frames).
+    REQUIRE(server.waitForFrames(10, std::chrono::seconds(5)));
 
     const std::vector<std::string> frames = server.frames();
-    REQUIRE(frames.size() >= 4);
-    REQUIRE(frames[0] == "SET auth t=kiwi p=");
-    REQUIRE(frames[1] == "SET ident_user=NetSDRStation-VST");
-    REQUIRE(frames[2] == "SET mod=am low_cut=-4900 high_cut=4900 freq=14100.000");
-    REQUIRE(frames[3] == "SET agc=1 hang=0 thresh=-100 slope=6 decay=1000 manGain=50");
+    REQUIRE(frames.size() >= 10);
+    REQUIRE(frames[0] == "SET options=1");
+    REQUIRE(frames[1] == "SET auth t=kiwi p=");
+    REQUIRE(frames[2] == "SET AR OK in=12000 out=12000");
+    REQUIRE(frames[3] == "SET ident_user=NetSDRStation-VST");
+    REQUIRE(frames[4] == "SET squelch=0 max=0");
+    REQUIRE(frames[5] == "SET genattn=0");
+    REQUIRE(frames[6] == "SET gen=0 mix=-1");
+    REQUIRE(frames[7] == "SET mod=iq low_cut=-5980 high_cut=5980 freq=14100.000");
+    REQUIRE(frames[8] == "SET agc=1 hang=0 thresh=-130 slope=6 decay=1000 manGain=20");
+    REQUIRE(frames[9] == "SET keepalive");
 
     client.disconnect();
 }
@@ -134,4 +155,38 @@ TEST_CASE("KiwiClient: connect with empty host returns false", "[network][kiwi]"
     KiwiClientConfig config; // host empty
     REQUIRE(client.connect(config) == false);
     REQUIRE(client.isConnected() == false);
+}
+
+// Test: onOpen callback fires on connection.
+TEST_CASE("KiwiClient: onOpen callback fires on connection", "[network][kiwi][integration]") {
+    MockServer server;
+
+    KiwiClient client;
+    std::atomic<bool> onOpenFired{false};
+
+    KiwiClientConfig config;
+    config.host = "127.0.0.1";
+    config.port = server.port();
+    config.userName = "";
+
+    client.setOnOpen([&onOpenFired]() {
+        onOpenFired = true;
+    });
+
+    REQUIRE(client.connect(config) == true);
+
+    // Poll until onOpen fires or timeout.
+    bool fired = false;
+    for (int attempt = 0; attempt < 100; ++attempt) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(50));
+        if (onOpenFired.load()) {
+            fired = true;
+            break;
+        }
+    }
+    REQUIRE(fired);
+
+    REQUIRE(client.isConnected());
+
+    client.disconnect();
 }

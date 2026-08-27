@@ -15,7 +15,8 @@
         "NS_ENABLE_UI": "ON",
         "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
         "SMTG_ENABLE_VST3_PLUGIN_EXAMPLES": "OFF",
-        "VST3_SDK_ROOT": "$ENV{VST3_SDK_ROOT}"
+        "VST3_SDK_ROOT": "$ENV{VST3_SDK_ROOT}",
+        "WEBVIEW2_SDK_ROOT": "$env{WEBVIEW2_SDK_ROOT}"
       }
     },
     {
@@ -78,11 +79,14 @@
     },
     {
       "name": "win-clangd",
-      "displayName": "Windows (Ninja, clangd compile_commands.json)",
+      "displayName": "Windows (Ninja + clang-cl, clangd compile_commands.json)",
       "generator": "Ninja",
       "inherits": "base",
       "cacheVariables": {
+        "CMAKE_C_COMPILER": "clang-cl",
+        "CMAKE_CXX_COMPILER": "clang-cl",
         "NS_ENABLE_VST3": "ON",
+        "SMTG_ENABLE_VST3_HOSTING_EXAMPLES": "OFF",
         "VST3_SDK_ROOT": "$env{VST3_SDK_ROOT}"
       }
     }

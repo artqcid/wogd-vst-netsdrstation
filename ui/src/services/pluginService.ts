@@ -17,6 +17,7 @@ export interface PluginMessage {
 export interface VstHost {
   setParameter(id: string, value: number): void
   getParameters(): void
+  setStation(hostPort: string): void
 }
 
 declare global {
@@ -44,6 +45,17 @@ class PluginService {
       window.vstHost!.setParameter(id, value)
     } else {
       console.log('[Dev Mode] setParameter', id, value)
+    }
+  }
+
+  /**
+   * Sends a station host:port to the plugin. No-op (logged) in dev mode.
+   */
+  setStation(hostPort: string): void {
+    if (this.isInNative()) {
+      window.vstHost!.setStation(hostPort)
+    } else {
+      console.log('[Dev Mode] setStation', hostPort)
     }
   }
 

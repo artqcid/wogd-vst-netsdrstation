@@ -1,32 +1,30 @@
 #include "dsp/resampler.h"
 
 #include <cmath>
-#include <vector>
+#include <cstring>
 
 extern "C" {
 #include <samplerate.h>
 }
 
 namespace netsdr {
-
 // ---------------------------------------------------------------------------
 // Resampler implementation
 // ---------------------------------------------------------------------------
 
-Resampler::Resampler(double inputRate, double outputRate) noexcept
+Resampler::Resampler(double inputRate, double outputRate, Quality quality) noexcept
     : input_rate_(inputRate),
-      output_rate_(outputRate) {
-    // Include the C header with extern "C" already handled in the header via
-    // the struct SRApi / SRC_STATE forward-declaration trick, but we need the
-    // actual C function declarations. Since samplerate.h is a C header, we
-    // include it here with extern "C" to avoid C++ name mangling.
-    // The header resampler.h does NOT include samplerate.h directly (it forward-
-    // declares the types) to keep it C++-clean; the .cpp includes it.
-
+      output_rate_(outputRate),
+      current_ratio_(outputRate / inputRate),
+      input_buffer_(kMaxStagingFrames),
+      stagingHead_(0),
+      stagingSize_(0) {
+    // Select converter type based on quality parameter.
+    const int converterType = (quality == Quality::Best)
+        ? SRC_SINC_BEST_QUALITY
+        : SRC_SINC_MEDIUM_QUALITY;
     int error = 0;
-    // SRC_SINC_MEDIUM_QUALITY: good quality / perf trade-off for real-time.
-    // 1 channel (mono).
-    state_ = src_new(SRC_SINC_MEDIUM_QUALITY, 1, &error);
+    state_ = src_new(converterType, 1, &error);
     valid_ = (error == 0);
     (void)inputRate;   // suppress unused-parameter warning if needed
     (void)outputRate;
@@ -46,99 +44,126 @@ void Resampler::reset() {
     if (state_ != nullptr) {
         src_reset(static_cast<SRC_STATE*>(state_));
     }
-    // Also clear the internal staging buffer so no stale input persists.
-    input_buffer_.clear();
-    input_offset_ = 0;
+    // Reset staging indices; buffer capacity is preserved (no reallocation).
+    stagingHead_ = 0;
+    stagingSize_ = 0;
 }
 
 std::size_t Resampler::process(const float* in, std::size_t numInFrames,
                                float* out, std::size_t maxOutFrames) {
-    // Append new input samples to the internal staging buffer.
-    // This allows unconsumed frames to persist across process() calls.
-    input_buffer_.insert(input_buffer_.end(), in, in + numInFrames);
-
     std::size_t total_out = 0;
 
-    // Loop calling src_process until the output buffer is full or no more
-    // output can be generated.  The standard streaming pattern:
-    //   - Set up SRC_DATA pointing at the current staging-buffer offset.
-    //   - Call src_process().  It may consume some input and produce some output.
-    //   - Advance the offset by input_frames_used, and the output pointer
-    //     by output_frames_gen.
-    //   - Repeat until output is full or all input is consumed and drained.
-    while (total_out < maxOutFrames) {
-        // Calculate how many unconsumed frames are available in the staging buffer.
-        std::size_t available = input_buffer_.size() - input_offset_;
-        if (available == 0) {
-            // No more input to process.  Try one more src_process call with
-            // input_frames = 0 to drain any remaining internal filter state
-            // (this can produce a few final output samples).
+    // ---------- Phase 1: Feed new input into the bounded staging buffer ----------
+    // Loop until all input is consumed or the output buffer fills.
+    // The staging buffer is fixed-capacity (kMaxStagingFrames); we compact
+    // (in-place memmove, NO allocation) whenever unconsumed frames sit behind a
+    // non-zero head, so the write position is always exactly stagingSize_ and
+    // the free space is exactly kMaxStagingFrames - stagingSize_.
+    while (numInFrames > 0 && total_out < maxOutFrames) {
+        // Compact first: move unconsumed frames to the front so head == 0.
+        if (stagingHead_ > 0) {
+            if (stagingSize_ > 0) {
+                std::memmove(input_buffer_.data(), input_buffer_.data() + stagingHead_,
+                             stagingSize_ * sizeof(float));
+            }
+            stagingHead_ = 0;
+        }
+
+        // Copy up to free_space frames from the caller's input into the staging
+        // buffer (write position == stagingSize_ after the compaction above).
+        std::size_t free_space = kMaxStagingFrames - stagingSize_;
+        std::size_t frames_to_copy = std::min(numInFrames, free_space);
+        if (frames_to_copy > 0) {
+            std::memcpy(input_buffer_.data() + stagingSize_, in,
+                        frames_to_copy * sizeof(float));
+            stagingSize_ += frames_to_copy;
+            in += frames_to_copy;
+            numInFrames -= frames_to_copy;
+        }
+
+        // If after copying we still have no staged data (e.g. first call with
+        // no prior input), trigger the drain path immediately.
+        if (stagingSize_ == 0) {
+            // No input to process; try one drain src_process call.
             SRC_DATA data{};
-            data.src_ratio = output_rate_ / input_rate_;
+            data.src_ratio = current_ratio_;
             data.data_in = nullptr;
             data.input_frames = 0;
-            data.data_out = out + total_out;
-            data.output_frames = static_cast<long>(maxOutFrames - total_out);
+            data.data_out = out + static_cast<long>(total_out);
+            data.output_frames = static_cast<long>(maxOutFrames - static_cast<long>(total_out));
             data.end_of_input = 0;
-src_process(static_cast<SRC_STATE*>(state_), &data);
-            size_t gen = static_cast<std::size_t>(data.output_frames_gen);
-            if (gen > 0) {
-                total_out += gen;
-            }
+            src_process(static_cast<SRC_STATE*>(state_), &data);
+            total_out += static_cast<std::size_t>(data.output_frames_gen);
             break;
         }
 
+        // ---------- Phase 2: Process the staged window with src_process ----------
         SRC_DATA data{};
-        data.src_ratio = output_rate_ / input_rate_;
-        data.data_in = input_buffer_.data() + static_cast<long>(input_offset_);
-        data.input_frames = static_cast<long>(available);
+        data.src_ratio = current_ratio_;
+        data.data_in = input_buffer_.data() + stagingHead_;
+        data.input_frames = static_cast<long>(stagingSize_);
         data.data_out = out + static_cast<long>(total_out);
         data.output_frames = static_cast<long>(maxOutFrames - static_cast<long>(total_out));
-        data.end_of_input = 0;   // may give more input later
+        data.end_of_input = 0;   // streaming: more input may come later
 
         src_process(static_cast<SRC_STATE*>(state_), &data);
 
         std::size_t gen = static_cast<std::size_t>(data.output_frames_gen);
         std::size_t used = static_cast<std::size_t>(data.input_frames_used);
 
-        if (gen == 0) {
-            // No output generated this iteration.
-            // This can happen during the initial filter transient if we haven't
-            // supplied enough input yet, or if the output buffer was already full.
-            // If we have input remaining but no output, it may be the transient;
-            // break to avoid an infinite loop – the caller may call process() again
-            // (e.g. with end-of-input semantics) to drain the remaining output.
-            if (input_offset_ >= input_buffer_.size()) {
-                // All input consumed and no output – nothing more to do.
-                break;
-            }
-            // Otherwise we have input but no output yet (initial transient).
-            // Break here; further output may be obtained by calling process()
-            // again or by setting end_of_input downstream.
+        if (gen > 0) {
+            total_out += gen;
+        }
+
+        // Advance head and reduce staged count by the number of frames consumed.
+        // src_process consumes 'used' frames STARTING at stagingHead_.
+        // We must NOT double-decrement; the remaining staged frames shift left
+        // automatically because the read pointer moves forward.
+        stagingHead_ += used;
+        stagingSize_ -= used;
+
+        // If all staged data has been consumed, reset head to 0 so that the
+        // next copy target (stagingHead_ + stagingSize_) stays within the
+        // pre-allocated buffer.  This prevents stagingHead_ from growing
+        // beyond kMaxStagingFrames and causing out-of-bounds writes.
+        if (stagingSize_ == 0) {
+            stagingHead_ = 0;
+        }
+
+        // Guard against infinite loop: if src_process consumed 0 input frames
+        // while we still have staged data, we are in the initial filter transient.
+        // Break out so the caller can call process() again later.
+        if (used == 0 && stagingSize_ > 0) {
             break;
         }
 
-        total_out += gen;
-        input_offset_ += used;
-
-        // If we have consumed all input that was available, we keep the loop
-        // going; src_process may still produce output from its internal delay
-        // line even with no new input (the "drain" phase).  The loop condition
-        // (total_out < maxOutFrames) will stop us when the output buffer fills.
-    }
-
-    // --- Compact the staging buffer ---
-    // Remove consumed frames from the front so the buffer does not grow
-    // unboundedly.  We move the remaining (unconsumed) input to the front.
-    if (input_offset_ > 0) {
-        // If there is remaining input, shift it to the beginning.
-        if (input_offset_ < input_buffer_.size()) {
-            std::move(input_buffer_.begin() + static_cast<long>(input_offset_),
-                      input_buffer_.end(),
-                      input_buffer_.begin());
+        // ---------- Phase 3: Compact if the head has advanced far enough ----------
+        // Move remaining unconsumed data to the front with memmove (NO allocation),
+        // so that stagingHead_ resets to 0 and the buffer stays within capacity.
+        if (stagingHead_ + stagingSize_ > kMaxStagingFrames / 2) {
+            if (stagingSize_ > 0) {
+                std::memmove(input_buffer_.data(), input_buffer_.data() + stagingHead_,
+                             stagingSize_ * sizeof(float));
+                stagingHead_ = 0;
+            }
         }
-        input_buffer_.resize(static_cast<std::size_t>(input_buffer_.size() - input_offset_));
-        input_offset_ = 0;
+    }  // end while (numInFrames > 0 && total_out < maxOutFrames)
+
+    // ---------- Phase 4: Drain phase ----------
+    // If no new input was supplied (numInFrames == 0 after the feeding loop)
+    // and the output buffer is not yet full, try one more src_process call with
+    // data_in=nullptr to emit any leftover filter state (the "drain" behaviour).
+    // This mirrors the original code's behaviour when available == 0.
+    if (numInFrames == 0 && total_out < maxOutFrames && stagingSize_ == 0 && stagingHead_ == 0) {
+        SRC_DATA data{};
+        data.src_ratio = current_ratio_;
+        data.data_in = nullptr;
+        data.input_frames = 0;
+        data.data_out = out + static_cast<long>(total_out);
+        data.output_frames = static_cast<long>(maxOutFrames - static_cast<long>(total_out));
+        data.end_of_input = 0;
+        src_process(static_cast<SRC_STATE*>(state_), &data);
+        total_out += static_cast<std::size_t>(data.output_frames_gen);
     }
 
     return total_out;
@@ -150,6 +175,17 @@ double Resampler::inputRate() const noexcept {
 
 double Resampler::outputRate() const noexcept {
     return output_rate_;
+}
+
+void Resampler::setRatio(double ratio) noexcept {
+    const double nominal = output_rate_ / input_rate_;
+    const double minRatio = nominal * 0.5;
+    const double maxRatio = nominal * 2.0;
+    current_ratio_ = (ratio < minRatio) ? minRatio : (ratio > maxRatio) ? maxRatio : ratio;
+}
+
+double Resampler::currentRatio() const noexcept {
+    return current_ratio_;
 }
 
 // ---------------------------------------------------------------------------

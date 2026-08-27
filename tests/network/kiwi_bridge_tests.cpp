@@ -42,6 +42,12 @@ public:
                     std::lock_guard<std::mutex> lock(mutex_);
                     frames_.push_back(msg->str);
                 }
+                cv_.notify_all();
+                // After recording, check if this is the auth frame and send audio_rate
+                // to trigger Phase 2 of the KiwiClient handshake.
+                if (msg->str == "SET auth t=kiwi p=") {
+                    socket.sendBinary("MSG audio_rate=12000");
+                }
                 // Echo a state message back to the UI client.
                 // The test expects "MSG state freq=14100".
                 socket.send("MSG state freq=14100");
@@ -56,7 +62,8 @@ public:
         if (thread_.joinable()) {
             thread_.join();
         }
-        ix::uninitNetSystem();
+        // Note: no ix::uninitNetSystem() here — the test runner initialises the
+        // net system once for the whole process (see tests/test_main.cpp).
     }
 
     std::uint16_t port() const { return port_; }
@@ -95,37 +102,41 @@ TEST_CASE("KiwiBridge: freq change from UI reaches the mock server as a SET comm
 
     REQUIRE(bridge.connect(config) == true);
 
-    // Wait for the handshake: auth, mod/freq, agc (3 frames).
-    REQUIRE(server.waitForFrames(3, std::chrono::seconds(5)));
+    // Wait for the handshake: options, auth, AR OK, squelch, genattn, gen,
+    // mod/freq, agc, keepalive (9 frames).
+    REQUIRE(server.waitForFrames(9, std::chrono::seconds(5)));
 
     const std::vector<std::string> handshakeFrames = server.frames();
-    REQUIRE(handshakeFrames.size() >= 3);
+    REQUIRE(handshakeFrames.size() >= 9);
 
     // Verify handshake frames are correct.
-    REQUIRE(handshakeFrames[0] == "SET auth t=kiwi p=");
-    REQUIRE(handshakeFrames[1] == "SET mod=am low_cut=-4900 high_cut=4900 freq=14100.000");
-    REQUIRE(handshakeFrames[2] == "SET agc=1 hang=0 thresh=-100 slope=6 decay=1000 manGain=50");
+    REQUIRE(handshakeFrames[0] == "SET options=1");
+    REQUIRE(handshakeFrames[1] == "SET auth t=kiwi p=");
+    REQUIRE(handshakeFrames[2] == "SET AR OK in=12000 out=12000");
+    REQUIRE(handshakeFrames[3] == "SET squelch=0 max=0");
+    REQUIRE(handshakeFrames[4] == "SET genattn=0");
+    REQUIRE(handshakeFrames[5] == "SET gen=0 mix=-1");
+    REQUIRE(handshakeFrames[6] == "SET mod=iq low_cut=-5980 high_cut=5980 freq=14100.000");
+    REQUIRE(handshakeFrames[7] == "SET agc=1 hang=0 thresh=-130 slope=6 decay=1000 manGain=20");
+    REQUIRE(handshakeFrames[8] == "SET keepalive");
 
-    // Send a freq change from the UI.
-    bridge.setOnStateUpdate(
-        [](const std::string& /*msg*/) { /* unused in this test */ });
-
+    // Send a freq change from the UI (using new UI name "freqKhz").
     REQUIRE(bridge.handleUiMessage(
-              R"({"type":"setParameter","data":["freq",14100]})",
+              R"({"type":"setParameter","data":["freqKhz",14100]})",
               0.0) == true);
 
     // Poll for the additional SET freq frame from the UI change.
     auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(5);
     while (std::chrono::steady_clock::now() < deadline) {
-        if (server.frames().size() >= 4) {
+        if (server.frames().size() >= 10) {
             break;
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
-    REQUIRE(server.frames().size() >= 4);
+    REQUIRE(server.frames().size() >= 10);
 
     const auto allFrames = server.frames();
-    REQUIRE(allFrames.size() >= 4); // 3 handshake + 1 freq change
+    REQUIRE(allFrames.size() >= 10); // 9 handshake + 1 freq change
 }
 
 TEST_CASE("KiwiBridge: rate limiter throttles repeated freq changes",
@@ -140,40 +151,41 @@ TEST_CASE("KiwiBridge: rate limiter throttles repeated freq changes",
 
     REQUIRE(bridge.connect(config) == true);
 
-    // Wait for the handshake frames.
-    REQUIRE(server.waitForFrames(3, std::chrono::seconds(5)));
+    // Wait for the handshake frames (options + auth + AR OK + squelch + genattn
+    // + gen + mod/freq + agc + keepalive = 9).
+    REQUIRE(server.waitForFrames(9, std::chrono::seconds(5)));
 
     // First freq change — should be allowed.
     REQUIRE(bridge.handleUiMessage(
-              R"({"type":"setParameter","data":["freq",14100]})",
+              R"({"type":"setParameter","data":["freqKhz",14100]})",
               0.0) == true);
 
     // Second change within the 0.05 s window (20/s = 1/20 = 0.05 s interval)
     // should be rate-limited and not sent.
     REQUIRE(bridge.handleUiMessage(
-              R"({"type":"setParameter","data":["freq",14100]})",
+              R"({"type":"setParameter","data":["freqKhz",14100]})",
               0.01) == false);
 
     // Third change after the window should be allowed again.
     REQUIRE(bridge.handleUiMessage(
-              R"({"type":"setParameter","data":["freq",14100]})",
+              R"({"type":"setParameter","data":["freqKhz",14100]})",
               0.06) == true);
 
-    // Poll for frames beyond the handshake until we have 5 total
-    // (3 handshake + 2 freq SET).
+    // Poll for frames beyond the handshake until we have 11 total
+    // (9 handshake + 2 freq SET from first + third changes; second is rate-limited).
     auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(5);
     while (std::chrono::steady_clock::now() < deadline) {
-        if (server.frames().size() >= 5) {
+        if (server.frames().size() >= 11) {
             break;
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
-    REQUIRE(server.frames().size() >= 5);
+    REQUIRE(server.frames().size() >= 11);
 
     const auto allFrames = server.frames();
     std::size_t freqCount = 0;
     for (const auto& f : allFrames) {
-        if (f.find("SET mod=am low_cut=-4900 high_cut=4900 freq=14100.000") !=
+        if (f.find("SET mod=iq low_cut=-5980 high_cut=5980 freq=14100.000") !=
             std::string::npos) {
             ++freqCount;
         }
@@ -199,31 +211,26 @@ TEST_CASE("KiwiBridge: server state is echoed back to the UI",
 
     REQUIRE(bridge.connect(config) == true);
 
-    // Wait for the handshake frames (server echoes "MSG state freq=14100"
-    // upon receiving each client frame during handshake).
-    REQUIRE(server.waitForFrames(3, std::chrono::seconds(5)));
+// Wait for the handshake frames (options + auth + AR OK + squelch + genattn + gen + mod/freq + agc + keepalive).
+    REQUIRE(server.waitForFrames(9, std::chrono::seconds(5)));
 
     // Send a UI freq change to guarantee a fresh echo.
     REQUIRE(bridge.handleUiMessage(
-              R"({"type":"setParameter","data":["freq",14100]})",
+              R"({"type":"setParameter","data":["freqKhz",14100]})",
               0.0) == true);
 
-    // Poll for the state callback to fire.
+    // Poll for the expected state echo ("MSG state freq=14100"),
+    // skipping the earlier "MSG audio_rate=12000" handshake message.
     bool received = false;
     auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(5);
     while (std::chrono::steady_clock::now() < deadline) {
-        if (!recordedMessage.empty()) {
+        if (recordedMessage == "MSG state freq=14100") {
             received = true;
             break;
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
     REQUIRE(received);
-    // Verify the recorded message is the expected echo.
-    if (received) {
-        INFO("Recorded state message: " << recordedMessage);
-        REQUIRE(recordedMessage == "MSG state freq=14100");
-    }
 }
 
 TEST_CASE("KiwiBridge: non-freq or malformed UI messages do not send commands",
@@ -238,10 +245,15 @@ TEST_CASE("KiwiBridge: non-freq or malformed UI messages do not send commands",
 
     REQUIRE(bridge.connect(config) == true);
 
-    // Wait for the handshake frames.
-    REQUIRE(server.waitForFrames(3, std::chrono::seconds(5)));
+// Wait for the handshake frames (options + auth + AR OK + squelch + genattn + gen + mod/freq + agc + keepalive).
+    REQUIRE(server.waitForFrames(9, std::chrono::seconds(5)));
 
-    std::size_t frameCountBefore = server.frames().size();
+    std::size_t frameCountBefore = server.frames().size(); // will be 9 (handshake only)
+
+    // Old "freq" UI name is no longer handled → treated as unknown.
+    REQUIRE(bridge.handleUiMessage(
+              R"({"type":"setParameter","data":["freq",14100]})",
+              0.0) == false);
 
     // Volume parameter should not trigger a server command.
     REQUIRE(bridge.handleUiMessage(

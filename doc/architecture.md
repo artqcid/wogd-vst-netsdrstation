@@ -64,26 +64,90 @@ analysis (JUCE/KFR/HISE are excluded; iPlug2/DPF are permissive alternatives).
 - **DSP/Host -> UI:** DAW modulates parameter -> EditController notified ->
   execute JS in WebView to update Vue state.
 
+### Station / Status channel (M3, implemented)
+
+In addition to the parameter channel above, M3 adds two extra message paths:
+
+**setStation (UI → Processor):**
+```
+PluginEditor::onJavaScriptMessage(type=setStation)
+  → PluginController::setStation(host, port)
+    → IConnectionPoint::sendMessage("NetSDRStation:SetStation", attr "HostPort")
+      → PluginProcessor::notify()
+        → workerThread_.post(connectToStation)
+          → KiwiClient::connect(host, port)
+```
+
+**Status feedback (Processor → UI):**
+```
+KiwiClient onOpen/onError/onClose callback
+  → PluginProcessor::emitStatus("Connected"|"Error"|"Disconnected")
+    → workerThread_.post(IMessage "NetSDRStation:Status")
+      → PluginController::notify()
+        → statusSink_(statusString)
+          → PluginEditor::pushStatus()
+            → webView_.eval("window.updateVueState({type:'status', data:'...'})") 
+```
+
+The `statusSink_` is a `std::function<void(std::string)>` registered by the
+editor in its constructor and cleared in its destructor.
+`KiwiClient::StateCallback` (`setOnOpen`, `setOnError`, `setOnClose`) is wired
+in `PluginProcessor::connectToStation`.
+
+_Files: `source/network/kiwi_client.h` (StateCallback), `source/vst/processor/plugin_processor.cpp` (emitStatus, connectToStation), `source/vst/controller/plugin_controller.cpp` (statusSink\_), `source/editor/plugin_editor.cpp` (pushStatus)_
+
 ## 6. Protocol / Handshake
 
-Connection via WebSocket on **port 8073** (the concrete test station
-`g8ure.ddns.net` uses port 8078). The protocol is ASCII `SET ...` text frames
-(reference: `jks-prv/kiwiclient` and the KiwiSDR server `rx/rx_cmd.cpp`).
+> **Vollständige Protokoll-Referenz:** `doc/kiwisdr-protocol-reference.md`
+> (aus KiwiSDR-Server-Quellcode + gr-kiwisdr/supersdr/kiwiclient abgeleitet).
+> Enthält: `CMD_SND_ALL`-Gate, Kick-Mechanismen (`too_busy`,
+> `connection_hang`), SND-Frame-Format, Keepalive-Regeln und die
+> Server-Policy-Analyse des ~11-s-Kicks.
 
-- **Authentication (anonymous):** send `SET auth t=kiwi p=`. This needs no user
-  name and no password, so the plugin works without any user configuration.
-- **Optional user identity:** `SET ident_user=<name>` — only sent when a user
-  name is explicitly configured.
+Connection via WebSocket on **port 8073** (the default API-ready test station
+`kphsdr.com:8073` uses the standard port; the port is configurable via
+`setServer()`, e.g. some Kiwis use non-standard ports). The protocol is ASCII
+`SET ...` text frames (reference: `jks-prv/kiwiclient` and the KiwiSDR server
+`rx/rx_cmd.cpp`).
+
+**Phase 1 (on open):**
+- `SET options=1` — marks the connection as external/non-local. **Must be sent
+  before auth** (kiwiclient `open()`).
+- **Authentication (anonymous):** `SET auth t=kiwi p=`. No user name / password
+  required, so the plugin works without any user configuration.
+
+**Phase 2 (triggered by the server's `audio_rate=<rate>` MSG):**
+- `SET AR OK in=<rate> out=<rate>` — **this is the command that activates the
+  SND audio stream.** `in`/`out` are parsed from the advertised `audio_rate=`
+  (typically 12000), never hard-coded. `out` == `in` requests the raw source
+  rate (no server-side resampling) because the plugin's own Resampler converts
+  source rate → DAW rate.
+- Optional `SET ident_user=<name>` (only when a user name is configured).
+- `SET squelch=0 max=0`, `SET genattn=0`, `SET gen=0 mix=-1` (init squelch off,
+  generator off — reference sequence).
 - **Tuning:** `SET mod=<mode> low_cut=<lc> high_cut=<hc> freq=<kHz>` (e.g.
   `SET mod=am low_cut=-4900 high_cut=4900 freq=14100.000`).
 - **AGC:** `SET agc=<0|1> hang=<0|1> thresh=<dB> slope=<dB> decay=<ms> manGain=<dB>`.
-- **Keepalive:** `SET keepalive` (periodic; the server drops idle connections).
+
+**Steady state:**
+- **Keepalive:** `SET keepalive` (periodic, 1 Hz; the server drops idle
+  connections). Do NOT send it faster (server treats it as spam and drops).
 - **Audio stream:** receive binary `SND` frames with IMA ADPCM-encoded
   sub-frames, decode them and write to the audio buffer.
 
 > Note: the earlier draft mentioned `SET user`/`SET inert`; those are not part
-> of the real protocol. The implemented commands are `auth`, optional
-> `ident_user`, `mod ... freq`, `agc`, `keepalive`.
+> of the real protocol.
+
+<!-- Vermerk 2026-08-27 (FIX-41, ENDGÜLTIG): -->
+> **Operational note — `n_snd=0` was a probe bug, not a client/server bug.**
+> The ~10-s `CLOSE 1005` and `n_snd=0` were caused by a bug in the **Python
+> probe** (`probe_full.py`): the server sends `sample_rate=` **before**
+> `audio_rate=`, and the probe's phase-2 latch swallowed the `SET AR OK` command
+> (which activates the SND stream). The C++ client was functionally correct and
+> has since been hardened to the reference sequence (options=1 before auth,
+> parsed AR OK rate, squelch/gen init, bogus `SERVER DE CLIENT` frame removed).
+> Live probe against kphsdr.com:8073 confirms SND frames flow. See
+> `doc/checklist.md` FIX-41.
 
 ## 7. Multi-Threaded Architecture (Real-Time Safety)
 
@@ -141,6 +205,10 @@ into three threads:
   JUCE orientation allowed for ideas/architecture, code never copied).
 - UI inventory & design: see `doc/ui-architecture.md` (complete KiwiSDR web
   UI element list, VST3 parameter mapping, scope decisions, tab layout).
+- Implementation plans: `doc/M3-implementation-plan.md` (integration & ship),
+  `doc/M4-implementation-plan.md` (UI parity), `doc/M5-implementation-plan.md`
+  (station selection). Each contains the chronological step order, alternatives
+  and risk registers for its milestone.
 - First milestone: generic VST foundation (forkable) + sine synth proof, see
   `doc/plan.md`.
 
@@ -154,7 +222,127 @@ into three threads:
 - Project-specific (KiwiSDR) details start only at Milestone 2.
 - Follow CCD (component orientation, separation of concerns, SRP, DIP, etc.).
 
-## 8. WebView2 Bundle Deployment
+## 11. Audio Pipeline (Milestone M3, implemented)
+
+> Cross-reference: `doc/M3-implementation-plan.md` (implementation status,
+> deviations and fixes), `doc/checklist.md` M3.
+
+After M3 the shipped `.vst3` connects to a real KiwiSDR server, decodes the
+audio and exposes the full parameter set to the DAW. The M1 sine oscillator is
+retired from `process()` (the class remains for its tests).
+
+### Pipeline (as implemented)
+
+```
+Network thread (IXWebSocket):
+  KiwiClient --SND binary frame--> ImaAdpcmDecoder --int16 PCM-->
+    AudioSampleQueue (lock-free SPSC, bounded tryPush, drop-newest)
+
+Audio thread (process()/renderPipeline):
+  AudioSampleQueue --pop--> Resampler (12 kHz -> DAW rate, bounded staging)
+    --> JitterBuffer (pre-allocated ring, drop-oldest, 100 ms prefill latch)
+    --> output (silence on underflow, volume/mute applied)
+```
+
+Two **deviations** from the original plan (rationale in
+`doc/M3-implementation-plan.md` §"Technical deviations"):
+
+1. The jitter buffer runs at the **DAW sample rate AFTER the resampler** (not
+   before), so `process()` pulls exactly `numSamples` per block.
+2. Connection is **lazy**: the processor connects only when a station is set
+   (`setState`/`applyState` or a `setStation` bridge message), never on
+   `initialize()`.
+
+### Sample rate: must ALWAYS come from the DAW (JUCE reference, 2026-08-27)
+
+`doc/plan.md` §M3 status entry FIX-40 documents the "sample rate always pulled
+from the DAW" rule. This subsection records the framework analysis behind it.
+
+**Reference: JUCE (`thirdParty/JUCE`, `juce_audio_processors`).**
+
+- `AudioProcessor::prepareToPlay(double sampleRate, int maxSamplesPerBlock)` is
+  the **pure virtual host→plugin callback** the host uses to hand the session
+  sample rate to the plugin
+  (`modules/juce_audio_processors_headless/processors/juce_AudioProcessor.h:139`).
+- The host stores the rate internally via
+  `AudioProcessor::setRateAndBufferSizeDetails(newSampleRate, newBlockSize)`
+  (`juce_AudioProcessor.cpp:376-380`), which assigns
+  `currentSampleRate = newSampleRate`.
+- Inside `processBlock()`, the plugin reads the current rate with
+  `double AudioProcessor::getSampleRate() const noexcept { return currentSampleRate; }`
+  (`juce_AudioProcessor.h:825`). **The doc comment explicitly states it is only
+  guaranteed valid inside `processBlock` and may return 0 otherwise** — i.e. the
+  sample rate is fundamentally a callback-time value supplied by the DAW, never a
+  hard-coded project constant.
+- Host side, JUCE's own non-DAW host (`AudioProcessorPlayer`) re-pulls the rate on
+  every audio-device start: `audioDeviceAboutToStart` reads
+  `device->getCurrentSampleRate()` and calls `prepareToPlay(sampleRate, blockSize)`
+  (`modules/juce_audio_utils/players/juce_AudioProcessorPlayer.cpp:344-355,180`).
+  In a real VST3 host the same rate flows into the plugin through the host's
+  `IAudioProcessor::setAudioProcessor`/`setupProcessing` handshake.
+- **Dynamic change:** when the user changes the sample rate in the DAW mid-session,
+  the host re-invokes the setup path with the new rate (JUCE re-calls
+  `prepareToPlay`; VST3 hosts call `setupProcessing` with a new `ProcessSetup`).
+  The plugin must therefore treat its output sample rate as **re-initialisable**
+  and rebuild any rate-dependent state (resampler, jitter buffer, clock-drift
+  baseline) when that happens.
+
+**Reference: VST3 SDK (`thirdParty/vst3sdk`).**
+
+- `IAudioProcessor::setupProcessing(ProcessSetup& setup)` is the VST3 equivalent
+  of JUCE's `prepareToPlay`. `ProcessSetup` carries
+  `int32 maxSamplesPerBlock` and `SampleRate sampleRate`
+  (`pluginterfaces/vst/ivstaudioprocessor.h:174-182`); `SampleRate` is
+  `typedef double` (`vsttypes.h:112`). The host calls `setupProcessing` when the
+  processing config (sample rate / max block) changes.
+
+**Our plugin (already correct, verify on any reconnect/setup re-entry):**
+
+- `PluginProcessor::setupProcessing` re-creates the `Resampler` and `JitterBuffer`
+  from `newSetup.sampleRate` and re-baselines `smoothedRatio_` to
+  `newSetup.sampleRate / 12000.0` (`source/vst/processor/plugin_processor.cpp:612-625`).
+  Because the KiwiSDR stream is fixed at 12 kHz, the DAW output rate is the only
+  free variable and it is taken from the host.
+
+**Open question (FIX-40):** whether `setupProcessing` is guaranteed to be
+re-invoked by every host on a mid-session sample-rate change, and whether the
+clock-drift `smoothedRatio_` (which the M3.6 log-analysis showed drifting to
+~4.0 instead of nominal ~3.675) is reset reliably on reconnect — see
+`doc/checklist.md` FIX-40 and `doc/plan.md` §M3 status.
+
+### Real-time safety (M3.4 audit)
+
+- Audio thread is **lock-free, allocation-free, network-free**:
+  - `JitterBuffer` = pre-allocated ring buffer; `push`/`pull`/`reset`
+    allocation-free (constructor allocates once).
+  - `Resampler` = bounded staging buffer (`kMaxStagingFrames = 4096`, reserved
+    in the constructor); in-place `memmove` compaction; oversized inputs are
+    processed in an internal chunked loop.
+  - `AudioSampleQueue::pop` = moodycamel lock-free SPSC.
+  - `ParameterRegistry::setValue` = lock-free O(1) `unordered_map` lookup
+    (FIX-35 resolved).
+- Jitter buffer pre-fill is a **start latch**: it only gates the first pull;
+  once playing, `pull` returns whatever is available (0 on underflow) so a
+  mid-stream dip below the 100 ms target never re-arms a burst of silence.
+
+### Parameter set (27 DAW-automatable VST3 parameters)
+
+`kParamStation` is **not** a VST3 parameter (VST3 params are double-typed); the
+station is plugin state serialized in `getState`/`setState` and set via the
+`setStation` bridge message (Option A). Groups:
+
+- **Core:** `mode` (enum 0..17), `freqKhz` (0.001..30000 kHz), `lowCut`
+  (-8000..0 Hz), `highCut` (0..8000 Hz).
+- **AGC:** `agcOn`, `agcHang`, `agcThresh` (-130..0 dB), `agcSlope` (0..10 dB),
+  `agcDecay` (20..5000 ms), `agcManGain` (0..120 dB).
+- **Audio:** `volume` (0..1), `mute`, `squelchOn`, `squelchThr` (0..1), `nbOn`,
+  `nbThresh` (0..1), `nrOn`, `deempOn`, `compOn`.
+- **Display/Waterfall:** `wfOn`, `wfSpeed` (enum 0..3), `wfZoom` (0..14),
+  `wfMaxDb` (-10..0), `wfMinDb` (-160..-60), `wfComp`, `arOn`, `ovOn`.
+
+Full definitions: `source/vst/common/paramdefinitions.h`, `paramids.h`.
+
+## 12. WebView2 Bundle Deployment
 
 The plugin is self-contained — it works without any system-wide WebView2 installation.
 All WebView2 dependencies are bundled inside the VST3 package.
@@ -168,11 +356,15 @@ at build time via CMake POST_BUILD commands (`source/entry/CMakeLists.txt`).
 ### Runtime Discovery
 
 On plugin load, `WebViewHost::Impl::attach()` (`source/webview/webview_editor.cpp`):
-1. Resolves the module directory via `GetModuleFileNameW`
+1. Resolves the **plugin DLL** directory via
+   `GetModuleFileNameW(reinterpret_cast<HMODULE>(&__ImageBase), ...)`.
+   Using `__ImageBase` (the plugin DLL's own image base) is critical — passing
+   `nullptr` would return the **host executable** path, pointing the runtime
+   discovery at the wrong directory (BUG-01 root cause, fixed).
 2. Sets the environment variable `WEBVIEW2_BROWSER_EXECUTABLE_FOLDER` to
    `<moduledir>/FixedRuntime`
-3. Constructs the `webview::webview` object — WebView2 uses the env var to
-   locate the bundled runtime instead of the Windows Registry
+3. Constructs the `webview::webview` object — `WebView2Loader.dll` reads the
+   env var to locate the bundled runtime instead of the Windows Registry
 4. Resets the env var after construction
 
 ### Release UI URL

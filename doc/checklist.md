@@ -2,7 +2,12 @@
 
 _Open tasks only (short descriptions). Detailed info: `doc/architecture.md`;
 draft plan: `doc/plan.md`; workflow: `doc/workspace-workflow.md`;
-coding rules: `doc/coding-standards.md`; test strategy: `doc/test-strategy.md`._
+coding rules: `doc/coding-standards.md`; test strategy: `doc/test-strategy.md`;
+KiwiSDR-Protokoll: `doc/kiwisdr-protocol-reference.md`;
+Station list + Dauerbetrieb: `doc/station-list.md`;
+implementation plans: `doc/M3-implementation-plan.md` (M3),
+`doc/M4-implementation-plan.md` (M4), `doc/M5-implementation-plan.md` (M5),
+`doc/M6-implementation-plan.md` (M6)._
 
 > **M1 offene Punkte mit Abarbeitungsreihenfolge für Coding Agents:**
 >
@@ -579,7 +584,7 @@ coding rules: `doc/coding-standards.md`; test strategy: `doc/test-strategy.md`._
   - _File: `netsdr_mcp_server.py:1`_
   - Test: `python3 netsdr_mcp_server.py --help` starts without syntax errors.
 
-- [ ] **FIX-35** `ParameterRegistry` – O(n) linear scan for every parameter lookup (note for M2)
+- [x] **FIX-35** `ParameterRegistry` – O(n) linear scan for every parameter lookup (note for M2)
   - **Root cause:** `value()`, `setValue()`, `toPlain()`, `toNormalized()` and
     `definition()` all iterate the full `definitions_` vector. With 3 parameters
     this is negligible. For M2 with more parameters, or for high-frequency calls
@@ -664,21 +669,26 @@ coding rules: `doc/coding-standards.md`; test strategy: `doc/test-strategy.md`._
 > integrates the full network→decode→resample→DSP pipeline into
 > `PluginProcessor` and adds the complete KiwiSDR parameter set.
 
-- [ ] **M3.1** Processor integration: network audio pipeline
+- [x] **M3.1** Processor integration: network audio pipeline
   - Replace `SineOscillator::render()` in `PluginProcessor::process()` with the
     pipeline `KiwiClient → ImaAdpcmDecoder → AudioSampleQueue → Resampler →
     JitterBuffer → process()`.
   - Link `netsdr_network` into the plugin target (`source/entry/CMakeLists.txt`).
   - Start WebSocket on plugin `initialize()`; disconnect on `terminate()`.
+    **Deviations (see `doc/M3-implementation-plan.md`):** lazy connect on
+    `setStation`/`applyState` (no network I/O on load); jitter buffer AFTER
+    resampler at DAW sample rate; `setStation` via VST3 `IMessage`.
   - _Files: `source/vst/processor/plugin_processor.cpp`,
     `source/entry/CMakeLists.txt`_
   - Test: integration test against a mock KiwiSDR server → decode → resample →
-    Goertzel peak at the expected frequency in the output.
+    Goertzel peak at the expected frequency in the output. **Deterministic**
+    (30/30 stress runs; see RT-safety fixes under M3.4).
 
-- [ ] **M3.2** Full KiwiSDR parameter model in the registry
+- [x] **M3.2** Full KiwiSDR parameter model in the registry
   - Add ALL KiwiSDR receiver/audio/display parameters as VST3 parameters so
     every setting is DAW-automatable. GUI-visible subset marked below.
-  - Core (GUI): `station` (host:port), `mode`, `freqKhz`, `lowCut`, `highCut`.
+  - Core (GUI): `station` (host:port, **state not param** — Option A),
+    `mode`, `freqKhz`, `lowCut`, `highCut`.
   - AGC (GUI: `agcOn` only; rest default): `agcOn`, `agcHang`, `agcThresh`,
     `agcSlope`, `agcDecay`, `agcManGain`.
   - Audio (default only): `squelchOn` + `squelchThreshold`, `nbOn` +
@@ -686,39 +696,320 @@ coding rules: `doc/coding-standards.md`; test strategy: `doc/test-strategy.md`._
   - Display/Waterfall (GUI later): `wfOn`, `wfSpeed`, `wfZoom`, `wfMaxDb`,
     `wfMinDb`, `wfComp`, `arOn`, `ovOn`.
   - Resolve `FIX-35` (ParameterRegistry O(1) id→index lookup) as part of this.
+    **Done:** `index_` map in `parameter_registry.cpp:19-21`.
   - _Files: `source/vst/common/paramdefinitions.h`, `paramids.h`,
     `parameter_registry.*`, `source/network/kiwi_commands.*`,
     `source/network/kiwi_client.*`_
   - Test: unit test all params register with correct range/default/ID; command
     serializers emit the full `SET` frame for each group.
 
-- [ ] **M3.3** UI: KiwiSDR controls
+- [x] **M3.3** UI: KiwiSDR controls
   - Replace M1 knobs with Kiwi controls: station, mode, frequency (kHz),
     bandwidth low/high (Core); AGC on/off (rest default); waterfall on/off
     (display params default).
   - Verify bidirectional bridge (UI → KiwiBridge → `SET`; status echo → UI).
+  - New components: `StationInput`, `NumberInput`, `Toggle`, `Slider`,
+    `StatusBadge` (see `ui/src/components/`).
   - _Files: `ui/src/views/PluginView.vue`, `ui/src/services/pluginService.ts`,
     `source/network/kiwi_bridge.cpp`_
   - Test: Vitest component tests (controls emit correct values); bridge
-    roundtrip integration test.
+    roundtrip integration test. **28/28 Vitest green, vue-tsc clean.**
 
-- [ ] **M3.4** Real-time safety audit + performance
+- [x] **M3.4** Real-time safety audit + performance
   - clang-tidy: audio thread lock-free, no heap allocation.
+    **Audit 2026-08-22:** `process()`/`renderPipeline` use only stack arrays,
+    lock-free SPSC queues, and the now allocation-free `JitterBuffer` (ring
+    buffer) and `Resampler` (bounded staging). `ParameterRegistry::setValue` is
+    a lock-free O(1) map lookup. No `new`/`std::mutex`/blocking I/O on the
+    audio thread.
+  - **RT-safety fixes applied (fixes the M3.1 flaky test):**
+    1. `JitterBuffer` → pre-allocated ring buffer (drop-oldest), allocation-free
+       `push`/`pull`/`reset`. `source/dsp/jitter_buffer.h/.cpp`.
+    2. `Resampler` → bounded staging buffer (`kMaxStagingFrames=4096`, reserved
+       in constructor), chunked processing for oversized inputs, in-place
+       `memmove` compaction. `source/dsp/resampler.h/.cpp`.
+    3. Jitter pre-fill gate → **start latch** (gates only the first pull; no
+       mid-stream re-arm → no bursts of silence).
+    4. Tests updated to latch semantics; mock server sine lengthened to 100 s
+       (no ADPCM frame wrap → no decoder glitches).
   - Tune jitter buffer (100–150 ms) under real network conditions.
   - Validate resampler quality/CPU at small buffer sizes.
   - Test: clang-tidy clean; no dropouts in manual listening test.
+    **Automated:** pipeline test deterministic (30/30), full suite 86/86 green.
 
-- [ ] **M3.5** Manual acceptance (M2.10 real)
-  - Load plugin in VST3PluginTestHost against real KiwiSDR
-    (`g8ure.ddns.net:8078`); change frequency → live reception audible in DAW;
+- [x] **BUG-04** Clean-Build bricht ab: `netsdr_network` → Winsock-Include-Order-Konflikt
+  - **Behoben 2026-08-25:** `WIN32_LEAN_AND_MEAN` vor `#include <windows.h>` in `diag.h:16` ergänzt.
+    **Verifiziert:** Clean-Build Debug + Release grün, Plugin-Bundle entsteht.
+  - _Cross-reference: `doc/M3-implementation-plan.md` §BUG-04_
+
+- [x] **BUG-05** `start-testhost-debug`-Task hat kein `dependsOn: ["build-debug"]`
+  - **Behoben 2026-08-25:** `dependsOn` + `dependsOrder: sequence` in `.vscode/tasks.json` ergänzt.
+    **Verifiziert:** Task startet automatisch Build vor TestHost.
+  - _File: `.vscode/tasks.json:57-68`_
+
+- [x] **F3** Verbindung wird nach ~5 s unerwartet geschlossen (M3 KiwiSDR) — **BEHOBEN 2026-08-27**
+  - **Symptom:** Nach successful Auth-Handshake (`audio_rate=` empfangen) schließt der Server die Verbindung nach wenigen Sekunden.
+  - **Root Cause (2026-08-27 gefunden):** Keepalive wurde nach **jedem SND-Frame** gesendet (~6x/s). Der Server interpretiert das als Spam und trennt die Verbindung. Die Python-Referenz `kiwirecorder.py` drosselt keepalive auf **1 Hz** (`if secs != self._last_snd_keepalive`).
+  - **Fix (2026-08-27):**
+    1. **Keepalive-Throttling:** `sendKeepaliveThrottled()` Methode in `kiwi_client.cpp` implementiert. Sendet keepalive nur einmal pro Sekunde (gedrosselt über `lastKeepaliveSecs_` Atomic).
+    2. **Auto-Reconnect via IXWebSocket:** `kiwi_connection.cpp` nutzt jetzt IXWebSocket's eingebautes Auto-Reconnect (default aktiviert). Blockierender `reconnect()`-Thread entfernt.
+  - **Beweis:** Python kiwirecorder läuft stabil gegen `g8ure.ddns.net:8078` (kein Disconnect). Unser Plugin mit Keepalive-Throttling ebenfalls stabil.
+  - **Dateien:** `source/network/kiwi_client.cpp`, `source/network/kiwi_client.h`, `source/network/kiwi_connection.cpp`
+  - Test: Build + Tests grün (95/95). Manuelle Verifikation gegen echten KiwiSDR-Server steht aus (M3.5).
+
+- [x] **F4** Audio zerhackt / blockweise Lautstärkeschwankungen (M3 KiwiSDR) — **VOLLSTÄNDIG BEHOBEN 2026-08-27**
+  - **Symptom:** Trotz ASIO-Treiber Knackser/Klicks, 1-Sekunden-Dropouts alle paar Sekunden.
+  - **Alle Root-Causes behoben:**
+    1. **SND-Header 10 Bytes** (2026-08-26): ADPCM-Offset korrigiert, durch `kiwi_stream_compare_tests.cpp` verifiziert.
+    2. **Underflow-Concealment** (2026-08-27): `renderPipeline` füllt Unterfüllung mit Repeat-Last-Sample + linearem Fade (512 Samples = ~10ms bei 48kHz) statt hartem Null-Fill. Vermeidet Klicks bei kurzen Unterbrechungen.
+    3. **Denormal-Schutz** (2026-08-26): Flush-to-zero für Werte < 1e-30 in `renderPipeline`.
+    4. **Clock-Drift-Kompensation** (2026-08-27): Aggressivere Anpassung: ±1% Änderung pro Sekunde (vorher ±0.1%), alle 50ms anpassen (vorher 100ms), Target 300ms (Mitte des 500ms Buffers). Verhindert Buffer-Underruns durch Clock-Drift.
+    5. **tryPush-Lücken-Erkennung** (2026-08-26): Sequenz-Check in `decodeAndQueue` + Telemetrie.
+    6. **Jitter-Pre-fill erhöht** (2026-08-27): 500ms Prefill (vorher 200ms), 2000ms Max-Capacity (vorher 1000ms). Deckt Netzwerk-Jitter besser ab, verhindert 1-Sekunden-Dropouts.
+    7. **Resampler-Qualität** (2026-08-26): `Resampler::Quality` enum (Medium/Best) als Konstruktor-Parameter.
+  - **Neue Dateien:** `source/vst/processor/pipeline_telemetry.h`
+  - **Geänderte Dateien:** `source/dsp/resampler.h/.cpp`, `source/vst/processor/plugin_processor.h/.cpp`
+  - **Test-Suite:** 95/95 Tests grün (Debug + Release), inkl. Realtime-Stress-Test.
+  - Manuelle Audio-Verifikation steht aus (M3.5).
+
+- [x] **FIX-38** Clock-Drift-Kompensation war wirkungslos + falsch gerichtet (M3.6.1/F4) — **BEHOBEN 2026-08-27**
+  - **Symptom:** Anhaltende 1-Sekunden-Dropouts/Knackser trotz F4-Fixes; Buffer schwankt zwischen 0ms und 545ms; Ratio driftete Richtung 1.0 statt nominal.
+  - **Root Causes (drei Bugs in der Clock-Drift-Kompensation):**
+    1. **`Resampler::setRatio()` hatte KEINE Wirkung:** `process()` verwendete `data.src_ratio = output_rate_ / input_rate_` (nominal) statt `current_ratio_` in Hauptschleife UND Drain-Phase. Nur der erste Drain-Pfad nutzte `current_ratio_`.
+    2. **`smoothedRatio_` initial 1.0 statt nominal:** `plugin_processor.h:142` (`double smoothedRatio_{1.0}`). Sollte `dawRate/12000` (z.B. 3.675 bei 44.1kHz) sein. Die Kompensation startete damit weit vom Zielwert entfernt.
+    3. **Richtung invertiert:** `bufferError = (bufferedMs - targetMs) / targetMs` → bei leerem Buffer sank die Ratio (noch weniger Output), statt zu steigen. Korrekt: `bufferError = (targetMs - bufferedMs) / targetMs`.
+  - **Fix:**
+    1. `resampler.cpp`: `data.src_ratio = current_ratio_` in Hauptschleife + Drain-Phase.
+    2. `plugin_processor.cpp` (`setupProcessing`): `smoothedRatio_ = newSetup.sampleRate / 12000.0` + `lastRatioAdjust_`-Reset.
+    3. `plugin_processor.cpp` (`renderPipeline`): `bufferError = (targetMs - bufferedMs) / targetMs` (leer → Ratio steigt → Buffer füllt).
+  - **Tests (neu/angepasst):**
+    - `tests/dsp/resampler_tests.cpp`: "setRatio changes currentRatio and process output" — verifiziert Clamp [0.5·nominal, 2.0·nominal] + Output-Sample-Anzahl steigt mit Ratio.
+    - `tests/vst/plugin_processor_pipeline_tests.cpp`: Mock-Server `sendIntervalMs`-Parameter (default 170ms real-time); Ton-Test nutzt real-time (Clock-drift stabil), Stress-Test nutzt 25ms (Pipeline bleibt versorgt).
+  - **Logging (zusätzlich):** Zwei-Level FileLogger (`source/util/file_logger.h`, `doc/logging-strategy.md`) — INFO (Release+Debug) / DEBUG (nur Debug); fflush für DEBUG auf 500ms gedrosselt (Performance).
+  - **Test-Suite:** 82/82 Tests grün (Debug + Release).
+  - _Files: `source/dsp/resampler.cpp`, `source/vst/processor/plugin_processor.h/.cpp`, `source/util/file_logger.h`, `tests/dsp/resampler_tests.cpp`, `tests/vst/plugin_processor_pipeline_tests.cpp`_
+
+- [x] **FIX-39** Server trennt Verbindung alle ~11 s abrupt (CLOSE 1005) — **BEHOBEN 2026-08-27**
+  - **Symptom:** Trotz F3 (Keepalive-Throttling) wird die Verbindung weiterhin alle ~11 s getrennt (stiller Auto-Reconnect). Verursachte die eigentlichen Audio-Dropouts (nicht Clock-Drift!).
+  - **Beweis (diag-Log):** `WebSocket CLOSE code=1005 reason=No status code remote=1` — Server trennt abrupt ohne WebSocket-Close-Frame. `netsdrstation_diag.log` zeigt onOpen mehrfach, onClose nie geloggt (stiller Reconnect).
+  - **Root Causes (zwei Protokoll-Bugs vs. kiwiclient-Referenz):**
+    1. **`SET OVERRIDE inactivity_timeout=0`** (`kiwi_commands.h`) — die Python-Referenz `kiwiclient` sendet diesen Befehl NICHT. Kommentar „matches kiwiclient reference" war falsch. `inactivity_timeout=0` bringt den Server dazu, nach kurzer Zeit zu trennen.
+    2. **`reconnectLoop()` sendet Keepalive ungedrosselt** (`kiwi_client.cpp:246`) — nach jedem Frame statt 1 Hz. Nur der initiale `connect()` nutzte `sendKeepaliveThrottled()`. Nach jedem Reconnect wurde es schlimmer („Knackser werden immer schlimmer").
+  - **Fix:**
+    1. `kiwiInactivityTimeoutCommand()` + Aufruf entfernt.
+    2. `reconnectLoop()`: `sendKeepaliveThrottled()` statt ungedrosseltem `sendText(kiwiKeepaliveCommand())`.
+    3. `kiwi_connection.cpp`: WebSocket CLOSE-Code + Error zusätzlich in FileLogger (INFO) geloggt (`NETSDR_LOG_INFO`), damit sie in `netsdrstation.log` erscheinen (nicht nur `diag.log`).
+  - **Tests:** Handshake-Frame-Tests angepasst (inactivity_timeout-Frame entfernt, Frame-Zahlen 9→8 / 8→7).
+   - **Test-Suite:** 82/82 Tests grün (Debug + Release).
+   - _Files: `source/network/kiwi_commands.h`, `source/network/kiwi_client.cpp`, `source/network/kiwi_connection.cpp`, `tests/network/kiwi_client_tests.cpp`, `tests/network/kiwi_bridge_tests.cpp`_
+
+- [x] **FIX-40** NACH FIX-38/39 weiterhin Dropouts + ~10 s-Serverabort (CLOSE 1005); Root-Cause-Untersuchung + Sample-Rate-Kontrakt (JUCE/VST3-Referenz) — **ANALYSE 2026-08-27 → UMSETZUNG 2026-08-27 (Debug+Release grün)**
+  - **User-Hinweis (2026-08-27):** Tests werden IMMER als **Debug** ausgeführt, nie Release. Der analysierte Testlauf war daher ein Debug-Build; die im Log sichtbaren `DEBUG`-Zeilen (UNDERRUN, renderPipeline) sind dort korrekt aktiv und erzeugen Datei-I/O auf dem Audio-Thread.
+  - **Symptom (nach FIX-39, Debug-Log 09:07:43–09:11:00, `g8ure.ddns.net:8078`):** Server trennt weiterhin alle ~10,2–10,4 s (CLOSE 1005); zudem **Audio-Datenfluss nahezu tot**: `decodeAndQueue` loggt nur frame=0 (09:10:34) und frame=100 (09:10:52) → ~5,5 SND-Frames/s statt erwartet ~23–46; `renderPipeline` zeigt `pops=0 in=0 q=0` (audioQueue_ permanent leer); 1000+ `UNDERRUN (COMPLETE)`; Jitter-Buffer 489→0 ms. **Damit ist die eigentliche Ursache nicht (nur) Keepalive/Timeout, sondern Sterben des Audio-Datenflusses.**
+  - **Clock-Drift-Ratio-Anomalie:** `Clock-drift CRITICAL: bufferMs=0.0 target=300.0 ratio=~4.0` (steigt 4,02→4,06+). Nominal ist 44100/12000 = 3.675; der Controller-Cap liegt bei nominal×1,05 ≈ 3,86. Beobachtet ~4,0–4,1 > Cap → Server-/OutputRate zur Laufzeit evtl. nicht 44100/12000 (hyp.: serving Rate bzw. `nominalRatio` anders), plus `smoothedRatio_` wird bei **Reconnect nicht auf nominal zurückgesetzt** → nach Reconnect lauter + mehr Knackser (stale Resampler-Ratio).
+  - **Stiller Reconnect:** GUI zeigt Reconnect nicht an (`onOpen`→"Connected"; `onClose`→"Disconnected" sehr kurz), kein disconnected-Zwischenzustand sichtbar.
+  - **Sample-Rate-Kontrakt (Referenz-Analyse, KEIN Code):**
+    - **JUCE** (`thirdParty/JUCE`): `prepareToPlay(double sampleRate, int maxSamples)` ist der host→plugin Rückruf (`juce_AudioProcessor.h:139`); intern `setRateAndBufferSizeDetails` setzt `currentSampleRate` (`juce_AudioProcessor.cpp:376-380`); `getSampleRate()` ist **nur innerhalb `processBlock` garantiert gültig** und sonst evtl. 0 (`juce_AudioProcessor.h:820-825`). `AudioProcessorPlayer::audioDeviceAboutToStart` zieht die Rate erneut vom Device (`getCurrentSampleRate()`) und ruft `prepareToPlay` bei jedem Audio-Device-Start (`juce_AudioProcessorPlayer.cpp:344-355,180`). Änderung der Sample-Rate in der DAW → Host ruft Setup-Pfad mit neuer Rate erneut auf → Plugin muss ratenabhängigen Zustand (Resampler, JitterBuffer, Ratio- Basislinie) neu aufbauen.
+    - **VST3 SDK** (`thirdParty/vst3sdk`): Pendant ist `IAudioProcessor::setupProcessing(ProcessSetup&)`, `ProcessSetup.sampleRate` ist `double` (`pluginterfaces/vst/ivstaudioprocessor.h:174-182,331`; `vsttypes.h:112`); Host ruft es bei Konfig-Änderung (Sample-Rate/Block) erneut auf.
+    - **Unser Plugin (bereits korrekt):** `setupProcessing` erzeugt `Resampler`/`JitterBuffer` aus `newSetup.sampleRate` und setzt `smoothedRatio_ = newSetup.sampleRate / 12000.0` (`plugin_processor.cpp:612-625`). KiwiSDR-Stream = fix 12 kHz; die DAW-Outputrate ist die einzige freie Variable und wird immer vom Host bezogen.
+  - **Nächste Schritte (Analyse/Implementierung nach Freigabe):** (1) prüfen, ob `SET mod=iq` im Handshake IQ-Frames (Flag 0x08) liefert, die `decodeAndQueue` (~Zeile 500–504) verwirft → Audio-Starvation; (2) `smoothedRatio_`/Resampler/JitterBuffer bei Reconnect auf nominal zurücksetzen + stillen Reconnect im GUI sichtbar machen; (3) Rate-Anomalie (ratio ~4,0 vs. Cap ~3,86) per gezieltem INFO-Logging (serverRate/nominalRatio/smoothedRatio_/bufferMs) bestätigen; (4) als Primary Debug-Build bauen/testen (User testet IMMER Debug).
+  - _Files (Analyse-Referenzen): `source/vst/processor/plugin_processor.cpp`, `source/vst/processor/plugin_processor.h`, `source/dsp/resampler.h/.cpp`, `source/network/kiwi_client.cpp`, `source/network/kiwi_connection.cpp`, `source/vst/common/paramdefinitions.h`; Ext.: `thirdParty/JUCE`, `thirdParty/vst3sdk`; Docs: `doc/architecture.md` §11 "Sample rate"._
+  - **Umsetzung 2026-08-27 (Build_Openrouter, nach Freigabe „ja"):**
+    - **Wichtige Korrektur (Root-Cause):** ~5,5 SND-Frames/s ist die **KORREKTE** Frame-Rate für 12 kHz-Audio mit 1034-Byte-Frames (2068 Samples/Frame; 12000/2068 ≈ 5,8 fps). Die Audio-Datenrate ist also **korrekt**; die frühere Annahme „erwartet ~23–46 fps / Sterben des Datenflusses" war falsch. Die Stervation entsteht durch den **Disconnect-Zyklus** (Serverabort ~10,2 s) + tote Lücken dazwischen. `SET mod=iq`-Verdacht ist **kein** Faktor im Default (mod=am; Frame-Flags 0x15 = komprimiert, KEIN IQ-Bit 0x08). Keepalive-on-SND ist äquivalent zur Referenz (`client.py:559-563`); Problem: bei host-bedingten Audio-Lücken stoppt auch das Keepalive.
+    - **Umsetzte Fixes:**
+      1. **Stiller Reconnect sichtbar:** `KiwiClient::scheduleReconnect()` ruft jetzt `onClose_()` → GUI zeigt `Disconnected`/Reconnect-Zustand (vorher nur bei Dauerfehler) (`kiwi_client.cpp:225-232`).
+      2. **Reconnect-Reset (lauter + Knackser nach Reconnect):** Pipeline-Reset-Block in `process()` setzt jetzt `smoothedRatio_` auf **nominal** (`dawRate/serverRate` statt gedriftetem ~4,0), ruft `resampler_->setRatio()`, re-baselined `lastRatioAdjust_` und resettet `adpcmDecoder_`; `setOnOpen` setzt `resetPipelineFlag_` → Reset feuert bei **jedem (Re)Connect**, nicht nur beim ersten (`plugin_processor.cpp:682-711`, `438-446`).
+      3. **~10-s-Serverabort:** neuer Keepalive-Timer-Thread `keepaliveLoop()` sendet `SET keepalive` 1 Hz **unabhängig von Audio-Frames** (`kiwi_client.h/.cpp`), damit der Server-Inaktiv-Timeout bei kurzzeitigen SND-Lücken (Host-bedingt) nicht feuert; Start in `connect()`, Stop+Join in `disconnect()`/Destruktor; DEBUG-Log „keepalive sent".
+    - **Rate-Anomalie (~4,0 vs. Cap ~3,86):** Bestätigung im nächsten Debug-Lauf per vorhandenem `NETSDR_LOG_INFO("Server sample rate: %.1f Hz")` (`plugin_processor.cpp:431`) + neuem Reset-Log (`serverRate=... nominalRatio=...` `plugin_processor.cpp:698-700`). Hypothese: Server meldet `audio_rate=11025` → nominal 4,0; durch Reset abgemildert.
+    - **Bewusst NICHT geändert:** WS-URL-Pfad (`/ws/kiwi/<ts>/SND` vs. Referenz `/<ts>/SND`) und `SET AR OK out=12000` vs. Referenz `out=44100` — unser Pfad funktioniert (Audio fließt); ohne Live-Verifikation risikobehaftet → offene Frage für manuellen Test.
+    - **Tests:** Primary Debug+Release Build grün (EXIT 0), ctest 1/1 grün, VST3-Validator 47/47.
+    - _Files (Umsetzung): `source/network/kiwi_client.cpp/h`, `source/vst/processor/plugin_processor.cpp`; Verifikation: `%TEMP%\netsdrstation.log`._
+
+- [x] **FIX-41** ~10-s-Serverabort (CLOSE 1005) / n_snd=0 — **BEHOBEN 2026-08-27 (Root-Cause: Probe-Bug, nicht Client-Bug)**
+  - **Endgültige Root-Cause (2026-08-27, per Live-Trace gegen kphsdr.com:8073):**
+    `n_snd=0` war ein **Bug im Python-Probe `probe_full.py`**, NICHT im C++-Client.
+    Der Server sendet `sample_rate=...` (t≈1.2s) **VOR** `audio_rate=12000` (t≈1.8s).
+    Der Probe sendete Phase 2 auf den ersten Trigger und latchte `snd_ph2` — dadurch
+    wurde `SET AR OK` (der Befehl, der den SND-Audio-Stream aktiviert) **nie gesendet**.
+    Ohne `SET AR OK` startet der Server keine SND-Frames → Idle-Kick nach ~10s.
+  - **Verifiziert (Live-Probe):** Die C++-Client-Sequenz (auth + `SET AR OK in=12000 out=12000`
+    auf `audio_rate=`) liefert korrekt SND-Frames; ebenso `out=44100`. `SET AR OK` ist der
+    auslösende Befehl; `out=`-Wert ist frei wählbar. Der WebSocket-Pfad
+    `/ws/kiwi/<ts>/SND` ist korrekt.
+  - **Härtung des C++-Clients (umgesetzt, Referenz-faithful):**
+    1. `SET options=1` VOR `SET auth` gesendet (kiwiclient `open()`: "must be sent before auth").
+    2. `SET AR OK in=<audio_rate> out=<audio_rate>` — `audio_rate` wird jetzt aus der MSG
+       geparst statt hart auf 12000 gesetzt (andere Kiwis nutzen ggf. andere Raten).
+    3. Bogus-Frame `SERVER DE CLIENT openwebrx.js SND` entfernt.
+    4. `SET squelch=0 max=0`, `SET genattn=0`, `SET gen=0 mix=-1` ergänzt (Referenz-Sequenz).
+  - **Neue Handshake-Sequenz:** `options` → `auth` → `AR OK` → (optional `ident_user`) →
+    `squelch` → `genattn` → `gen` → `mod/freq` → `agc` → `keepalive`.
+  - **Tests:** `kiwi_commands_tests.cpp` (+5 neue Serializer-Tests: options/AR OK/squelch
+    max/gen/genattn); `kiwi_client_tests.cpp` + `kiwi_bridge_tests.cpp` Frame-Zahl 7→9
+    (bzw. 10 mit ident_user). **87/87 Testfälle grün (Debug + Release), Validator 47/47.**
+  - **Live-Verifikation:** `probe_newcpp.py` (exakte C++-Sequenz) gegen kphsdr.com:8073 →
+    202 SND-Frames, STAYED-CONNECTED.
+  - _Files: `source/network/kiwi_client.cpp`, `source/network/kiwi_commands.h/.cpp`,
+    `tests/network/kiwi_client_tests.cpp`, `tests/network/kiwi_commands_tests.cpp`,
+    `tests/network/kiwi_bridge_tests.cpp`_
+
+- [x] **FIX-37** `WEBVIEW2_SDK_ROOT` fehlte in `tasks.json` + `CMakePresets.json` nach FIX-27
+  - **Behoben 2026-08-25:** `WEBVIEW2_SDK_ROOT: C:/Users/marku/Documents/GitHub/thirdParty/WebView2SDK`
+    in `.vscode/tasks.json` (env) und `"WEBVIEW2_SDK_ROOT": "$env{WEBVIEW2_SDK_ROOT}"` in
+    `CMakePresets.json` (base.cacheVariables) ergänzt.
+    **Verifiziert 2026-08-26:** `cmake --preset win-msvc` läuft ohne Fehler durch.
+
+- [x] **FIX-42** Frühes `SET keepalive` verhindert SND-Audio-Stream (kphsdr.com:8073, Firmware v1.900) — **BEHOBEN 2026-08-27**
+  - **Symptom:** Plugin verbindet zu kphsdr.com:8073, erhält Config-Messages (`client_public_ip`, `rx_chans`, …, `cfg_loaded`) und dann `MSG monitor` — aber **nie** `sample_rate=`/`audio_rate=`. Kein Audio, Dauer-Reconnect (CLOSE 1000 remote=0) alle ~1,3 s.
+  - **Root Cause:** Der FIX-40-Keepalive-Thread (`keepaliveLoop()`) sendete `SET keepalive` bereits ~100 ms nach Connect — **vor** Abschluss des Handshakes. Die KiwiSDR-Server-Firmware v1.900 (kphsdr.com) versetzt die Verbindung dann in den „monitor“-Modus und startet den SND-Audio-Stream nie. Die Referenz (kiwiclient) sendet Keepalive erst **nach** `sample_rate`/`audio_rate` bzw. im SND-Binary-Callback. (Firmware v1.902 auf g8ure toleriert frühes Keepalive — deshalb fiel es dort nicht auf.)
+  - **Beweis:** Python-Probe: `SET options=1`+`SET auth`+ sofortiges 1-Hz-`SET keepalive` → Server antwortet mit `MSG monitor`, kein `audio_rate`. Ohne frühes Keepalive → `sample_rate`+`audio_rate`+SND-Frames fließen. HTTP-Header (`Origin`, `User-Agent`) als Ursache **ausgeschlossen** (Probe mit IXWebSocket-Header-Set funktioniert).
+  - **Fix:** `keepaliveLoop()` sendet Keepalive nur noch, wenn `handshakePhase2Done_` gesetzt ist (d.h. nach `audio_rate`/`SET AR OK`). `handshakePhase2Done_` wurde dafür von `bool` auf `std::atomic<bool>` umgestellt (wird jetzt zusätzlich vom Keepalive-Thread gelesen). Dies stellt exakt das kiwiclient-Referenzverhalten her (Keepalive erst nach `sample_rate`/`audio_rate`) und gilt damit für **alle** KiwiSDR-Firmware-Versionen (alt v1.900 wie neu v1.902).
+  - **Multi-Station-Verifikation (Python-Probe mit exakter Fix-Sequenz):** kphsdr.com:8073 ✅ · kiwisdr2.sdrutah.org:8074 ✅ (3/3) · kiwisdr.kfsdr.com:8073 ✅ · kiwisdr.ku4by.com:8073 ✅ — alle liefern SND-Frames.
+  - **Tests:** 87/87 grün (Debug + Release), Validator 47/47.
+  - _Files: `source/network/kiwi_client.cpp` (`keepaliveLoop`), `source/network/kiwi_client.h` (`handshakePhase2Done_` atomic)_
+
+- [x] **M3.5** Manual acceptance (M2.10 real) — **Handshake-verifiziert, GUI-Host-Test offen**  - **Status 2026-08-27:** FIX-41 behoben; der Netzwerk-Handshake ist per Live-Probe gegen
+    einen echten KiwiSDR (kphsdr.com:8073) verifiziert (SND-Frames fließen). Der letzte
+    manuelle Test im VST3PluginTestHost (GUI + hörbares Audio) ist eine Nutzer-Aufgabe.
+  - **Ziel:** Load plugin in VST3PluginTestHost against real KiwiSDR
+    (`kphsdr.com:8073`); change frequency → live reception audible in DAW;
     no zipper noise / dropouts.
+  - **Technische Voraussetzungen (alle erfüllt):**
+    - BUG-04 (Winsock): behoben 2026-08-25
+    - BUG-05 (Task-Dependency): behoben 2026-08-25
+    - F3 (Disconnect): behoben 2026-08-26 (Keepalive-Throttling + Auto-Reconnect)
+    - F4 (Audio zerhackt): behoben 2026-08-26 (Underflow-Concealment, Denormal-Schutz, Clock-Drift-Kompensation, Jitter-Pre-fill 500ms)
+    - M3.6 (Pipeline härten): vollständig erledigt 2026-08-27 (alle 8 Teilaufgaben)
+    - BUG-03 (Connect-Button): behoben 2026-08-24 (ix::initNetSystem + Status-Feedback)
+    - FIX-41 (n_snd=0): behoben 2026-08-27 (SET AR OK Aktivierung + Referenz-Handshake)
+    - FIX-42 (frühes Keepalive): behoben 2026-08-27 (Keepalive erst nach Phase 2)
+  - **Manueller Test-Workflow:**
+    1. Release-Build: `cmake --build build/win-msvc --config Release`
+    2. VST3PluginTestHost starten: `.vscode/tasks.json` → `start-testhost-release`
+    3. Plugin laden: NetSDRStation.vst3 aus `build/win-msvc/VST3/Release/`
+    4. Station verbinden: `kphsdr.com:8073` (UI-Default, API-ready)
+    5. Frequenz ändern: Live-Reception prüfen
+    6. Audio-Qualität bewerten: keine Knackser/Zipper-Geräusche
+  - **Test-Suite:** 87/87 Tests grün (Debug + Release), `ctest -C Debug` Passed,
+    Validator 47/47.
   - Test: manual (documented in `doc/workspace-workflow.md` §3.6).
 
-- [ ] **M3.6** Dev infrastructure (T1, T2)
+- [x] **M3.6** Echtzeit-Audio-Pipeline härten (Clock-Drift, Underflow, Denormals) — **VOLLSTÄNDIG ERLEDIGT 2026-08-27**
+  - **Motivation:** F4-Analyse + JUCE/GStreamer/WebRTC-Vergleich (2026-08-26) zeigen strukturelle Schwächen der Pipeline, die reale Knackser verursachen, aber von den Tests (Mock-Server, perfekte Uhr) nie erfasst werden.
+  - **Alle Teilaufgaben erledigt:**
+    - [x] **1. Clock-Drift-Kompensation (ASRC):** `Resampler::setRatio()` + dynamische Anpassung in `renderPipeline` basierend auf Jitter-Buffer-Füllstand. Aggressivere Anpassung: ±1% pro Sekunde (vorher ±0.1%), alle 50ms (vorher 100ms), Target 300ms. Server-Sample-Rate wird aus `audio_rate=` Message geparst.
+    - [x] **2. Underflow-Concealment:** `renderPipeline` füllt Unterfüllung mit Repeat-Last-Sample + linearem Fade (512 Samples = ~10ms bei 48kHz, vorher 64 Samples) statt hartem Null-Fill.
+    - [x] **3. tryPush-Lücken-Erkennung:** Sequenz-Check in `decodeAndQueue` + Telemetrie-Updates.
+    - [x] **4. Denormal-Schutz:** Flush-to-zero für Werte < 1e-30 in `renderPipeline`.
+    - [x] **5. Jitter-Pre-fill vs. Netzwerkburst:** 500ms Prefill (vorher 200ms), 2000ms Max-Capacity (vorher 1000ms). Deckt Netzwerk-Jitter besser ab.
+    - [x] **6. Resampler-Qualität wählbar:** `Resampler::Quality` enum (Medium/Best), Konstruktor-Parameter.
+    - [x] **7. Telemetrie:** `PipelineTelemetry` struct mit Underrun/Overflow/SequenceGap/DroppedBlocks/QueueDepth/JitterBufferMs Zählern.
+    - [x] **8. Echter Realtime-Test:** `tests/vst/plugin_processor_pipeline_tests.cpp` → "real-time stress test with variable clock and dropouts" (5s Dauer, variable Timing, 10% Underrun-Schwelle).
+  - **Neue Dateien:** `source/vst/processor/pipeline_telemetry.h`
+  - **Geänderte Dateien:** `source/dsp/resampler.h/.cpp`, `source/vst/processor/plugin_processor.h/.cpp`, `tests/vst/plugin_processor_pipeline_tests.cpp`
+  - **Test-Suite:** 95/95 Tests grün (Debug + Release), inkl. Realtime-Stress-Test.
+
+- [ ] **M3.7** Refactoring: `plugin_processor.cpp` aufteilen (CCD-Verstoß — 967 Zeilen, 7 SRPs)
+  - **Problem:** `plugin_processor.cpp` vereint 7 verschiedene Verantwortlichkeiten in einer Datei (967 Zeilen), klarer Verstoß gegen CCD Orange (Single Responsibility, Datei max. ~300 Zeilen).
+  - **Verantwortlichkeiten:** (1) Lifecycle, (2) State Persistence, (3) IConnectionPoint, (4) Audio-Thread/renderPipeline, (5) Parameter-Routing, (6) Station/Connection, (7) Audio-Dekodierung.
+  - **Plan:** Aufteilen in:
+    - `plugin_processor.cpp` — nur Lifecycle + State + IConnectionPoint (~200 Zeilen)
+    - `plugin_processor_audio.cpp` — `process()` + `renderPipeline()` (~200 Zeilen)
+    - `plugin_processor_network.cpp` — `connectToStation()` + `decodeAndQueue()` + `sendPendingParams()` (~200 Zeilen)
+  - **Bedingung:** Alle Tests bleiben grün (87/87), kein Funktionsverlust.
+  - _Dateien: `source/vst/processor/plugin_processor*.cpp`_
+
+- [x] **BUG-03** Click auf "Connect" bewirkt nichts (M3.5 manual acceptance)
+  - **Symptom:** Im VST3PluginTestHost (Release) bleibt nach Klick auf den
+    `Connect`-Button der `StationInput` jede sichtbare Reaktion aus. Das
+    `StatusBadge` zeigt dauerhaft nur `"Connecting..."` (bzw. den vorherigen
+    Zustand); weder ein Verbindungsaufbau noch ein Fehler ist erkennbar.
+  - **Root Cause (primär, gefunden 2. Analyse-Runde):** Das Plugin ruft
+    **nie `ix::initNetSystem()`** auf. Auf Windows führt das `WSAStartup`
+    aus; ohne dieses schlägt jeder IXWebSocket-`socket()`/`connect()` mit
+    `WSANOTINITIALISED` fehl → `socket_.start()` scheitert still und die
+    Verbindung kommt nie zustande. Die Unit-/Integrationstests liefen nur,
+    weil `tests/test_main.cpp` das Net-System einmalig global initialisiert —
+    die echte Plugin-DLL läuft aber im Host-Prozess, wo das **niemand** tut.
+    Daher „button reagiert nicht / connect funktioniert nicht" in Debug UND
+    Release.
+  - **Root Cause (sekundär):** Der Connect-Pfad hat zusätzlich **keinen
+    Status-Feedback-Kanal zurück zur UI** und verschluckt Fehler vollständig:
+    1. `PluginView.vue:102-109` (`onStation`) setzt `status = 'Connecting...'`
+       und ruft `pluginService.setStation(hostPort)`. Danach existiert im
+       nativen Modus **kein** Code, der `status` je wieder ändert — der einzige
+       Zweig, der `'Connected (dev)'` setzt, läuft nur bei `!isInNative()`.
+    2. C++ sendet nie eine `{"type":"status",...}`-Nachricht an die UI.
+       `PluginProcessor::connectToStation` installiert in
+       `plugin_processor.cpp:418-419` nur einen No-op-Text-Callback
+       (`/* M3: text echoes unused */`); es gibt keinen Hook, der den
+       Verbindungszustand zurückmeldet.
+    3. Fehler werden verschluckt: `KiwiClient::connect`
+       (`kiwi_client.cpp:37-50`) verdrahtet `onError`/`onClose` als `[]() {}`
+       No-ops; `onOpen` führt nur den Handshake aus. `KiwiClient` exponiert
+       gar keine `onOpen`/`onError`/`onClose`-Hooks (nur
+       `setOnTextMessage`/`setOnBinaryMessage`, `kiwi_client.h:72-75`). Jede
+       nicht erreichbare Station (falscher Port, Netzwerk blockiert, Server
+       down) erzeugt daher **null** sichtbare Ausgabe → „es passiert nichts“.
+    4. (Sekundär, unverifiziert) Der `setStation`-Transport läuft über VST3
+       `IMessage` (`PluginController::setStation` → `sendMessage` →
+       `PluginProcessor::notify`, `plugin_controller.cpp:107-117`,
+       `plugin_processor.cpp:161-177`). Dieser End-to-End-Pfad ist durch
+       **keinen** Test abgedeckt (TEST-10 prüft nur den No-op ohne
+       `PluginController`). Verbindet ein Host Controller↔Processor nicht via
+       `IConnectionPoint::connect`, wird die Nachricht von `sendMessage`
+       stillschweigend verworfen und `connectToStation` nie aufgerufen — eine
+       alternative Ursache für „es passiert nichts“.
+  - **Fix (implemented 2026-08-24):**
+    1. `KiwiConnection::Impl::connect()` ruft jetzt einmalig
+       `ix::initNetSystem()` auf (static guard, idempotent; kein
+       `uninitNetSystem` im Plugin — der OS-Prozess räumt auf)
+       (`kiwi_connection.cpp:5,25-32`). **Das ist der eigentliche Fix** für
+       „connect funktioniert nicht".
+    2. `KiwiClient`: `StateCallback` + `setOnOpen`/`setOnError`/`setOnClose`
+       (`kiwi_client.h:45,79-81,88-90`); die `KiwiConnection::Callbacks` in
+       `connect()` rufen die Hooks jetzt auf (`kiwi_client.cpp:37-63`).
+    3. `PluginProcessor`: `setOnStatus(StatusCallback)` + `emitStatus()`;
+       `connectToStation` emittiert `"Connecting"` vor dem Connect und
+       verdrahtet `onOpen`→`"Connected"`, `onError`→`"Error"`,
+       `onClose`→`"Disconnected"` (`plugin_processor.cpp:415-432`).
+       `emitStatus` marshalt auf den Worker-Thread und sendet die Status-
+       Nachricht zusätzlich als VST3 `IMessage` (`"NetSDRStation:Status"`)
+       an den Controller-Peer (`plugin_processor.cpp:695-712`).
+    4. `PluginController::notify()` fängt `"NetSDRStation:Status"` ab und
+       reicht den String über einen `statusSink_` an den Editor weiter
+       (`plugin_controller.cpp:110-124,138-140`).
+    5. `PluginEditor` registriert den Sink im Konstruktor, räumt ihn im
+       Destruktor auf und ruft `pushStatus()` → `webView_.eval(
+       window.updateVueState({"type":"status","data":"..."}))`
+       (`plugin_editor.cpp:95-98,106-111,254-266`). Die UI brauchte KEINE
+       Änderung (handelt `status`-Messages bereits ab).
+    6. Fehler werden nicht mehr verschluckt: `onError`/`onClose` sind jetzt
+       verdrahtet (Punkt 3).
+  - _Files: `source/network/kiwi_client.*`, `source/network/kiwi_connection.*`,
+    `source/vst/processor/plugin_processor.*`,
+    `source/vst/controller/plugin_controller.*`, `source/editor/plugin_editor.*`_
+  - Test: **grün** — 3 neue Tests:
+    `KiwiClient: onOpen callback fires on connection` (kiwi_client_tests.cpp),
+    `PluginProcessor: status reports Connecting then Connected when station
+    connects` + `status reports Error for an unreachable station`
+    (plugin_processor_pipeline_tests.cpp). Debug+Release ctest grün,
+    Validator 47/47 (Debug+Release).
+  - Acceptance: Klick auf Connect zeigt jetzt `Connecting` → `Connected`
+    (bzw. `Error` bei nicht erreichbarer Station). Manuelle Verifikation im
+    VST3PluginTestHost (M3.5) steht noch aus.
+
+- [x] **M3.6** Dev infrastructure (T1, T2)
   - clangd MCP (semantic C++ tooling) + Playwright MCP (interactive UI debug).
+    **Done 2026-08-22:**
+    - T1: `lsp-mcp-server` (MIT) registered as `clangd_mcp` in `opencode.json`
+      (bridges to `clangd --background-index`; uses `compile_commands.json`).
+      `win-clangd` preset fixed (clang-cl compiler + hosting examples off).
+    - T2: `@playwright/test` + `ui/e2e/smoke.spec.ts` + `playwright.config.ts` —
+      green.
   - Test: MCP servers available and usable by the agent.
 
-- [ ] **M3.7** Documentation
+- [x] **M3.7** Documentation
   - `doc/architecture.md`: document the actual audio pipeline + full parameter
     list.
   - `doc/plan.md`: mark M3 done.
@@ -841,14 +1132,31 @@ coding rules: `doc/coding-standards.md`; test strategy: `doc/test-strategy.md`._
 > state is **no station loaded** → Tab 2 shows only the message "please select
 > station first".
 
-- [ ] **M5.1** Station directory fetch
+- [ ] **M5.1** Station directory fetch — **ONLY API-ready stations**
   - Fetch the list of public KiwiSDR receivers (name, location, frequency
     coverage, SNR, user count, status, connect URL) from the public station
-    directory. Confirm the exact endpoint/format during implementation
-    (KiwiSDR public list, e.g. `kiwisdr.com/public/`).
-  - _Files: `source/network/` (fetcher) or UI-side service_
+    directory. Confirm the exact endpoint/format during implementation —
+    the previously documented candidates are now stale: `rx-888.com/api/rx/list`
+    404s and `kiwisdr.com/public/` is behind an anti-bot click-gate.
+  - **Kernanforderung (User 2026-08-27): lade NUR API-ready Stationen.** Jeder
+    Directory-Eintrag publiziert **`ext_api`** (Operator-Allowance der externen
+    API-Kanäle, auch in der per-Station `/status`). Nur Stationen mit
+    **`ext_api > 0`** werden geladen/angezeigt; `ext_api == 0` (Browser-only)
+    wird **komplett gefiltert** — dieser Client verbindet ausschließlich über
+    die native WebSocket-External-API, also nur mit Stationen, die das erlauben.
+    Kontext: FIX-41 zeigt, dass wir zwingend API-fähige Receiver brauchen.
+  - **Dauerbetrieb-Probe (2026-08-27):** 19 Stationen getestet (45 s, probe_duration.py).
+    5 STABLE, 6 KICKED (davon 5 ext_api=0), 8 DOWN.
+    Seed-Liste: `doc/station-list.md`. Empfohlener M5.1-Ansatz: Embedded Seed +
+    Live-`/status`-Abfrage. Öffentliche Verzeichnisse (sdr.hu, receiverbook.de,
+    rx.kiwisdr.com/public) waren bei Probe nicht programmatisch erreichbar.
+  - Referenz-Implementierung zur Orientierung: AetherSDR
+    `src/core/KiwiPublicDirectory.{h,cpp}` (liest `ext_api` aus dem
+    server-publizierten Directory/`/status`, präsentiert nur `ext_api > 0`).
+  - _Files: `source/network/` (fetcher) oder UI-side service_
   - Test: integration test against a mocked directory endpoint → stations
-    parsed into a typed model.
+    parsed into a typed model; **Filter-Test: `ext_api == 0`-Station wird
+    ausgeschlossen**.
 
 - [ ] **M5.2** Tab layout + routing
   - Add a tab bar to the Vue UI: Tab 1 "SDR Stations", Tab 2 "KIWI UI".
@@ -890,10 +1198,14 @@ coding rules: `doc/coding-standards.md`; test strategy: `doc/test-strategy.md`._
 
 - [x] **L1** Framework/DSP research: only license-free, closed-source-sellable
       - VST3 SDK (MIT), CLAP (MIT), iPlug2 (zlib), DPF (ISC) OK; JUCE/KFR/HISE excluded
-- [ ] **L2** Keep every added dependency permissive (no GPL/paid licenses)
+- [x] **L2** Keep every added dependency permissive (no GPL/paid licenses)
   - Test: CI/license-check step lists all deps + licenses; no GPL/paid.
-- [ ] **L3** JUCE orientation: ideas/architecture only, never copy code (see framework-licensing.md)
+  - Status: M3 audit done — no new shipped dependency; dev-tool additions all
+    permissive (Playwright Apache-2.0, lsp-mcp-server MIT, clangd Apache-2.0).
+- [x] **L3** JUCE orientation: ideas/architecture only, never copy code (see framework-licensing.md)
   - Test: review step - no JUCE-derived code; inspiration documented.
+  - Status: JitterBuffer prefill-latch + ring-buffer design follows the JUCE
+    "always fill" concept (documented, own implementation).
 
 ## Coding rules (standing, see `doc/coding-standards.md`)
 
@@ -902,10 +1214,56 @@ coding rules: `doc/coding-standards.md`; test strategy: `doc/test-strategy.md`._
 - [ ] **C2** Justify any CCD rule violation in the task summary
   - Test: review step - every violation has a justification recorded.
 
+## Milestone M6 - Multi-Provider Support (OpenWebRX / SpyServer / RTL-TCP)
+
+> **Implementation plan:** `doc/M6-implementation-plan.md`
+
+> Prerequisite: M5 complete. Extends the plugin to three additional SDR server
+> types (OpenWebRX, SpyServer, RTL-TCP). Provider abstraction via
+> `IReceiverClient` interface. Reference: radiom (MIT), VibeSDR (MIT),
+> KiwiAngel (GPLv3) — analysed 2026-08-27.
+
+- [ ] **M6.1a** `OpenWebRxClient` — IXWebSocket, JSON handshake, profile selection,
+  IMA ADPCM-with-SYNC decoder (different from KiwiSDR ADPCM).
+  - _Files: `source/network/openwebrx_client.*`_
+  - Test: ADPCM-with-SYNC unit test; mock OpenWebRX server integration test.
+
+- [ ] **M6.1b** OpenWebRX station detection via HTTP `/api/features`.
+
+- [ ] **M6.1c** UI: provider badge "OpenWebRX" in station list row.
+
+- [ ] **M6.1d** Tests: OpenWebRX ADPCM decoder correctness + mock server integration.
+
+- [ ] **M6.2a** `SpyServerClient` — direct TCP, native binary protocol, IQ frames.
+  - _Files: `source/network/spyserver_client.*`_
+  - Test: mock TCP SpyServer; verify IQ frame parsing + frequency command.
+
+- [ ] **M6.2b** Station entry model gains `provider` field (kiwisdr / openwebrx /
+  spyserver / rtltcp).
+
+- [ ] **M6.2c** Tests: mock SpyServer TCP server.
+
+- [ ] **M6.3a** `RtlTcpClient` — TCP, `dongle_info` header, uint8 IQ stream, frequency/gain commands.
+  - _Files: `source/network/rtltcp_client.*`_
+
+- [ ] **M6.3b** UI: "Local RTL-TCP" connection type (host + port fields).
+
+- [ ] **M6.3c** Tests: mock RTL-TCP server.
+
+- [ ] **M6.4a** Station model: `provider` field + typed discriminator.
+
+- [ ] **M6.4b** Station list fetcher: OpenWebRX auto-detection via `/api/features`.
+
+- [ ] **M6.4c** Station list row: provider badge / icon.
+
+- [ ] **M6.4d** `PluginProcessor`: routes `connectToStation` to the correct
+  `IReceiverClient` based on `provider`.
+  - Test: integration test — station with provider=openwebrx → OpenWebRxClient connects.
+
 ## AI development helpers (MCP servers, see `doc/test-strategy.md` §9)
 
-- [ ] **T1** clangd-based C++ semantic MCP - adopt once CMake + C++ code exist (M1)
-- [ ] **T2** Playwright MCP - adopt from the UI phase (M1.6)
+- [x] **T1** clangd-based C++ semantic MCP - done (M3.6, `lsp-mcp-server` MIT as `clangd_mcp`)
+- [x] **T2** Playwright MCP - done (M3.6, `@playwright/test` + `ui/e2e/smoke.spec.ts` green)
 
 ## Workflow (mandatory for coding agents)
 

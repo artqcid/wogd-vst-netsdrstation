@@ -54,6 +54,37 @@ source code (closed-source commercial use)._
 | PFFFT | FFT | BSD |
 | moodycamel ReaderWriterQueue | lock-free SPSC queue | BSD-2-Clause (already in stack) |
 
+## KiwiSDR client code (`jks-prv/kiwiclient`) — GPL audit
+
+The project connects to KiwiSDR receivers over WebSocket. Reference client code
+lives in https://github.com/jks-prv/kiwiclient (jks = the KiwiSDR developer).
+Assessment for closed-source commercial use:
+
+| Component | License | Closed-source OK? |
+|-----------|---------|-------------------|
+| `mod_pywebsocket/` (base WebSocket impl) | BSD-3-Clause (Google 2011) | Yes |
+| `chunk/` (nntplib copy) | PSF (Python) | Yes |
+| `rigctld.py` | GPL v2+ | No |
+| `kiwi/client.py`, `kiwirecorder.py`, `kiwiwfrecorder.py` (the actual client) | **NO license file present** | No / high risk |
+
+Key facts:
+- The KiwiSDR *server* firmware (jks-prv/kiwirx) is **GPLv3**. The Python client
+  family belongs to the same project and is treated as GPL throughout the
+  KiwiSDR community/forum.
+- The client repo has **no LICENSE file** for its core `.py` modules → under
+  copyright law that means "all rights reserved" (no permission without the
+  author's grant). Either way, embedding that Python client code into a
+  closed-source product is **not** permitted.
+- `mod_pywebsocket` (BSD-3) and `chunk` (PSF) ARE reusable.
+
+**Rule:** Do NOT copy/port `kiwi/client.py` or the kiwirecorder/kiwiwfrecorder
+clients into this repo. The **KiwiSDR WebSocket protocol** itself (frame layout,
+`SET auth`/`SET AR`/`SET ident_user` commands, MSG/SND/W/F tagging) is an
+interface, not copyrightable expression — reimplementing it independently in
+`kiwi_client.cpp` (own code/names/structure) is allowed and is exactly what the
+project already does. Read the reference client for "what/why", write our own
+"how".
+
 ## Recommendation
 
 Stay with the current architecture (all permissive, closed-source OK):
@@ -71,6 +102,23 @@ closed-source commercial use.
   at adoption time. The "VST" name/logo has separate trademark guidelines that
   do not affect source licensing.
 - CLAP is an optional extra target (project goal lists VST3/AU/CLAP).
+
+## Dev-tool dependencies (M3, L2 audit)
+
+Dev tools / agent tooling are NOT shipped inside the `.vst3` bundle; they are
+used on the developer machine only. Still kept permissive (closed-source
+friendly):
+
+| Tool | Purpose | License |
+|------|---------|---------|
+| IXWebSocket | KiwiSDR WebSocket client (shipped) | BSD-3-Clause |
+| libsamplerate | SRC (shipped) | BSD-2-Clause |
+| moodycamel ReaderWriterQueue | lock-free SPSC (shipped, header-only) | BSD-2-Clause |
+| @playwright/test | UI E2E tests (M3.6 T2, dev only) | Apache-2.0 |
+| lsp-mcp-server | clangd semantic C++ MCP bridge (M3.6 T1, dev only) | MIT |
+| clangd (LLVM) | LSP server for C++ (dev only) | Apache-2.0 w/ LLVM exception |
+
+No GPL/AGPL/paid dependency was added in M3 → L2 satisfied.
 
 ## Orienting on JUCE (allowed, with limits)
 

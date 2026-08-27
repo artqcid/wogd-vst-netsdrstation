@@ -1,5 +1,6 @@
 #include "webview_editor.h"
 
+#include "common/diag.h"
 #include "webview/webview.h"
 
 #if defined(_WIN32)
@@ -8,6 +9,10 @@
 
 #include <memory>
 #include <string>
+
+// DOS header of this DLL; used as HMODULE to resolve the plugin's own path
+// (GetModuleFileNameW(nullptr, ...) would return the HOST executable's path).
+extern "C" IMAGE_DOS_HEADER __ImageBase;
 
 namespace netsdr {
 
@@ -20,11 +25,14 @@ public:
     if (w_) {
       return true; // already attached
     }
+    diagLog("webview attach: parent=%p", parentHandle);
     std::wstring moduleDir;
 #ifdef _WIN32
     {
       wchar_t path[MAX_PATH] = {};
-      if (GetModuleFileNameW(nullptr, path, MAX_PATH) > 0) {
+      // NOTE: use the plugin DLL's own image base, not nullptr (host exe).
+      if (GetModuleFileNameW(reinterpret_cast<HMODULE>(&__ImageBase), path,
+                             MAX_PATH) > 0) {
         std::wstring full(path);
         auto pos = full.rfind(L'\\');
         if (pos != std::wstring::npos) {
@@ -33,6 +41,7 @@ public:
                                   (moduleDir + L"\\FixedRuntime").c_str());
         }
       }
+      diagLog("webview attach: moduleDir=%ls", moduleDir.c_str());
     }
 #endif
     try {
@@ -46,10 +55,12 @@ public:
       constexpr bool kWebViewDebug = false;
 #endif
       w_ = std::make_unique<webview::webview>(kWebViewDebug, parentHandle);
-    } catch (const std::exception &) {
+    } catch (const std::exception &e) {
+      diagLog("webview attach: EXCEPTION %s", e.what());
       w_.reset();
       return false;
     }
+    diagLog("webview attach: webview created OK");
 
     // Bridge: expose a "vstHost" namespace to the JS side. Every bound
     // function forwards its JSON payload to the message handler.
@@ -59,6 +70,10 @@ public:
     });
     w_->bind("vstHostGetParameters", [this](const std::string & /*req*/) {
       dispatchMessage("getParameters", "");
+      return std::string{};
+    });
+    w_->bind("vstHostSetStation", [this](const std::string &req) {
+      dispatchMessage("setStation", req);
       return std::string{};
     });
     w_->bind("vstHostResize", [this](const std::string &req) {
@@ -80,6 +95,9 @@ window.vstHost = {
   },
   getParameters: function () {
     window.vstHostGetParameters();
+  },
+  setStation: function (hostPort) {
+    window.vstHostSetStation(hostPort);
   }
 };
 )js";
@@ -99,10 +117,13 @@ window.vstHost = {
 
   bool navigate(const std::string &url) {
     if (!w_) {
+      diagLog("webview navigate: FAIL (no webview)");
       return false;
     }
     const auto err = w_->navigate(url);
-    return !err.has_error();
+    const bool ok = !err.has_error();
+    diagLog("webview navigate: %s url=%s", ok ? "ok" : "FAIL", url.c_str());
+    return ok;
   }
 
   bool eval(const std::string &js) {
@@ -124,6 +145,7 @@ window.vstHost = {
     auto parentRes = w_->window();
     auto widgetRes = w_->widget();
     if (!parentRes.ok() || !widgetRes.ok()) {
+      diagLog("webview resize: window/widget not available");
       return;
     }
 #if defined(_WIN32)
@@ -131,7 +153,13 @@ window.vstHost = {
     const HWND widget = static_cast<HWND>(widgetRes.value());
     RECT r{};
     if (GetClientRect(parent, &r)) {
-      MoveWindow(widget, 0, 0, r.right - r.left, r.bottom - r.top, TRUE);
+      const int w = r.right - r.left;
+      const int h = r.bottom - r.top;
+      MoveWindow(widget, 0, 0, w, h, TRUE);
+      diagLog("webview resize: parent=%p widget=%p size=%dx%d", parent,
+              widget, w, h);
+    } else {
+      diagLog("webview resize: GetClientRect FAILED parent=%p", parent);
     }
 #else
     // macOS (NSView) / Linux (GtkWidget): resize the native widget here.
@@ -148,6 +176,8 @@ window.vstHost = {
 
 private:
   void dispatchMessage(const std::string &type, const std::string &payload) {
+    diagLog("webview dispatchMessage: type=%s payload=%s", type.c_str(),
+            payload.substr(0, 128).c_str());
     if (handler_) {
       // Compose a tiny JSON envelope: {"type":"...","data":<payload>}.
       std::string message = "{\"type\":\"" + type + "\",\"data\":";

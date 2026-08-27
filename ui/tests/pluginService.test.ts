@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 
 import { pluginService, type PluginMessage } from '@/services/pluginService'
 
@@ -37,6 +37,24 @@ describe('pluginService', () => {
   it('setParameter logs in dev mode when window.vstHost is absent', () => {
     const log = vi.spyOn(console, 'log').mockImplementation(() => {})
     pluginService.setParameter('freq', 440)
+    expect(log).toHaveBeenCalled()
+    log.mockRestore()
+  })
+
+  it('setStation calls window.vstHost.setStation in native mode', () => {
+    const setStation = vi.fn()
+    ;(window as unknown as { vstHost: { setStation: unknown } }).vstHost = {
+      setStation,
+    }
+
+    pluginService.setStation('host:port')
+
+    expect(setStation).toHaveBeenCalledWith('host:port')
+  })
+
+  it('setStation logs in dev mode when window.vstHost is absent', () => {
+    const log = vi.spyOn(console, 'log').mockImplementation(() => {})
+    pluginService.setStation('host:port')
     expect(log).toHaveBeenCalled()
     log.mockRestore()
   })

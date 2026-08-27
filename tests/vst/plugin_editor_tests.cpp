@@ -1,4 +1,4 @@
-// Unit tests for the Plugin editor (TEST-06/07/08).
+// Unit tests for the Plugin editor (TEST-06/07/08/09/10).
 // Covers the normalization chain, UI URL, and size constraint clamping.
 
 #include "catch.hpp"
@@ -60,13 +60,13 @@ TEST_CASE("PluginEditor: onJavaScriptMessage normalization chain (TEST-06)",
         return "{\"type\":\"setParameter\",\"data\":[\"" + id + "\"," + std::to_string(value) + "]}";
     };
 
-    // freq: UI sends 440 Hz, normalized must be (440-20)/(20000-20) ~ 0.021
+    // freqKhz: UI sends 7100.5 kHz, normalized must be (7100.5-0.001)/(30000.0-0.001)
     netsdr::BridgeSetParameter parsed;
-    REQUIRE(netsdr::parseSetParameterMessage(makeEnvelope("freq", 440), parsed));
+    REQUIRE(netsdr::parseSetParameterMessage(makeEnvelope("freqKhz", 7100.5), parsed));
     std::uint32_t tag;
     REQUIRE(netsdr::paramIdFromUiName(parsed.id, tag));
     double norm = registry.toNormalized(tag, parsed.value);
-    double expected = (440.0 - 20.0) / (20000.0 - 20.0);
+    double expected = (7100.5 - 0.001) / (30000.0 - 0.001);
     REQUIRE(std::abs(norm - expected) < 1e-9);
 
     // volume: UI sends 0.5, normalized = 0.5 (range 0..1)
@@ -103,9 +103,7 @@ TEST_CASE("PluginEditor: uiUrl returns correct URL per build type (TEST-07)",
 TEST_CASE("PluginEditor: checkSizeConstraint clamps to minimum (TEST-08)",
           "[vst][editor]") {
     // MockController satisfies the IEditController interface required by
-    // PluginEditor's constructor.  We use a C-style cast because the test
-    // SDK may not support implicit conversion, but the binary layout is
-    // compatible via public inheritance.
+    // PluginEditor's constructor.
     MockController mockCtrl;
     netsdr::ParameterRegistry reg(netsdr::createParameterDefinitions());
     netsdr::PluginEditor editor(&mockCtrl, reg);
@@ -140,14 +138,14 @@ TEST_CASE("PluginEditor: UI messages reach host edit gestures (TEST-09)",
     };
 
     // Known parameter: full gesture with normalized value.
-    editor.onJavaScriptMessage(makeEnvelope("freq", 880.0).c_str());
+    editor.onJavaScriptMessage(makeEnvelope("freqKhz", 7100.5).c_str());
     REQUIRE(mockCtrl.beginCount == 1);
     REQUIRE(mockCtrl.endCount == 1);
     REQUIRE(mockCtrl.edits.size() == 1);
     if (mockCtrl.edits.size() == 1) {
-        REQUIRE(mockCtrl.edits[0].first == netsdr::kParamFreq);
+        REQUIRE(mockCtrl.edits[0].first == netsdr::kParamFreqKhz);
         const double expected =
-            registry.toNormalized(netsdr::kParamFreq, 880.0);
+            registry.toNormalized(netsdr::kParamFreqKhz, 7100.5);
         REQUIRE(std::abs(mockCtrl.edits[0].second - expected) < 1e-9);
     }
 
@@ -162,4 +160,24 @@ TEST_CASE("PluginEditor: UI messages reach host edit gestures (TEST-09)",
     REQUIRE(mockCtrl.beginCount == 1);
     REQUIRE(mockCtrl.endCount == 1);
     REQUIRE(mockCtrl.edits.size() == 1);
+}
+
+// TEST-10: setStation envelope is parsed but does NOT produce edit gestures
+// on a non-PluginController mock. The editor's dispatch path safely ignores
+// setStation when no PluginController is present (dynamic_cast fails → no-op).
+TEST_CASE("PluginEditor: setStation does not produce edit gestures without PluginController (TEST-10)",
+          "[vst][editor]") {
+    netsdr::ParameterRegistry registry(netsdr::createParameterDefinitions());
+    MockController mockCtrl;
+    netsdr::PluginEditor editor(&mockCtrl, registry);
+
+    // setStation message — should be safely ignored since MockController
+    // is not a PluginController (dynamic_cast fails → no-op).
+    editor.onJavaScriptMessage(
+        "{\"type\":\"setStation\",\"data\":[\"127.0.0.1:8073\"]}");
+
+    // Counts must remain at 0 (no beginEdit/performEdit/endEdit called).
+    REQUIRE(mockCtrl.beginCount == 0);
+    REQUIRE(mockCtrl.endCount == 0);
+    REQUIRE(mockCtrl.edits.empty());
 }

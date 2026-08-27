@@ -97,5 +97,6 @@ TEST_CASE("KiwiConnection connects to local mock KiwiSDR server [integration]",
     if (serverThread.joinable()) {
         serverThread.join();
     }
-    ix::uninitNetSystem();
+    // Note: no ix::uninitNetSystem() here — the test runner initialises the
+    // net system once for the whole process (see tests/test_main.cpp).
 }

@@ -157,14 +157,12 @@ Detailed architecture: `doc/architecture.md` §8.
 
 _Automated part (bridge emits `setParameter` with the correct value) is covered
 by the M2.9 integration tests; this section documents the manual DAW listening
-check. The processor integration and the full manual acceptance are now
-tracked as M3.1 / M3.5 (see `doc/checklist.md`)._
+check. The processor integration (M3.1) is implemented and covered by the
+mock-server integration test; the full manual acceptance against a real
+KiwiSDR is tracked as M3.5 (see `doc/checklist.md`)._
 
 **Prerequisites for the manual check:** the full network→decode→resample→DSP
-audio pipeline wired into the plugin (the M2 components exist as modules:
-`KiwiConnection`, `KiwiClient`, `ImaAdpcmDecoder`, `AudioSampleQueue`,
-`Resampler`, `JitterBuffer`, `KiwiBridge`; the processor integration is
-M3.1).
+audio pipeline wired into the plugin (M3.1, implemented).
 
 1. Build the Vue UI and the Release VST3 (see §3.5).
 2. Start VST3PluginTestHost (Debug or Release, `.vscode/tasks.json`), scan the

@@ -5,9 +5,14 @@
 // and is shared (read-only definition) between the processor and the edit
 // controller. The registry itself is pure C++ with no VST3 SDK dependency, so
 // it can be unit-tested in isolation (CCD: SRP, DIP).
+//
+// Lookup performance (FIX-35): an id -> index map built in the constructor
+// gives O(1) lookups for definition/value/conversion methods. This matters on
+// the audio thread for DAW automation sweeps over the 27-parameter set.
 
 #include <cstdint>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 namespace netsdr {
@@ -47,8 +52,13 @@ public:
     double toNormalized(uint32_t id, double plain) const;
 
 private:
+    // Returns the value-store index for a parameter id, or a sentinel when the
+    // id is not registered. O(1).
+    std::size_t indexOf(uint32_t id) const;
+
     std::vector<ParameterDefinition> definitions_;
     std::vector<double> values_;
+    std::unordered_map<uint32_t, std::size_t> index_;
 };
 
 } // namespace netsdr
