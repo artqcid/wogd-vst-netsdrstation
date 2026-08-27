@@ -1165,7 +1165,21 @@ implementation plans: `doc/M3-implementation-plan.md` (M3),
     at any size without clipping; Vitest — responsive layout at several
     viewport sizes.
 
+- [ ] **M4.1.5** Schema-based Bridge API (type-safe contract)
+  - Well-defined, schema-based API contract between the C++ backend and the
+    Vue.js frontend: JSON Schema as single source of truth, auto-generated
+    TypeScript/Zod validators (UI) and C++ parsers/validators (backend).
+  - **Prerequisite for M4.2** (all UI components consume the generated types).
+  - _Files: `schema/bridge.schema.json`, `schema/generate-ts.sh`,
+    `schema/generate-cpp.py`, `ui/src/generated/*`,
+    `source/vst/common/generated/*`_
+  - Ref: `doc/M4-implementation-plan.md` M4.1.5 (Appendix A: alternatives).
+  - Test: existing bridge tests keep passing (no behavior change);
+    generated types/validators compile in both languages.
+
 - [ ] **M4.2** UI scaffold & component library
+  - **Prerequisite:** M4.1.5 (schema-based API) — the state store consumes the
+    generated types/validators from `ui/src/generated/*`.
   - Vue component primitives matching the KiwiSDR w3 widgets: slider, number
     field, select/dropdown, checkbox/toggle, button, readout, color picker.
   - Dark SDR theme + panel/layout shell (header, control panels, status bar).
