@@ -114,49 +114,25 @@ clips.
 **Requirement:** Define a well-specified, schema-based API contract between the
 C++ backend (VST processor/controller) and the Vue.js frontend (WebView UI).
 The API must enable modern decoupling, automatic type/validator generation, and
-maintainable evolution. Inspired by OpenAPI/Swagger for REST APIs, but adapted
-for the embedded UI ↔ C++ message-passing architecture.
+maintainable evolution.
 
-#### Context & Challenges
+**Target architecture:** **JSON Schema as single source of truth** with
+auto-generated TypeScript/Zod validators (UI) and C++ parsers/validators
+(backend). See **Appendix A** for alternative approaches (Zod-first, Protobuf).
 
-The current bridge protocol (`source/vst/common/bridge_protocol.h`) uses
-manual JSON parsing and hand-written parameter name constants (`kUiParamFreqKhz`
-etc.). This approach works but has scaling issues:
+#### Why Schema-Based Design?
 
-1. **No compile-time type safety** between TypeScript and C++ — parameter names
-   and value types are duplicated manually in both languages.
-2. **No runtime validation schema** — malformed messages from the UI are caught
-   only deep inside the C++ parser.
-3. **Difficult to evolve** — adding a new parameter requires manual edits in 5
-   places: C++ constant, C++ parser, TypeScript service, TypeScript type, Vue
-   component.
-4. **No versioning** — breaking changes to message formats are not tracked.
-5. **No automatic documentation** — UI developers must read C++ headers to
-   understand the protocol.
+Current bridge (`source/vst/common/bridge_protocol.h`) uses manual JSON
+parsing. Scaling issues:
 
-#### Research Summary (2026 State-of-the-Art)
+- No compile-time type safety (TS ↔ C++)
+- No runtime validation schema
+- Manual edits in 5 places per new parameter
+- No versioning, no auto-docs
 
-Modern schema-based API design uses a **single source of truth** (a schema
-file) to generate both server-side and client-side code. Common approaches:
+**Solution:** Single schema file → generated code for both languages.
 
-- **OpenAPI / Swagger** — REST API standard; generates server stubs + client
-  SDKs. Not directly applicable (VST plugins don't expose HTTP endpoints), but
-  the *philosophy* (schema → generated code) is transferable.
-- **JSON Schema** — Language-agnostic schema definition; mature tooling for
-  TypeScript (e.g. `json-schema-to-typescript`, `ajv`) and C++ (e.g.
-  `nlohmann/json` + validators). **Widely adopted** as the interop format.
-- **Zod (TypeScript)** — Runtime validator + type inference. Excellent DX for
-  TypeScript-first projects. Can be converted to JSON Schema via
-  `zod-to-json-schema` for cross-language use.
-- **Protocol Buffers / FlatBuffers** — Binary schema languages with C++ and
-  TypeScript codegen. **Overkill** for VST embedded UI (adds build complexity,
-  not WebView-native).
-
-**Best fit for this project:** **JSON Schema as the single source of truth**,
-with TypeScript/Zod validators generated for the UI and C++ parsers/validators
-generated for the backend.
-
-#### Recommended Architecture
+#### Target Architecture
 
 ```
 schema/bridge.schema.json  (single source of truth)
@@ -310,30 +286,11 @@ bool parseSetParameterMessage(const std::string& message, BridgeSetParameter& ou
 
 #### Benefits
 
-1. **Single source of truth** — schema file is the authoritative contract.
-2. **Type safety** — TypeScript and C++ types guaranteed to match (generated
-   from same schema).
-3. **Runtime validation** — Zod (UI) and generated validators (C++) catch
-   malformed messages early.
-4. **Automatic documentation** — JSON Schema can be rendered as API docs (e.g.
-   via `docusaurus-plugin-json-schema`).
-5. **Versioning** — schema file can be versioned; breaking changes trigger
-   major version bump.
-6. **Reduced boilerplate** — adding a new parameter = one schema edit, not 5
-   manual file edits.
-
-#### Risks & Mitigation
-
-- **Risk:** Code generation adds build complexity.
-  **Mitigation:** Use simple, transparent scripts (Python for C++, standard npm
-  packages for TS). Commit generated files to git so builds work without
-  codegen toolchain (regenerate only when schema changes).
-- **Risk:** JSON Schema learning curve for team.
-  **Mitigation:** Start with a minimal schema (2-3 message types), expand
-  incrementally. JSON Schema syntax is simpler than TypeScript or C++.
-- **Risk:** Performance overhead of runtime validation.
-  **Mitigation:** Zod validation is <1 ms for typical messages. C++ validators
-  are simple if-checks (no regex, no complex logic). Measure if needed.
+- **Type safety** across languages (TS ↔ C++ guaranteed to match)
+- **Runtime validation** (Zod for UI, C++ validators for backend)
+- **Single edit** to add/change parameters (schema only, code auto-generated)
+- **Auto-documentation** (JSON Schema → renderable API docs)
+- **Versioning** (schema file tracks breaking changes)
 
 #### Success Criteria
 
@@ -366,22 +323,9 @@ bool parseSetParameterMessage(const std::string& message, BridgeSetParameter& ou
 - `ui/src/services/pluginService.ts` (use generated Zod validators)
 
 **Dependencies:**
-- `json-schema-to-typescript` (npm, dev)
-- `json-schema-to-zod` (npm, dev, or alternative: `zod-to-json-schema` inverse)
+- `json-schema-to-typescript`, `json-schema-to-zod` (npm, dev)
 - `nlohmann/json` (already in project)
-- Python 3.8+ (for C++ codegen script; already available in dev env)
-
-#### Alternative: Zod-first (TypeScript-centric approach)
-
-If the team prefers TypeScript-first development, an alternative is:
-
-1. Define schemas in **Zod** (TypeScript).
-2. Generate JSON Schema via `zod-to-json-schema` (for documentation).
-3. Generate C++ manually from the Zod definitions (no automatic C++ codegen).
-
-**Tradeoff:** Better TypeScript DX, but loses C++ type safety (manual C++
-edits required). **Not recommended** for this project because the C++ side
-(VST processor) is the source of truth for parameters.
+- Python 3.8+ (C++ codegen script)
 
 ---
 
@@ -822,19 +766,17 @@ Side-by-side comparison of the Vue UI against `kphsdr.com:8072`:
 
 ## Technology recommendations
 
-| Choice | Recommendation | Alternative |
-|--------|---------------|-------------|
-| **Bridge API schema** | **JSON Schema (single source of truth)** | **Zod-first (TS-centric, but loses C++ type safety)** |
-| **TS codegen** | **`json-schema-to-typescript` + `json-schema-to-zod`** | **Manual Zod definitions + `zod-to-json-schema`** |
-| **C++ codegen** | **Custom Python script (`schema/generate-cpp.py`)** | **Manual C++ (no type safety, error-prone)** |
-| **Runtime validation (TS)** | **Zod (40M+ npm downloads, best DX)** | **Ajv (faster, but worse DX), Valibot (smaller bundle)** |
-| **Runtime validation (C++)** | **Generated validators (`nlohmann/json`)** | **JSON Schema validator library (overkill)** |
-| State management | Pinia (MIT, official Vue 3 state library) | Vuex 4 (older, more boilerplate) |
-| CSS approach | CSS custom properties + Flexbox/Grid (no Tailwind) | Tailwind CSS (adds 50 kB to bundle) |
-| Canvas waterfall | Plain `<canvas>` + `ImageData` | WebGL shader (better perf, higher complexity) |
-| Icons | Unicode / `data:svg` inline | FontAwesome (large, CDN-loaded) |
-| Bundle | `vite-plugin-singlefile` (already in use) | Keep as is (important: Pinia adds ~7 kB inline) |
-| E2E testing | Playwright (already planned as T2) | Cypress (heavier, slower) |
+| Component | Target Choice | Rationale |
+|-----------|--------------|-----------|
+| **Bridge API schema** | **JSON Schema (single source of truth)** | Language-agnostic, WebView-native JSON, mature TS+C++ codegen. See Appendix A for alternatives (Zod-first, Protobuf). |
+| **TypeScript codegen** | **`json-schema-to-typescript` + `json-schema-to-zod`** | Standard npm packages, Zod for runtime validation (<1 ms). |
+| **C++ codegen** | **Custom Python script (`schema/generate-cpp.py`)** | Generates structs + validators for `nlohmann/json`. |
+| State management | Pinia (MIT) | Official Vue 3 state library, ~7 kB inline. |
+| CSS approach | CSS custom properties + Flexbox/Grid | No Tailwind (bundle size). |
+| Canvas waterfall | `<canvas>` + `ImageData` | Plain 2D canvas (WebGL deferred to M5 if perf needed). |
+| Icons | Unicode / inline `data:svg` | No FontAwesome (CDN). |
+| Bundle | `vite-plugin-singlefile` | Already in use. |
+| E2E testing | Playwright | Planned as T2. |
 
 ---
 
@@ -849,4 +791,210 @@ Side-by-side comparison of the Vue UI against `kphsdr.com:8072`:
 | Waterfall stream protocol complexity | Medium | Implement simulated spectrum first; real waterfall stream as a follow-on. |
 | `vite-plugin-singlefile` bundle size after Pinia | Low | Profile: Pinia ~7 kB; w3_ext ~12 kB; total expected < 120 kB inlined. |
 | macOS/Linux resize (FIX-22 port) | Low | Platform wrappers clearly isolated in `webview_editor.cpp`; implement as soon as cross-platform build is active. |
+
+---
+
+## Appendix A: Alternative Bridge API Architectures
+
+This appendix documents the alternative API-design approaches evaluated for
+M4.1.5. The **target architecture** (JSON Schema as single source of truth) is
+defined in M4.1.5 above. These alternatives are preserved as reference for
+future review or if requirements change.
+
+### Alternative 1: Zod-first (TypeScript-centric)
+
+**Approach:**
+1. Define schemas in **Zod** (TypeScript source files).
+2. Generate JSON Schema via `zod-to-json-schema` (for documentation only).
+3. Manually maintain C++ parsers (no automatic C++ codegen).
+
+**Example:**
+```ts
+// ui/src/schemas/bridge.ts
+import { z } from "zod";
+
+export const BridgeSetParameterSchema = z.object({
+  type: z.literal("setParameter"),
+  data: z.tuple([z.enum(["freqKhz", "lowCut", "highCut", ...]), z.number()]),
+});
+
+export type BridgeSetParameter = z.infer<typeof BridgeSetParameterSchema>;
+```
+
+**Pros:**
+- Best TypeScript DX (write Zod schemas directly in TS)
+- No external schema files (everything in TypeScript)
+- Zod runtime validation built-in (no codegen step for TS)
+
+**Cons:**
+- **Loses C++ type safety** — C++ structs and parsers must be written manually
+  and kept in sync with Zod schemas manually.
+- TypeScript becomes the source of truth, but the **VST processor (C++) owns
+  the parameter semantics** (ranges, units, defaults).
+- Risk of drift: C++ and TS schemas can diverge silently.
+
+**Verdict:** **Not recommended** for this project. The C++ side (VST3 parameter
+model, KiwiSDR protocol bridge) is the authoritative source for parameter
+definitions. Making TypeScript the source of truth inverts the ownership model.
+
+---
+
+### Alternative 2: OpenAPI / Swagger
+
+**Approach:**
+1. Define API contract in OpenAPI 3.1 (YAML or JSON).
+2. Generate TypeScript client via `openapi-typescript` or `openapi-generator`.
+3. Generate C++ server stubs (limited tooling; manual adaptation required).
+
+**Why OpenAPI?**
+- Industry standard for REST APIs.
+- Mature ecosystem (validators, docs, client/server codegen).
+- Can define request/response schemas, parameter types, versioning.
+
+**Why it doesn't fit:**
+- OpenAPI is designed for **HTTP REST APIs** (GET/POST, paths, status codes).
+- VST plugins use **WebView message-passing** (JavaScript `postMessage` → C++
+  bridge function), not HTTP.
+- OpenAPI concepts (paths, methods, headers) have no analog in the bridge
+  protocol.
+- **Overkill:** 90% of OpenAPI features (auth, content negotiation, paths) are
+  unused.
+
+**Verdict:** **Not applicable.** OpenAPI is the right choice for REST APIs,
+but VST embedded UI is not an HTTP service.
+
+---
+
+### Alternative 3: Protocol Buffers (Protobuf)
+
+**Approach:**
+1. Define message schemas in `.proto` files (Protocol Buffers IDL).
+2. Generate TypeScript classes via `protobuf.js` or `ts-proto`.
+3. Generate C++ parsers via `protoc` (official C++ codegen).
+
+**Example:**
+```proto
+// schema/bridge.proto
+syntax = "proto3";
+
+message SetParameterRequest {
+  string parameter_id = 1;
+  double value = 2;
+}
+```
+
+**Pros:**
+- Strong type safety (TS and C++ generated from same `.proto`).
+- Binary serialization (smaller, faster than JSON).
+- Mature tooling (Google's `protoc` compiler).
+
+**Cons:**
+- **Not WebView-native:** JavaScript `postMessage` uses JSON, not binary
+  Protobuf. Requires serialization layer (Protobuf → JSON → bridge).
+- **Build complexity:** Adds `protoc` compiler, `.proto` preprocessing, extra
+  build steps.
+- **Learning curve:** Protobuf IDL syntax is unfamiliar to web developers.
+- **Overkill:** Binary serialization unnecessary for bridge messages (typical
+  payload: 20-50 bytes JSON).
+
+**Verdict:** **Not recommended.** Protobuf is excellent for high-throughput
+binary protocols (gRPC, game engines), but VST WebView messaging is low-volume
+JSON (< 100 messages/sec). The build complexity and binary-serialization
+overhead outweigh the benefits.
+
+---
+
+### Alternative 4: FlatBuffers
+
+**Approach:**
+Similar to Protobuf, but optimized for zero-copy deserialization.
+
+**Why it doesn't fit:**
+- Same issues as Protobuf (not WebView-native, binary format, build
+  complexity).
+- FlatBuffers excels at **zero-copy reads** in performance-critical systems
+  (game engines, embedded systems), but VST bridge messages are parsed once per
+  user interaction (button click, slider drag).
+- **Overkill** for this use case.
+
+**Verdict:** **Not recommended.**
+
+---
+
+### Alternative 5: Manual TypeScript + Manual C++ (Status Quo)
+
+**Approach:**
+- Write TypeScript types manually in `pluginService.ts`.
+- Write C++ parsers manually in `bridge_protocol.cpp`.
+- Keep them in sync via code review.
+
+**Current implementation:**
+```ts
+// ui/src/services/pluginService.ts
+export function setParameter(id: string, value: number) {
+  window.vstHost.setParameter(id, value);
+}
+```
+
+```cpp
+// source/vst/common/bridge_protocol.cpp
+bool parseSetParameterMessage(const std::string& message, BridgeSetParameter& out) {
+  auto j = nlohmann::json::parse(message, nullptr, false);
+  if (j.is_discarded()) return false;
+  if (!j.contains("type") || j["type"] != "setParameter") return false;
+  // ... 15 more lines of manual checks ...
+}
+```
+
+**Pros:**
+- No build tooling required (no codegen).
+- Simple, transparent, easy to debug.
+
+**Cons:**
+- **High maintenance burden:** Every new parameter requires edits in 5 places
+  (C++ constant, C++ parser, TS type, TS service, Vue component).
+- **No compile-time safety:** TS and C++ can drift silently.
+- **No runtime validation:** Malformed messages caught only in C++ parser
+  (late).
+- **No versioning:** Breaking changes not tracked.
+
+**Verdict:** **Acceptable for M3 (prototype), but does not scale to M4 (full
+UI with 50+ parameters).** The schema-based approach (M4.1.5 target
+architecture) is the logical evolution.
+
+---
+
+### Comparison Matrix
+
+| Approach | Type Safety (TS ↔ C++) | Runtime Validation | Build Complexity | WebView-Native | Verdict |
+|----------|------------------------|-------------------|------------------|----------------|---------|
+| **JSON Schema (target)** | ✅ High (generated) | ✅ Zod (TS) + generated (C++) | Medium (codegen scripts) | ✅ Yes (JSON) | **Recommended** |
+| Zod-first | ⚠️ Low (manual C++) | ✅ Zod (TS only) | Low | ✅ Yes | Not recommended (C++ drift) |
+| OpenAPI | ❌ N/A (wrong domain) | — | High | ❌ No (HTTP) | Not applicable |
+| Protobuf | ✅ High (generated) | ✅ Generated | High (protoc) | ❌ No (binary) | Overkill |
+| FlatBuffers | ✅ High (generated) | ✅ Generated | High (flatc) | ❌ No (binary) | Overkill |
+| Manual (status quo) | ❌ None | ❌ None | None | ✅ Yes | Does not scale |
+
+---
+
+### Why JSON Schema Won
+
+1. **Language-agnostic** — mature codegen for both TypeScript and C++.
+2. **WebView-native** — JSON is the natural format for `postMessage`.
+3. **Balance** — enough structure to guarantee type safety, not so heavy that
+   it adds excessive build complexity.
+4. **Ecosystem** — widely adopted (OpenAPI uses JSON Schema for request/response
+   bodies; npm packages have JSON Schema for `package.json` validation;
+   VSCode uses JSON Schema for settings IntelliSense).
+5. **Future-proof** — if M5+ adds a REST API or MCP server, JSON Schema can be
+   converted to OpenAPI automatically (via tools like `json-schema-to-openapi`).
+
+The Zod-first approach was a close second, but the **C++ side owns the
+parameter model** in a VST3 plugin (parameter ranges, units, normalization are
+defined in C++ `PluginController`). Making TypeScript the source of truth
+would invert the ownership model and create manual sync work on the C++ side.
+
+---
+
+**End of Appendix A.**
 | KiwiSDR waterfall binary format undocumented | Medium | Reference `waterfall.js` (`web/kiwi/waterfall.js`) in the upstream repo for the exact frame decoding. |
