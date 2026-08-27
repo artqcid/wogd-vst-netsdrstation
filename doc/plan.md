@@ -149,10 +149,11 @@ This is where NetSDRStation-specific functionality begins.
 > - **Live-Verifikation:** korrigierte Probe gegen kphsdr.com:8073 → SND-Frames
 >   fließen (STAYED-CONNECTED). Der letzte manuelle Test im VST3PluginTestHost
 >   (hörbares Audio) ist eine Nutzer-Aufgabe (M3.5-Workflow dokumentiert).
-> - **M3-Status:** M3.1–M3.4, M3.6, M3.7 abgeschlossen. Test-Suite 87/87 grün
->   (Debug + Release), Validator 47/47. M3.5: Handshake verifiziert, GUI-Host-Test
->   offen (Nutzer).
-> - Details: `doc/checklist.md` FIX-41, M3.5.
+> - **M3-Status:** M3.1–M3.7 abgeschlossen. Test-Suite 92/92 grün
+>   (Debug + Release), Validator 47/47. M3.5: Manual Acceptance bestanden
+>   (Verbindung stabil, Frequenz/Passband/Volume/Disconnect verifiziert).
+>   M3.7 Refactoring (`plugin_processor.cpp` → 3 Dateien) umgesetzt.
+> - Details: `doc/checklist.md` FIX-41, FIX-43, BUG-06/07, FEATURE-01, FIX-44, M3.5, M3.7.
 
 ## Milestone 4 - KiwiSDR UI parity (Vue)
 

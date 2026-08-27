@@ -13,6 +13,8 @@ set(netsdrstation_sources
     ../vst/common/processor_state.cpp
     ../vst/processor/plugin_processor.h
     ../vst/processor/plugin_processor.cpp
+    ../vst/processor/plugin_processor_audio.cpp
+    ../vst/processor/plugin_processor_network.cpp
     ../vst/controller/plugin_controller.h
     ../vst/controller/plugin_controller.cpp
     ../dsp/ima_adpcm.h

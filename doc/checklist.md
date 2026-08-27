@@ -981,9 +981,8 @@ implementation plans: `doc/M3-implementation-plan.md` (M3),
     `source/vst/processor/plugin_processor.{h,cpp}`, `source/network/kiwi_client.{h,cpp}`_
   - Test: Debug+Release Build grün, VST3-Validator 47/47, ctest grün (92/92).
 
-- [x] **M3.5** Manual acceptance (M2.10 real) — **Handshake-verifiziert, GUI-Host-Test offen**  - **Status 2026-08-27:** FIX-41 behoben; der Netzwerk-Handshake ist per Live-Probe gegen
-    einen echten KiwiSDR (kphsdr.com:8073) verifiziert (SND-Frames fließen). Der letzte
-    manuelle Test im VST3PluginTestHost (GUI + hörbares Audio) ist eine Nutzer-Aufgabe.
+- [x] **M3.5** Manual acceptance (M2.10 real) — **ABGESCHLOSSEN 2026-08-27**  - **Status 2026-08-27:** Verbindung stabil (Debug + Release), Frequenz/Passband/Volume
+    wirken, Disconnect-Button funktioniert. M3 damit vollständig abgenommen.
   - **Ziel:** Load plugin in VST3PluginTestHost against real KiwiSDR
     (`kphsdr.com:8072`, UI-Default, STABLE); change frequency → live reception
     audible in DAW; no zipper noise / dropouts.
@@ -1022,15 +1021,16 @@ implementation plans: `doc/M3-implementation-plan.md` (M3),
   - **Geänderte Dateien:** `source/dsp/resampler.h/.cpp`, `source/vst/processor/plugin_processor.h/.cpp`, `tests/vst/plugin_processor_pipeline_tests.cpp`
   - **Test-Suite:** 95/95 Tests grün (Debug + Release), inkl. Realtime-Stress-Test.
 
-- [ ] **M3.7** Refactoring: `plugin_processor.cpp` aufteilen (CCD-Verstoß — 967 Zeilen, 7 SRPs)
-  - **Problem:** `plugin_processor.cpp` vereint 7 verschiedene Verantwortlichkeiten in einer Datei (967 Zeilen), klarer Verstoß gegen CCD Orange (Single Responsibility, Datei max. ~300 Zeilen).
+- [x] **M3.7** Refactoring: `plugin_processor.cpp` aufteilen (CCD-Verstoß — 967 Zeilen, 7 SRPs) — **UMSETZEN 2026-08-27**
+  - **Problem:** `plugin_processor.cpp` vereinte 7 verschiedene Verantwortlichkeiten in einer Datei (894 Zeilen), klarer Verstoß gegen CCD Orange (Single Responsibility, Datei max. ~300 Zeilen).
   - **Verantwortlichkeiten:** (1) Lifecycle, (2) State Persistence, (3) IConnectionPoint, (4) Audio-Thread/renderPipeline, (5) Parameter-Routing, (6) Station/Connection, (7) Audio-Dekodierung.
-  - **Plan:** Aufteilen in:
-    - `plugin_processor.cpp` — nur Lifecycle + State + IConnectionPoint (~200 Zeilen)
-    - `plugin_processor_audio.cpp` — `process()` + `renderPipeline()` (~200 Zeilen)
-    - `plugin_processor_network.cpp` — `connectToStation()` + `decodeAndQueue()` + `sendPendingParams()` (~200 Zeilen)
-  - **Bedingung:** Alle Tests bleiben grün (87/87), kein Funktionsverlust.
-  - _Dateien: `source/vst/processor/plugin_processor*.cpp`_
+  - **Umsetzung — Aufgeteilt in 3 Dateien:**
+    - `plugin_processor.cpp` (368 Zeilen) — Lifecycle + State + IConnectionPoint + IAudioProcessor-Setup + `applyParamValue`/`applyState` + `station`/`setOnStatus`/`emitStatus`.
+    - `plugin_processor_audio.cpp` (325 Zeilen) — `process()` + `renderPipeline()` (Audio-Thread).
+    - `plugin_processor_network.cpp` (259 Zeilen) — `connectToStation()` + `disconnectStation()` + `decodeAndQueue()` + `sendPendingParams()`.
+  - **Bedingung:** Alle Tests grün, kein Funktionsverlust.
+  - _Dateien: `source/vst/processor/plugin_processor.cpp`, `plugin_processor_audio.cpp`, `plugin_processor_network.cpp`, `source/entry/CMakeLists.txt`, `tests/CMakeLists.txt`_
+  - Test: Debug+Release Build grün, VST3-Validator 47/47, ctest grün (92/92).
 
 - [x] **BUG-03** Click auf "Connect" bewirkt nichts (M3.5 manual acceptance)
   - **Symptom:** Im VST3PluginTestHost (Release) bleibt nach Klick auf den

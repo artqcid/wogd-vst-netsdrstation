@@ -33,6 +33,8 @@ threading/lock_free_spsc_tests.cpp
     ${CMAKE_SOURCE_DIR}/source/vst/common/bridge_protocol.cpp
     ${CMAKE_SOURCE_DIR}/source/vst/common/processor_state.cpp
     ${CMAKE_SOURCE_DIR}/source/vst/processor/plugin_processor.cpp
+    ${CMAKE_SOURCE_DIR}/source/vst/processor/plugin_processor_audio.cpp
+    ${CMAKE_SOURCE_DIR}/source/vst/processor/plugin_processor_network.cpp
     ${CMAKE_SOURCE_DIR}/source/vst/controller/plugin_controller.cpp
     ${CMAKE_SOURCE_DIR}/source/editor/plugin_editor.cpp
     ${CMAKE_SOURCE_DIR}/source/webview/webview_editor.cpp
