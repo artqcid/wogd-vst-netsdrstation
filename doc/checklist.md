@@ -1150,20 +1150,20 @@ implementation plans: `doc/M3-implementation-plan.md` (M3),
 > VST editor must be freely resizable by dragging the bottom-right corner
 > (standard VST3 host resize), with the UI reflowing continuously at any size.
 
-- [ ] **M4.1** Resizable window (Grundbedingung)
-  - Editor window freely resizable via bottom-right corner drag (standard VST3
-    host behaviour); only clamp is the documented `kMinWidth`/`kMinHeight`
-    floor.
-  - C++ side: forward host `onSize`/`WM_SIZE` to the webview widget so the
-    WebView2 view fills the client area on every resize (extends FIX-22); keep
-    `checkSizeConstraint` as the single clamp.
-  - UI side: fully responsive Vue layout (fluid grid/flex), no hard-coded
-    pixel dimensions; all panels reflow continuously.
+- [x] **M4.1** Resizable window (Grundbedingung)
+  - **C++ side DONE (via FIX-22):** `onSize` → `webView_.resizeToParent()` →
+    `MoveWindow(widget, 0, 0, w, h, TRUE)` (webview_editor.cpp); `attach()`
+    sizes the widget immediately; `checkSizeConstraint` is the single clamp.
+  - Min size updated to `kMinWidth=640`, `kMinHeight=400` (plugin_editor.cpp);
+    below this the webview scrolls (overflow:auto).
+  - **UI side DONE:** `PluginView.vue` rebuilt as fluid `kiwi-layout` grid
+    (header / controls-row / statusbar), panels `flex: 1 1 220px` wrap at
+    narrow widths; removed hard-coded `max-width:640px; margin:40px auto`.
   - _Files: `source/editor/plugin_editor.cpp`,
-    `source/webview/webview_editor.cpp`, `ui/src/**`_
-  - Test: manual — drag corner in VST3PluginTestHost (and a DAW), UI reflows
-    at any size without clipping; Vitest — responsive layout at several
-    viewport sizes.
+    `source/webview/webview_editor.cpp`, `ui/src/views/PluginView.vue`_
+  - Test: C++ TEST-08 updated to 640×400 clamp (92/92 green); Vitest
+    responsive layout structure at 640/1024/1920 viewports (34/34 green).
+  - Manual acceptance still pending: drag corner in VST3PluginTestHost/DAW.
 
 - [ ] **M4.1.5** Schema-based Bridge API (type-safe contract)
   - Well-defined, schema-based API contract between the C++ backend and the

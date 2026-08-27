@@ -1,78 +1,91 @@
 <template>
-  <div class="container">
-    <h1>NetSDRStation</h1>
-    <p class="subtitle">KiwiSDR Receiver - Milestone M3</p>
+  <div class="container kiwi-layout">
+    <!-- Header row (M4.1 layout): title + station/status -->
+    <header class="kiwi-header">
+      <div class="kiwi-title">
+        <h1>NetSDRStation</h1>
+        <p class="subtitle">KiwiSDR Receiver - Milestone M4</p>
+      </div>
+      <div class="kiwi-panel station-panel">
+        <StationInput :station="station" :status="status" @connect="onStation" @disconnect="onDisconnect" />
+      </div>
+      <StatusBadge class="kiwi-status-badge" :status="status" />
+    </header>
 
-    <div class="station-section">
-      <StationInput :station="station" :status="status" @connect="onStation" @disconnect="onDisconnect" />
+    <!-- Main controls row (M4.1 layout): panels wrap at narrow widths -->
+    <main class="kiwi-controls-row">
+      <section class="kiwi-panel">
+        <label class="section-label">Receiver</label>
+        <select v-model.number="mode" @change="onModeChange" data-testid="mode-select">
+          <option value="0">AM</option>
+          <option value="1">AMN</option>
+          <option value="2">AMW</option>
+          <option value="3">USB</option>
+          <option value="4">USN</option>
+          <option value="5">LSB</option>
+          <option value="6">LSN</option>
+          <option value="7">CW</option>
+          <option value="8">CWN</option>
+          <option value="9">NBFM</option>
+          <option value="10">NNFM</option>
+          <option value="11">IQ</option>
+          <option value="12">DRM</option>
+          <option value="13">SAM</option>
+          <option value="14">SAU</option>
+          <option value="15">SAL</option>
+          <option value="16">SAS</option>
+          <option value="17">QAM</option>
+        </select>
+      </section>
+
+      <section class="kiwi-panel">
+        <label class="section-label">Frequency</label>
+        <NumberInput
+          label="Frequency"
+          suffix="kHz"
+          :min="0.001"
+          :max="30000"
+          :step="0.1"
+          :value="freqKhz"
+          @update:value="onFreqKhz"
+        />
+        <NumberInput
+          label="Low Cut"
+          suffix="Hz"
+          :min="-8000"
+          :max="0"
+          :step="100"
+          :value="lowCut"
+          @update:value="onLowCut"
+        />
+        <NumberInput
+          label="High Cut"
+          suffix="Hz"
+          :min="0"
+          :max="8000"
+          :step="100"
+          :value="highCut"
+          @update:value="onHighCut"
+        />
+      </section>
+
+      <section class="kiwi-panel">
+        <label class="section-label">Audio</label>
+        <Toggle label="AGC" :active="agcOn" @update:active="onAgc" />
+        <Slider label="Volume" :min="0" :max="1" :step="0.01" :value="volume" @update:value="onVolume" />
+        <MuteButton :active="mute" @toggle="onMute" />
+      </section>
+
+      <section class="kiwi-panel">
+        <label class="section-label">Display</label>
+        <Toggle label="Waterfall" :active="wfOn" @update:active="onWf" />
+      </section>
+    </main>
+
+    <!-- Status bar row (M4.1 layout) -->
+    <footer class="kiwi-statusbar">
       <StatusBadge :status="status" />
-    </div>
-
-    <div class="receiver-section">
-      <label class="section-label">Receiver</label>
-      <select v-model.number="mode" @change="onModeChange" data-testid="mode-select">
-        <option value="0">AM</option>
-        <option value="1">AMN</option>
-        <option value="2">AMW</option>
-        <option value="3">USB</option>
-        <option value="4">USN</option>
-        <option value="5">LSB</option>
-        <option value="6">LSN</option>
-        <option value="7">CW</option>
-        <option value="8">CWN</option>
-        <option value="9">NBFM</option>
-        <option value="10">NNFM</option>
-        <option value="11">IQ</option>
-        <option value="12">DRM</option>
-        <option value="13">SAM</option>
-        <option value="14">SAU</option>
-        <option value="15">SAL</option>
-        <option value="16">SAS</option>
-        <option value="17">QAM</option>
-      </select>
-    </div>
-
-    <div class="freq-section">
-      <NumberInput
-        label="Frequency"
-        suffix="kHz"
-        :min="0.001"
-        :max="30000"
-        :step="0.1"
-        :value="freqKhz"
-        @update:value="onFreqKhz"
-      />
-      <NumberInput
-        label="Low Cut"
-        suffix="Hz"
-        :min="-8000"
-        :max="0"
-        :step="100"
-        :value="lowCut"
-        @update:value="onLowCut"
-      />
-      <NumberInput
-        label="High Cut"
-        suffix="Hz"
-        :min="0"
-        :max="8000"
-        :step="100"
-        :value="highCut"
-        @update:value="onHighCut"
-      />
-    </div>
-
-    <div class="audio-section">
-      <label class="section-label">Audio</label>
-      <Toggle label="AGC" :active="agcOn" @update:active="onAgc" />
-      <Slider label="Volume" :min="0" :max="1" :step="0.01" :value="volume" @update:value="onVolume" />
-      <MuteButton :active="mute" @toggle="onMute" />
-    </div>
-
-    <div class="display-section">
-      <label class="section-label">Display</label>
-      <Toggle label="Waterfall" :active="wfOn" @update:active="onWf" />
-    </div>
+    </footer>
   </div>
 </template>
 
@@ -83,6 +96,7 @@ import NumberInput from '@/components/NumberInput.vue'
 import Toggle from '@/components/Toggle.vue'
 import Slider from '@/components/Slider.vue'
 import MuteButton from '@/components/MuteButton.vue'
+import StatusBadge from '@/components/StatusBadge.vue'
 import { pluginService, type PluginMessage } from '@/services/pluginService'
 
 // State refs
@@ -177,44 +191,99 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.container {
+/* M4.1 Grundbedingung: the editor fills the WebView area entirely and the
+   layout reflows at any size. Grid rows: header / controls / status bar.
+   Below kMinSize the browser scrolls instead of clipping (overflow:auto). */
+.kiwi-layout {
+  display: grid;
+  grid-template-rows: auto 1fr auto; /* header / main / status */
+  grid-template-columns: 1fr;
+  height: 100%;
+  min-height: 0;
+  overflow: auto;
   background: #222;
   color: #eee;
   font-family: 'Segoe UI', Arial, sans-serif;
-  padding: 20px;
-  max-width: 640px;
-  margin: 40px auto;
+  padding: 12px;
+  gap: 10px;
+}
+
+/* Header row: title + station panel + status badge */
+.kiwi-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #444;
+}
+
+.kiwi-title {
+  flex: 1 1 200px;
+  min-width: 0;
 }
 
 h1 {
   color: #4CAF50;
-  font-size: 28px;
-  margin-bottom: 4px;
+  font-size: 20px;
+  margin: 0;
 }
 
 .subtitle {
   color: #888;
-  font-size: 14px;
-  margin-bottom: 20px;
+  font-size: 12px;
+  margin: 2px 0 0 0;
+}
+
+/* Main controls row: panels wrap at narrow widths */
+.kiwi-controls-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: flex-start;
+  align-content: flex-start;
+  min-height: 0;
+}
+
+/* Each panel is a flex item that grows/shrinks with a ~220 px floor */
+.kiwi-panel {
+  flex: 1 1 220px;
+  min-width: 0;
+  background: #2a2a2a;
+  border: 1px solid #444;
+  border-radius: 6px;
+  padding: 10px 12px;
+}
+
+.station-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* Status bar row */
+.kiwi-statusbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-top: 8px;
+  border-top: 1px solid #444;
+  font-size: 12px;
+  color: #999;
+}
+
+.kiwi-status-badge {
+  margin-left: auto;
 }
 
 /* Section labels */
 .section-label {
   color: #4CAF50;
-  font-size: 13px;
+  font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 1px;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
   display: block;
-}
-
-/* Sections */
-.station-section,
-.receiver-section,
-.freq-section,
-.audio-section,
-.display-section {
-  margin-bottom: 20px;
 }
 
 /* -- Mode select --*/
@@ -226,7 +295,6 @@ select {
   border: 1px solid #555;
   border-radius: 4px;
   font-size: 13px;
-  margin-bottom: 12px;
 }
 
 /* -- NumberInput overrides --*/

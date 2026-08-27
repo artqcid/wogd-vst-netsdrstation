@@ -26,8 +26,10 @@ IMPLEMENT_FUNKNOWN_METHODS(PluginEditor, IPlugView, IPlugView::iid)
 
 namespace {
 const ViewRect kDefaultSize(0, 0, 640, 400);
-const int32 kMinWidth = 320;
-const int32 kMinHeight = 200;
+// Minimum editor size (M4.1): the KiwiSDR UI reflows down to this width/height
+// before scrolling instead of clipping. Below it the webview scrolls.
+const int32 kMinWidth = 640;
+const int32 kMinHeight = 400;
 
 // Vite dev server used for hot reload in debug builds (workspace-workflow.md).
 // Release builds load the pre-built UI bundle (ui/dist) via a file:// URL,

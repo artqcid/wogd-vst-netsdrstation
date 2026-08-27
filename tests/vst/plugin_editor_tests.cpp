@@ -108,11 +108,11 @@ TEST_CASE("PluginEditor: checkSizeConstraint clamps to minimum (TEST-08)",
     netsdr::ParameterRegistry reg(netsdr::createParameterDefinitions());
     netsdr::PluginEditor editor(&mockCtrl, reg);
 
-    // Below minimum -> clamped
+    // Below minimum -> clamped (M4.1: kMinWidth=640, kMinHeight=400)
     Steinberg::ViewRect small(0, 0, 100, 50);
     editor.checkSizeConstraint(&small);
-    REQUIRE(small.getWidth() == 320);
-    REQUIRE(small.getHeight() == 200);
+    REQUIRE(small.getWidth() == 640);
+    REQUIRE(small.getHeight() == 400);
 
     // Above minimum -> unchanged
     Steinberg::ViewRect large(0, 0, 800, 600);
