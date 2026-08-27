@@ -109,7 +109,287 @@ clips.
 
 ---
 
+### Step 1.5 — M4.1.5: Schema-based Bridge API (type-safe contract)
+
+**Requirement:** Define a well-specified, schema-based API contract between the
+C++ backend (VST processor/controller) and the Vue.js frontend (WebView UI).
+The API must enable modern decoupling, automatic type/validator generation, and
+maintainable evolution. Inspired by OpenAPI/Swagger for REST APIs, but adapted
+for the embedded UI ↔ C++ message-passing architecture.
+
+#### Context & Challenges
+
+The current bridge protocol (`source/vst/common/bridge_protocol.h`) uses
+manual JSON parsing and hand-written parameter name constants (`kUiParamFreqKhz`
+etc.). This approach works but has scaling issues:
+
+1. **No compile-time type safety** between TypeScript and C++ — parameter names
+   and value types are duplicated manually in both languages.
+2. **No runtime validation schema** — malformed messages from the UI are caught
+   only deep inside the C++ parser.
+3. **Difficult to evolve** — adding a new parameter requires manual edits in 5
+   places: C++ constant, C++ parser, TypeScript service, TypeScript type, Vue
+   component.
+4. **No versioning** — breaking changes to message formats are not tracked.
+5. **No automatic documentation** — UI developers must read C++ headers to
+   understand the protocol.
+
+#### Research Summary (2026 State-of-the-Art)
+
+Modern schema-based API design uses a **single source of truth** (a schema
+file) to generate both server-side and client-side code. Common approaches:
+
+- **OpenAPI / Swagger** — REST API standard; generates server stubs + client
+  SDKs. Not directly applicable (VST plugins don't expose HTTP endpoints), but
+  the *philosophy* (schema → generated code) is transferable.
+- **JSON Schema** — Language-agnostic schema definition; mature tooling for
+  TypeScript (e.g. `json-schema-to-typescript`, `ajv`) and C++ (e.g.
+  `nlohmann/json` + validators). **Widely adopted** as the interop format.
+- **Zod (TypeScript)** — Runtime validator + type inference. Excellent DX for
+  TypeScript-first projects. Can be converted to JSON Schema via
+  `zod-to-json-schema` for cross-language use.
+- **Protocol Buffers / FlatBuffers** — Binary schema languages with C++ and
+  TypeScript codegen. **Overkill** for VST embedded UI (adds build complexity,
+  not WebView-native).
+
+**Best fit for this project:** **JSON Schema as the single source of truth**,
+with TypeScript/Zod validators generated for the UI and C++ parsers/validators
+generated for the backend.
+
+#### Recommended Architecture
+
+```
+schema/bridge.schema.json  (single source of truth)
+  │
+  ├──> generate-ts.sh  ──> ui/src/generated/bridge.ts (TypeScript types + Zod validators)
+  │                         ├─ export type BridgeSetParameter = { id: string; value: number }
+  │                         └─ export const BridgeSetParameterSchema = z.object({...})
+  │
+  └──> generate-cpp.sh ──> source/vst/common/generated/bridge_schema.h (C++ structs + validators)
+                            ├─ struct BridgeSetParameter { std::string id; double value; }
+                            └─ bool validate(const nlohmann::json&, BridgeSetParameter&)
+```
+
+**Key principle:** Developers edit **only** `schema/bridge.schema.json`. Both
+TypeScript and C++ code are auto-generated at build time.
+
+#### Implementation Plan
+
+**Phase 1: Schema definition**
+
+Create `schema/bridge.schema.json` (JSON Schema Draft 2020-12) defining all
+bridge message types:
+
+```json
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://netsdrstation.dev/schemas/bridge.json",
+  "title": "NetSDRStation Bridge Protocol",
+  "description": "Message contract between Vue.js UI and C++ VST processor",
+  "definitions": {
+    "SetParameterMessage": {
+      "type": "object",
+      "required": ["type", "data"],
+      "properties": {
+        "type": { "const": "setParameter" },
+        "data": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": [
+            { "type": "string", "enum": ["freqKhz", "lowCut", "highCut", "volume", "..."] },
+            { "type": "number" }
+          ]
+        }
+      }
+    },
+    "SetStationMessage": { ... },
+    "DisconnectMessage": { ... },
+    "UpdateVueStateMessage": { ... }
+  }
+}
+```
+
+**Phase 2: TypeScript code generation**
+
+Use `json-schema-to-typescript` + `zod-to-json-schema` (inverse direction: JSON
+Schema → Zod).
+
+```sh
+# schema/generate-ts.sh (called by Vite build hook)
+npx json-schema-to-typescript schema/bridge.schema.json \
+  --output ui/src/generated/bridge.ts
+npx json-schema-to-zod schema/bridge.schema.json \
+  --output ui/src/generated/bridge-validators.ts
+```
+
+Generated `ui/src/generated/bridge.ts`:
+```ts
+export type BridgeSetParameter = {
+  type: "setParameter";
+  data: [string, number];
+};
+```
+
+Generated `ui/src/generated/bridge-validators.ts`:
+```ts
+import { z } from "zod";
+export const BridgeSetParameterSchema = z.object({
+  type: z.literal("setParameter"),
+  data: z.tuple([z.enum(["freqKhz", "lowCut", ...]), z.number()]),
+});
+```
+
+**Phase 3: C++ code generation**
+
+Use a custom Python script (or C++ template engine) to convert JSON Schema →
+C++ structs + validators. The `nlohmann/json` library (already used for bridge
+parsing) supports schema validation via external libraries, but **manual
+codegen is simpler** for this use case.
+
+```sh
+# schema/generate-cpp.py (called by CMake)
+python3 schema/generate-cpp.py schema/bridge.schema.json \
+  --output source/vst/common/generated/bridge_schema.h
+```
+
+Generated `bridge_schema.h`:
+```cpp
+#pragma once
+#include <nlohmann/json.hpp>
+#include <optional>
+
+namespace netsdr::schema {
+
+struct BridgeSetParameter {
+  std::string type;  // must be "setParameter"
+  std::array<std::variant<std::string, double>, 2> data;
+};
+
+// Validates JSON and populates `out` if valid.
+inline bool parseSetParameter(const nlohmann::json& j, BridgeSetParameter& out) {
+  if (!j.contains("type") || j["type"] != "setParameter") return false;
+  if (!j.contains("data") || !j["data"].is_array() || j["data"].size() != 2) return false;
+  // ... enum check for data[0], type check for data[1] ...
+  out.type = j["type"];
+  out.data[0] = j["data"][0].get<std::string>();
+  out.data[1] = j["data"][1].get<double>();
+  return true;
+}
+
+}  // namespace netsdr::schema
+```
+
+**Phase 4: Integrate into build**
+
+- CMake: add `add_custom_command` to run `generate-cpp.py` before compiling
+  `bridge_protocol.cpp`.
+- Vite: add `vite-plugin-run` to run `generate-ts.sh` before TypeScript
+  compilation.
+
+**Phase 5: Refactor existing bridge code**
+
+Replace manual parsers in `bridge_protocol.cpp` with generated validators:
+
+```cpp
+// Before (manual):
+bool parseSetParameterMessage(const std::string& message, BridgeSetParameter& out) {
+  auto j = nlohmann::json::parse(message, nullptr, false);
+  if (j.is_discarded()) return false;
+  // ... 20 lines of manual checks ...
+}
+
+// After (generated):
+#include "vst/common/generated/bridge_schema.h"
+bool parseSetParameterMessage(const std::string& message, BridgeSetParameter& out) {
+  auto j = nlohmann::json::parse(message, nullptr, false);
+  if (j.is_discarded()) return false;
+  return netsdr::schema::parseSetParameter(j, out);
+}
+```
+
+#### Benefits
+
+1. **Single source of truth** — schema file is the authoritative contract.
+2. **Type safety** — TypeScript and C++ types guaranteed to match (generated
+   from same schema).
+3. **Runtime validation** — Zod (UI) and generated validators (C++) catch
+   malformed messages early.
+4. **Automatic documentation** — JSON Schema can be rendered as API docs (e.g.
+   via `docusaurus-plugin-json-schema`).
+5. **Versioning** — schema file can be versioned; breaking changes trigger
+   major version bump.
+6. **Reduced boilerplate** — adding a new parameter = one schema edit, not 5
+   manual file edits.
+
+#### Risks & Mitigation
+
+- **Risk:** Code generation adds build complexity.
+  **Mitigation:** Use simple, transparent scripts (Python for C++, standard npm
+  packages for TS). Commit generated files to git so builds work without
+  codegen toolchain (regenerate only when schema changes).
+- **Risk:** JSON Schema learning curve for team.
+  **Mitigation:** Start with a minimal schema (2-3 message types), expand
+  incrementally. JSON Schema syntax is simpler than TypeScript or C++.
+- **Risk:** Performance overhead of runtime validation.
+  **Mitigation:** Zod validation is <1 ms for typical messages. C++ validators
+  are simple if-checks (no regex, no complex logic). Measure if needed.
+
+#### Success Criteria
+
+- [ ] `schema/bridge.schema.json` defines all M4 message types (setParameter,
+      setStation, disconnect, updateVueState).
+- [ ] TypeScript types and Zod validators auto-generated and used in
+      `pluginService.ts`.
+- [ ] C++ structs and validators auto-generated and used in
+      `bridge_protocol.cpp`.
+- [ ] Build process (CMake + Vite) runs code generation automatically.
+- [ ] All existing bridge tests pass with the new generated code (no behavior
+      change).
+- [ ] Documentation: README in `schema/` explaining the workflow.
+
+#### Files
+
+**New:**
+- `schema/bridge.schema.json` (JSON Schema definition)
+- `schema/generate-ts.sh` (TypeScript codegen script)
+- `schema/generate-cpp.py` (C++ codegen script)
+- `schema/README.md` (developer guide)
+- `ui/src/generated/bridge.ts` (generated TypeScript types)
+- `ui/src/generated/bridge-validators.ts` (generated Zod schemas)
+- `source/vst/common/generated/bridge_schema.h` (generated C++ validators)
+
+**Modified:**
+- `CMakeLists.txt` (add custom command for C++ codegen)
+- `ui/vite.config.ts` (add plugin for TypeScript codegen)
+- `source/vst/common/bridge_protocol.cpp` (use generated validators)
+- `ui/src/services/pluginService.ts` (use generated Zod validators)
+
+**Dependencies:**
+- `json-schema-to-typescript` (npm, dev)
+- `json-schema-to-zod` (npm, dev, or alternative: `zod-to-json-schema` inverse)
+- `nlohmann/json` (already in project)
+- Python 3.8+ (for C++ codegen script; already available in dev env)
+
+#### Alternative: Zod-first (TypeScript-centric approach)
+
+If the team prefers TypeScript-first development, an alternative is:
+
+1. Define schemas in **Zod** (TypeScript).
+2. Generate JSON Schema via `zod-to-json-schema` (for documentation).
+3. Generate C++ manually from the Zod definitions (no automatic C++ codegen).
+
+**Tradeoff:** Better TypeScript DX, but loses C++ type safety (manual C++
+edits required). **Not recommended** for this project because the C++ side
+(VST processor) is the source of truth for parameters.
+
+---
+
 ### Step 2 — M4.2: UI scaffold & component library
+
+**Prerequisite:** M4.1.5 (schema-based API) must be complete before
+implementing UI components — all TypeScript types and Zod validators must be
+generated and integrated into `pluginService.ts`.
 
 Build the visual framework before implementing individual panels.
 
@@ -544,6 +824,11 @@ Side-by-side comparison of the Vue UI against `kphsdr.com:8072`:
 
 | Choice | Recommendation | Alternative |
 |--------|---------------|-------------|
+| **Bridge API schema** | **JSON Schema (single source of truth)** | **Zod-first (TS-centric, but loses C++ type safety)** |
+| **TS codegen** | **`json-schema-to-typescript` + `json-schema-to-zod`** | **Manual Zod definitions + `zod-to-json-schema`** |
+| **C++ codegen** | **Custom Python script (`schema/generate-cpp.py`)** | **Manual C++ (no type safety, error-prone)** |
+| **Runtime validation (TS)** | **Zod (40M+ npm downloads, best DX)** | **Ajv (faster, but worse DX), Valibot (smaller bundle)** |
+| **Runtime validation (C++)** | **Generated validators (`nlohmann/json`)** | **JSON Schema validator library (overkill)** |
 | State management | Pinia (MIT, official Vue 3 state library) | Vuex 4 (older, more boilerplate) |
 | CSS approach | CSS custom properties + Flexbox/Grid (no Tailwind) | Tailwind CSS (adds 50 kB to bundle) |
 | Canvas waterfall | Plain `<canvas>` + `ImageData` | WebGL shader (better perf, higher complexity) |
@@ -557,6 +842,9 @@ Side-by-side comparison of the Vue UI against `kphsdr.com:8072`:
 
 | Risk | Likelihood | Mitigation |
 |------|-----------|------------|
+| **Schema codegen adds build complexity** | **Medium** | **Use transparent scripts (Python for C++, standard npm for TS). Commit generated files to git so builds work without codegen (regenerate only when schema changes).** |
+| **JSON Schema learning curve for team** | **Low** | **Start with minimal schema (2-3 message types), expand incrementally. JSON Schema syntax simpler than C++ or TypeScript.** |
+| **Runtime validation performance overhead** | **Low** | **Zod validation <1 ms for typical messages. C++ validators are simple if-checks (no regex). Measure if needed.** |
 | WebView2 canvas performance for 60 fps waterfall | Medium | Use `requestAnimationFrame` + `ImageData.set` (typed array, no per-pixel JS); profile early. |
 | Waterfall stream protocol complexity | Medium | Implement simulated spectrum first; real waterfall stream as a follow-on. |
 | `vite-plugin-singlefile` bundle size after Pinia | Low | Profile: Pinia ~7 kB; w3_ext ~12 kB; total expected < 120 kB inlined. |
