@@ -1,22 +1,19 @@
 import { test, expect } from '@playwright/test'
 
-test('smoke: page loads and key elements are visible', async ({ page }) => {
-  // 1. Open the app URL (Vite dev server runs on http://localhost:5173)
+test('smoke: page loads and all M4 panels are present', async ({ page }) => {
   await page.goto('/')
 
-  // 2. Assert station input is visible
-  // StationInput renders an <input type="text"> with placeholder the station call sign,
-  // wrapped in a <div> with data-testid="station-input"
-  const stationInput = page.getByTestId('station-input')
-  await expect(stationInput).toBeVisible()
+  // Header: title + station input + status badge.
+  await expect(page.getByRole('heading', { name: /NetSDRStation/ })).toBeVisible()
+  await expect(page.getByTestId('station-input')).toBeVisible()
 
-  // 3. Assert frequency field is visible
-  // NumberInput with label="Frequency" renders <label>Frequency</label>
-  const freqLabel = page.getByLabel('Frequency')
-  await expect(freqLabel).toBeVisible()
+  // Control panels.
+  for (const id of ['mode-panel', 'freq-panel', 'band-panel', 'audio-panel', 'extension-panel', 'waterfall-panel']) {
+    await expect(page.getByTestId(id)).toBeVisible()
+  }
 
-  // 4. Assert mode select is visible
-  // PluginView renders a <select> with mode options, with data-testid="mode-select"
-  const modeSelect = page.getByTestId('mode-select')
-  await expect(modeSelect).toBeVisible()
+  // Status bar with S-meter + readouts.
+  await expect(page.getByTestId('status-bar')).toBeVisible()
+  await expect(page.getByTestId('status-bar').locator('.s-meter')).toBeVisible()
+  await expect(page.getByTestId('status-freq')).toContainText('kHz')
 })

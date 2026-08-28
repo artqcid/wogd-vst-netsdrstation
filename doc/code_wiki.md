@@ -119,7 +119,7 @@ Symbols:
 - `MCP-First Workflow (RAG / Code-Wiki)` (section, lines 63-88) - ## MCP-First Workflow (RAG / Code-Wiki)
 - `Knowledge-Sync (Docs <-> RAG/Wiki MCP <-> NotebookLM)` (section, lines 89-103) - ## Knowledge-Sync (Docs <-> RAG/Wiki MCP <-> NotebookLM)
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\WORKSPACE_AGENT_PROMPT.md:40` (section) [netsdr_c38adca53870]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:1495` (section) [netsdr_7a4256ffbbff]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:1504` (section) [netsdr_d04de259fd2d]
 - `Ad-hoc / scratch compilation (no artifacts in the repo root)` (section, lines 104-125) - ## Ad-hoc / scratch compilation (no artifacts in the repo root)
 - `Logging Strategy (Two-Level)` (section, lines 126-155) - ## Logging Strategy (Two-Level)
 - `Quick facts` (section, lines 156-171) - ## Quick facts
@@ -136,7 +136,6 @@ Symbols:
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\workspace-workflow.md:156` (section) [netsdr_deb87cc734b4]
 - `Setup` (section, lines 29-33) - ## Setup
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\tests\vst\plugin_processor_tests.cpp:133` (function) [netsdr_5b88464ea2d6]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:661` (section) [netsdr_df3aa309f9a7]
 - `Windows (PowerShell)` (section, lines 34-36) - # Windows (PowerShell)
 - `macOS / Linux (bash)` (section, lines 37-43) - # macOS / Linux (bash)
 - `Build & test` (section, lines 44-46) - ## Build & test
@@ -158,7 +157,7 @@ Symbols:
 - `1. Tooling / RAG` (section, lines 9-39) - ## 1. Tooling / RAG
 - `Knowledge-Sync (Docs <-> RAG/Wiki MCP <-> NotebookLM)` (section, lines 40-52) - ## Knowledge-Sync (Docs <-> RAG/Wiki MCP <-> NotebookLM)
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\AGENTS.md:89` (section) [netsdr_82e8ea0494d4]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:1495` (section) [netsdr_7a4256ffbbff]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:1504` (section) [netsdr_d04de259fd2d]
 - `2. Architecture rules` (section, lines 53-58) - ## 2. Architecture rules
 - `3. Build / Deploy` (section, lines 59-63) - ## 3. Build / Deploy
 - `4. Deliverables` (section, lines 64-72) - ## 4. Deliverables
@@ -300,7 +299,7 @@ Symbols:
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\M3-implementation-plan.md:1` (section) [netsdr_f8976a83d425]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\M3-implementation-plan.md:462` (section) [netsdr_7c10525cdafb]
 - `Bridge mapping` (section, lines 504-520) - #### Bridge mapping
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:1139` (section) [netsdr_b2cf1f94a290]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:1139` (section) [netsdr_67f7d7f3e7db]
 - `Step 4 — M4.4: Modulation & Passband panel` (section, lines 521-522) - ### Step 4 — M4.4: Modulation & Passband panel
 - `Layout` (section, lines 523-532) - #### Layout
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\M3-implementation-plan.md:808` (section) [netsdr_6aa1fd797da3]
@@ -337,7 +336,7 @@ Symbols:
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\ui-architecture.md:96` (section) [netsdr_e269afc6c4bc]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\ui-architecture.md:130` (section) [netsdr_b55812af964b]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\ui-architecture.md:152` (section) [netsdr_32e56b98eeaa]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:1139` (section) [netsdr_b2cf1f94a290]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:1139` (section) [netsdr_67f7d7f3e7db]
 - `Step 7 — M4.7: Waterfall & spectrum display` (section, lines 658-662) - ### Step 7 — M4.7: Waterfall & spectrum display
 - `7a. Network layer extension — waterfall stream` (section, lines 663-681) - #### 7a. Network layer extension — waterfall stream
 - `7b. Waterfall canvas component` (section, lines 682-691) - #### 7b. Waterfall canvas component
@@ -415,14 +414,14 @@ Symbols:
 - `UI side` (section, lines 345-356) - #### UI side
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\ui-architecture.md:181` (section) [netsdr_9160de674a1d]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\M4-implementation-plan.md:62` (section) [netsdr_f24f5916e91f]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:1139` (section) [netsdr_b2cf1f94a290]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:1139` (section) [netsdr_67f7d7f3e7db]
 - `C++ side` (section, lines 357-370) - #### C++ side
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\M3-implementation-plan.md:578` (section) [netsdr_9842f5de2c0c]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\ui-architecture.md:181` (section) [netsdr_9160de674a1d]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\M4-implementation-plan.md:37` (section) [netsdr_5b5ba71225a5]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\M4-implementation-plan.md:819` (section) [netsdr_0f2799794004]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\M4-implementation-plan.md:995` (section) [netsdr_88a76d9a8b34]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:1139` (section) [netsdr_b2cf1f94a290]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:1139` (section) [netsdr_67f7d7f3e7db]
 - `Reconnection / error handling` (section, lines 371-379) - #### Reconnection / error handling
 - `Disconnect / switch station` (section, lines 380-401) - #### Disconnect / switch station
 - `State diagram` (section, lines 402-427) - ## State diagram
@@ -451,7 +450,7 @@ Symbols:
 - `radiom Analysis Notes (Web app, MIT-licensed)` (section, lines 222-243) - ## radiom Analysis Notes (Web app, MIT-licensed)
 - `Checklist Items to Add` (section, lines 244-249) - ## Checklist Items to Add
 - `Milestone M6 - Multi-Provider Support` (section, lines 250-272) - ## Milestone M6 - Multi-Provider Support
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:1428` (section) [netsdr_d16f4b1c85ec]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:1437` (section) [netsdr_0a9cd3173fed]
 
 ## C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\architecture.md
 
@@ -501,16 +500,16 @@ Symbols:
 - `Milestone M2 - KiwiSDR integration (project-specific)` (section, lines 599-660) - ## Milestone M2 - KiwiSDR integration (project-specific)
 - `Milestone M3 - Integration & Ship (project-specific)` (section, lines 661-1131) - ## Milestone M3 - Integration & Ship (project-specific)
 - `Not in M3 (deferred)` (section, lines 1132-1138) - ### Not in M3 (deferred)
-- `Milestone M4 - KiwiSDR UI parity (Vue)` (section, lines 1139-1329) - ## Milestone M4 - KiwiSDR UI parity (Vue)
-- `Not in M4 (deferred)` (section, lines 1330-1335) - ### Not in M4 (deferred)
-- `Milestone M5 - Station selection tab` (section, lines 1336-1398) - ## Milestone M5 - Station selection tab
-- `Workflow Goals (standing requirements, see `doc/workspace-workflow.md`)` (section, lines 1399-1407) - ## Workflow Goals (standing requirements, see `doc/workspace-workflow.md`)
-- `Licensing (standing constraint, see `doc/framework-licensing.md`)` (section, lines 1408-1420) - ## Licensing (standing constraint, see `doc/framework-licensing.md`)
-- `Coding rules (standing, see `doc/coding-standards.md`)` (section, lines 1421-1427) - ## Coding rules (standing, see `doc/coding-standards.md`)
-- `Milestone M6 - Multi-Provider Support (OpenWebRX / SpyServer / RTL-TCP)` (section, lines 1428-1473) - ## Milestone M6 - Multi-Provider Support (OpenWebRX / SpyServer / RTL-TCP)
-- `AI development helpers (MCP servers, see `doc/test-strategy.md` §9)` (section, lines 1474-1478) - ## AI development helpers (MCP servers, see `doc/test-strategy.md` §9)
-- `Workflow (mandatory for coding agents)` (section, lines 1479-1494) - ## Workflow (mandatory for coding agents)
-- `Knowledge-Sync (Docs <-> RAG/Wiki MCP <-> NotebookLM)` (section, lines 1495-1506) - ## Knowledge-Sync (Docs <-> RAG/Wiki MCP <-> NotebookLM)
+- `Milestone M4 - KiwiSDR UI parity (Vue)` (section, lines 1139-1338) - ## Milestone M4 - KiwiSDR UI parity (Vue)
+- `Not in M4 (deferred)` (section, lines 1339-1344) - ### Not in M4 (deferred)
+- `Milestone M5 - Station selection tab` (section, lines 1345-1407) - ## Milestone M5 - Station selection tab
+- `Workflow Goals (standing requirements, see `doc/workspace-workflow.md`)` (section, lines 1408-1416) - ## Workflow Goals (standing requirements, see `doc/workspace-workflow.md`)
+- `Licensing (standing constraint, see `doc/framework-licensing.md`)` (section, lines 1417-1429) - ## Licensing (standing constraint, see `doc/framework-licensing.md`)
+- `Coding rules (standing, see `doc/coding-standards.md`)` (section, lines 1430-1436) - ## Coding rules (standing, see `doc/coding-standards.md`)
+- `Milestone M6 - Multi-Provider Support (OpenWebRX / SpyServer / RTL-TCP)` (section, lines 1437-1482) - ## Milestone M6 - Multi-Provider Support (OpenWebRX / SpyServer / RTL-TCP)
+- `AI development helpers (MCP servers, see `doc/test-strategy.md` §9)` (section, lines 1483-1487) - ## AI development helpers (MCP servers, see `doc/test-strategy.md` §9)
+- `Workflow (mandatory for coding agents)` (section, lines 1488-1503) - ## Workflow (mandatory for coding agents)
+- `Knowledge-Sync (Docs <-> RAG/Wiki MCP <-> NotebookLM)` (section, lines 1504-1515) - ## Knowledge-Sync (Docs <-> RAG/Wiki MCP <-> NotebookLM)
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\WORKSPACE_AGENT_PROMPT.md:40` (section) [netsdr_c38adca53870]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\AGENTS.md:89` (section) [netsdr_82e8ea0494d4]
 
@@ -605,7 +604,7 @@ Symbols:
 - `Goal` (section, lines 9-14) - ## Goal
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\logging-strategy.md:18` (section) [netsdr_f975336414b8]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\logging-strategy.md:38` (section) [netsdr_bb1f31f98099]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:1139` (section) [netsdr_b2cf1f94a290]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:1139` (section) [netsdr_67f7d7f3e7db]
 - `Architecture goals (foundation first)` (section, lines 15-25) - ## Architecture goals (foundation first)
 - `Milestone 1 - Generic VST foundation (+ sine synth proof)` (section, lines 26-42) - ## Milestone 1 - Generic VST foundation (+ sine synth proof)
 - `Milestone 2 - KiwiSDR integration (project-specific)` (section, lines 43-46) - ## Milestone 2 - KiwiSDR integration (project-specific)
@@ -799,22 +798,22 @@ Symbols:
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\M3-implementation-plan.md:318` (section) [netsdr_739d0d7f20c1]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:15` (section) [netsdr_ed4559899efb]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:661` (section) [netsdr_df3aa309f9a7]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:1479` (section) [netsdr_d4a5df49f8ad]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:1488` (section) [netsdr_afea91b57d9d]
 - `query_code_rag` (function, lines 1244-1270) - def query_code_rag(query, top_k=3, format='text', semantic=False) - Search the RAG database for code locations matching the query.
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\WORKSPACE_AGENT_PROMPT.md:9` (section) [netsdr_bb5ed899c0e9]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\AGENTS.md:49` (section) [netsdr_f5ad307f98e6]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\AGENTS.md:63` (section) [netsdr_0a8100eeff1c]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:1479` (section) [netsdr_d4a5df49f8ad]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:1488` (section) [netsdr_afea91b57d9d]
 - `get_rag_chunk` (function, lines 1274-1316) - def get_rag_chunk(chunk_id) - Return the full content of a single RAG chunk (transient).
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\WORKSPACE_AGENT_PROMPT.md:9` (section) [netsdr_bb5ed899c0e9]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\AGENTS.md:49` (section) [netsdr_f5ad307f98e6]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\AGENTS.md:63` (section) [netsdr_0a8100eeff1c]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:1479` (section) [netsdr_d4a5df49f8ad]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:1488` (section) [netsdr_afea91b57d9d]
 - `query_code_wiki` (function, lines 1320-1366) - def query_code_wiki(query, max_results=12, format='text') - Search the Code-Wiki symbol index for classes, functions and methods.
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\WORKSPACE_AGENT_PROMPT.md:9` (section) [netsdr_bb5ed899c0e9]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\AGENTS.md:49` (section) [netsdr_f5ad307f98e6]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\AGENTS.md:63` (section) [netsdr_0a8100eeff1c]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:1479` (section) [netsdr_d4a5df49f8ad]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:1488` (section) [netsdr_afea91b57d9d]
 - `_rag_has_data` (function, lines 1369-1376) - def _rag_has_data() - Check whether the RAG database already contains code chunks.
 
 ## C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\schema\generate-cpp.py
@@ -1023,9 +1022,9 @@ Symbols:
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\tests\dsp\jitter_buffer_tests.cpp:98` (function) [netsdr_7f1d0bf3c8ab]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\tests\dsp\jitter_buffer_tests.cpp:144` (function) [netsdr_181911350241]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\dsp\jitter_buffer.h:25` (class) [netsdr_a6d4500869a1]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:661` (section) [netsdr_df3aa309f9a7]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\vst\processor\plugin_processor_audio.cpp:154` (function) [netsdr_7e76fe9ee683]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\tests\vst\plugin_processor_pipeline_tests.cpp:593` (module) [netsdr_b5af20adc4e0]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:661` (section) [netsdr_df3aa309f9a7]
 - `msToSamples` (function, lines 124-126) - std::size_t JitterBuffer::msToSamples(double ms, double sampleRate)
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\dsp\jitter_buffer.h:25` (class) [netsdr_a6d4500869a1]
 - `samplesToMs` (function, lines 129-131) - double JitterBuffer::samplesToMs(std::size_t samples, double sampleRate)
@@ -1167,14 +1166,14 @@ Symbols:
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\tests\dsp\resampler_tests.cpp:129` (function) [netsdr_b92c7b9be026]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\M3-implementation-plan.md:137` (section) [netsdr_88453f76941f]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\plan.md:70` (section) [netsdr_7bdb2e1df912]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:661` (section) [netsdr_df3aa309f9a7]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\vst\processor\plugin_processor_audio.cpp:154` (function) [netsdr_7e76fe9ee683]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:661` (section) [netsdr_df3aa309f9a7]
 - `currentRatio` (function, lines 187-189) - double Resampler::currentRatio() const noexcept
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\dsp\resampler.h:35` (class) [netsdr_73bb8d01dfc9]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\tests\dsp\resampler_tests.cpp:129` (function) [netsdr_b92c7b9be026]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:661` (section) [netsdr_df3aa309f9a7]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\vst\processor\plugin_processor.cpp:61` (function) [netsdr_3f905db92532]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\vst\processor\plugin_processor.cpp:220` (function) [netsdr_39d0e8982fc8]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:661` (section) [netsdr_df3aa309f9a7]
 
 ## C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\dsp\resampler.h
 
@@ -1301,21 +1300,21 @@ Symbols:
 - `uiUrl` (function, lines 119-126) - const char *PluginEditor::uiUrl()
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\tests\vst\plugin_editor_tests.cpp:85` (module) [netsdr_14ee62438e1d]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\tests\vst\plugin_editor_tests.cpp:90` (function) [netsdr_e60dcaf5a4bd]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:373` (section) [netsdr_04ed7b8c111d]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\editor\plugin_editor.h:24` (class) [netsdr_65d94909e11c]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:373` (section) [netsdr_04ed7b8c111d]
 - `isPlatformTypeSupported` (function, lines 128-135) - tresult PLUGIN_API PluginEditor::isPlatformTypeSupported(FIDString type)
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\editor\plugin_editor.h:24` (class) [netsdr_65d94909e11c]
 - `attached` (function, lines 137-145) - tresult PLUGIN_API PluginEditor::attached(void *parent, FIDString /*type*/)
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\webview\webview_editor.cpp:24` (method) [netsdr_dda19e9ed403]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\tests\vst\plugin_editor_tests.cpp:45` (module) [netsdr_731f144b6741]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:184` (section) [netsdr_86984efab567]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\editor\plugin_editor.h:24` (class) [netsdr_65d94909e11c]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:184` (section) [netsdr_86984efab567]
 - `removed` (function, lines 147-157) - tresult PLUGIN_API PluginEditor::removed()
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\M6-implementation-plan.md:204` (section) [netsdr_7fa411704d3a]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\M3-implementation-plan.md:564` (section) [netsdr_27cbe3aa2061]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\architecture.md:99` (section) [netsdr_801f3006ab84]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:1139` (section) [netsdr_b2cf1f94a290]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\editor\plugin_editor.h:24` (class) [netsdr_65d94909e11c]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:1139` (section) [netsdr_67f7d7f3e7db]
 - `onWheel` (function, lines 159-161) - tresult PLUGIN_API PluginEditor::onWheel(float /*distance*/)
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\editor\plugin_editor.h:24` (class) [netsdr_65d94909e11c]
 - `onKeyDown` (function, lines 163-166) - tresult PLUGIN_API PluginEditor::onKeyDown(char16 /*key*/, int16 /*keyCode*/, int16 /*modifiers*/)
@@ -1329,18 +1328,18 @@ Symbols:
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\webview2-bundle-audit.md:162` (section) [netsdr_9264ab2c9fef]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\M4-implementation-plan.md:37` (section) [netsdr_5b5ba71225a5]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\M4-implementation-plan.md:97` (section) [netsdr_3ec62dc02bb0]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:184` (section) [netsdr_86984efab567]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:1139` (section) [netsdr_b2cf1f94a290]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\editor\plugin_editor.h:24` (class) [netsdr_65d94909e11c]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:184` (section) [netsdr_86984efab567]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:1139` (section) [netsdr_67f7d7f3e7db]
 - `setFrame` (function, lines 187-196) - tresult PLUGIN_API PluginEditor::setFrame(IPlugFrame *frame)
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\M4-implementation-plan.md:37` (section) [netsdr_5b5ba71225a5]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\editor\plugin_editor.h:24` (class) [netsdr_65d94909e11c]
 - `checkSizeConstraint` (function, lines 200-208) - tresult PLUGIN_API PluginEditor::checkSizeConstraint(ViewRect *rect)
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\tests\vst\plugin_editor_tests.cpp:100` (module) [netsdr_3dbe8da4ead5]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\tests\vst\plugin_editor_tests.cpp:103` (function) [netsdr_08393ac809b6]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:373` (section) [netsdr_04ed7b8c111d]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:1139` (section) [netsdr_b2cf1f94a290]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\editor\plugin_editor.h:24` (class) [netsdr_65d94909e11c]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:373` (section) [netsdr_04ed7b8c111d]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:1139` (section) [netsdr_67f7d7f3e7db]
 - `attachWebView` (function, lines 210-218) - void PluginEditor::attachWebView(void *parentHandle)
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\webview2-bundle-audit.md:162` (section) [netsdr_9264ab2c9fef]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\editor\plugin_editor.h:24` (class) [netsdr_65d94909e11c]
@@ -1352,20 +1351,20 @@ Symbols:
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\tests\vst\plugin_editor_tests.cpp:123` (module) [netsdr_afd420c2ff5c]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\tests\vst\plugin_editor_tests.cpp:129` (function) [netsdr_293070a9ae6a]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\tests\vst\plugin_editor_tests.cpp:168` (function) [netsdr_ab91691bd72f]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\editor\plugin_editor.h:24` (class) [netsdr_65d94909e11c]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:15` (section) [netsdr_ed4559899efb]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:184` (section) [netsdr_86984efab567]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:373` (section) [netsdr_04ed7b8c111d]
 - `pushStatus` (function, lines 280-293) - void PluginEditor::pushStatus(const std::string& status)
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\M3-implementation-plan.md:578` (section) [netsdr_9842f5de2c0c]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\architecture.md:67` (section) [netsdr_453ae5f869df]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\editor\plugin_editor.h:24` (class) [netsdr_65d94909e11c]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:661` (section) [netsdr_df3aa309f9a7]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\editor\plugin_editor.h:24` (class) [netsdr_65d94909e11c]
 - `pushLevel` (function, lines 295-301) - void PluginEditor::pushLevel(float dbm)
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:1139` (section) [netsdr_b2cf1f94a290]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\editor\plugin_editor.h:24` (class) [netsdr_65d94909e11c]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:1139` (section) [netsdr_67f7d7f3e7db]
 - `pushWaterfall` (function, lines 303-317) - void PluginEditor::pushWaterfall(const std::vector<float>& bins)
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:1139` (section) [netsdr_b2cf1f94a290]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\editor\plugin_editor.h:24` (class) [netsdr_65d94909e11c]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:1139` (section) [netsdr_67f7d7f3e7db]
 
 ## C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\editor\plugin_editor.h
 
@@ -1936,8 +1935,8 @@ Symbols:
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\tests\threading\audio_sample_queue_tests.cpp:68` (function) [netsdr_86e960f26077]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\tests\threading\audio_sample_queue_tests.cpp:76` (function) [netsdr_86bedf0120d0]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\vst\processor\plugin_processor_network.cpp:57` (function) [netsdr_ae8b29c857d5]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:599` (section) [netsdr_2a648a28a9fa]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\vst\processor\plugin_processor_audio.cpp:154` (function) [netsdr_7e76fe9ee683]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:599` (section) [netsdr_2a648a28a9fa]
 - `AudioSampleQueue` (class, lines 26-26) - class AudioSampleQueue {
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\tests\threading\audio_sample_queue_tests.cpp:1` (module) [netsdr_35c6569714e6]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\tests\threading\audio_sample_queue_tests.cpp:15` (function) [netsdr_6e5b189737e1]
@@ -1986,11 +1985,11 @@ Symbols:
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\threading\worker_thread.h:22` (class) [netsdr_7fb21bb67849]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\tests\threading\lock_free_spsc_tests.cpp:34` (function) [netsdr_0c26129c4738]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\tests\threading\lock_free_spsc_tests.cpp:69` (function) [netsdr_1c7107e56484]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\vst\processor\plugin_processor.h:111` (class) [netsdr_19230beb4d90]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:184` (section) [netsdr_86984efab567]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:293` (section) [netsdr_56c65c6f1184]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:373` (section) [netsdr_04ed7b8c111d]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:599` (section) [netsdr_2a648a28a9fa]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\vst\processor\plugin_processor.h:111` (class) [netsdr_19230beb4d90]
 
 ## C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\threading\worker_thread.cpp
 
@@ -2050,8 +2049,8 @@ Symbols:
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\tests\threading\worker_thread_tests.cpp:14` (function) [netsdr_05d00cffa2cc]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\tests\threading\worker_thread_tests.cpp:44` (function) [netsdr_12ae6df53161]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\tests\threading\worker_thread_tests.cpp:58` (function) [netsdr_c3bad4850c7b]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:184` (section) [netsdr_86984efab567]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:373` (section) [netsdr_04ed7b8c111d]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\vst\processor\plugin_processor.h:46` (class) [netsdr_f7536bdc62ea]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\vst\processor\plugin_processor.h:111` (class) [netsdr_19230beb4d90]
 
 ## C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\util\file_logger.h
 
@@ -2126,16 +2125,16 @@ Symbols:
 - `parseDisconnectMessage` (function, lines 28-34) - bool parseDisconnectMessage(const std::string& message)
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\tests\vst\bridge_protocol_tests.cpp:73` (function) [netsdr_f5be5b6e593e]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\vst\common\bridge_protocol.h:25` (module) [netsdr_716ff49960b0]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:661` (section) [netsdr_df3aa309f9a7]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\editor\plugin_editor.cpp:220` (function) [netsdr_d7749edae7f1]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:661` (section) [netsdr_df3aa309f9a7]
 - `paramIdFromUiName` (function, lines 36-146) - bool paramIdFromUiName(const std::string& id, std::uint32_t& outId)
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\tests\vst\bridge_protocol_tests.cpp:80` (function) [netsdr_ad4a24c7d994]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\tests\vst\bridge_protocol_tests.cpp:118` (function) [netsdr_57980d032cc6]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\tests\vst\plugin_editor_tests.cpp:45` (module) [netsdr_731f144b6741]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\tests\vst\plugin_editor_tests.cpp:52` (function) [netsdr_7392ff80a1a3]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\vst\common\bridge_protocol.h:85` (module) [netsdr_bb67314febfa]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:373` (section) [netsdr_04ed7b8c111d]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\editor\plugin_editor.cpp:220` (function) [netsdr_d7749edae7f1]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:373` (section) [netsdr_04ed7b8c111d]
 
 ## C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\vst\common\bridge_protocol.h
 
@@ -2186,7 +2185,7 @@ Symbols:
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\schema\generate-cpp.py:100` (function) [netsdr_66af0fb226c8]
 - `parseLevel` (function, lines 98-106) - inline bool parseLevel(const nlohmann::json& j, double& outDbM)
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\schema\generate-cpp.py:108` (function) [netsdr_283226b24391]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:1139` (section) [netsdr_b2cf1f94a290]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:1139` (section) [netsdr_67f7d7f3e7db]
 
 ## C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\vst\common\paramdefinitions.h
 
@@ -2245,17 +2244,17 @@ Symbols:
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\vst\common\parameter_registry.h:34` (class) [netsdr_0430cd2e79e7]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\tests\vst\parameter_registry_tests.cpp:92` (function) [netsdr_a7e5f80f68c8]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\architecture.md:313` (section) [netsdr_d617eb7cc2cc]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:564` (section) [netsdr_dc6865ff0621]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:661` (section) [netsdr_df3aa309f9a7]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\vst\processor\plugin_processor.cpp:238` (function) [netsdr_cef681e0bdc7]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\vst\processor\plugin_processor.cpp:269` (function) [netsdr_f0ed32e807dc]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:564` (section) [netsdr_dc6865ff0621]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:661` (section) [netsdr_df3aa309f9a7]
 - `toPlain` (function, lines 47-53) - double ParameterRegistry::toPlain(uint32_t id, double normalized) const
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\vst\common\parameter_registry.h:34` (class) [netsdr_0430cd2e79e7]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\tests\vst\parameter_registry_tests.cpp:105` (function) [netsdr_b883516431f2]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\M3-implementation-plan.md:91` (section) [netsdr_00c1bcd2c3d0]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\vst\processor\plugin_processor.cpp:238` (function) [netsdr_cef681e0bdc7]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:373` (section) [netsdr_04ed7b8c111d]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:564` (section) [netsdr_dc6865ff0621]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\vst\processor\plugin_processor.cpp:238` (function) [netsdr_cef681e0bdc7]
 - `toNormalized` (function, lines 55-61) - double ParameterRegistry::toNormalized(uint32_t id, double plain) const
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\vst\common\parameter_registry.h:34` (class) [netsdr_0430cd2e79e7]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\tests\vst\parameter_registry_tests.cpp:105` (function) [netsdr_b883516431f2]
@@ -2265,8 +2264,8 @@ Symbols:
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\tests\vst\plugin_editor_tests.cpp:45` (module) [netsdr_731f144b6741]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\tests\vst\plugin_editor_tests.cpp:52` (function) [netsdr_7392ff80a1a3]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\tests\vst\plugin_editor_tests.cpp:129` (function) [netsdr_293070a9ae6a]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:373` (section) [netsdr_04ed7b8c111d]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:564` (section) [netsdr_dc6865ff0621]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\editor\plugin_editor.cpp:220` (function) [netsdr_d7749edae7f1]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\vst\controller\plugin_controller.cpp:52` (function) [netsdr_428c87c95776]
 
 ## C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\vst\common\parameter_registry.h
 
@@ -2323,7 +2322,7 @@ Symbols:
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\tests\vst\processor_state_tests.cpp:127` (function) [netsdr_0c8206ece3c2]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\tests\vst\processor_state_tests.cpp:141` (function) [netsdr_2a894eeb60b9]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\tests\vst\processor_state_tests.cpp:150` (function) [netsdr_e60e4cfb7f68]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:247` (section) [netsdr_bcd9ff227122]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\vst\processor\plugin_processor.cpp:121` (function) [netsdr_10986cb3389a]
 - `deserialize` (function, lines 73-162) - bool ProcessorState::deserialize(const std::string& bytes)
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\vst\common\processor_state.h:32` (class) [netsdr_9626986e9747]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\tests\vst\plugin_processor_tests.cpp:50` (function) [netsdr_d4624880e94c]
@@ -2332,9 +2331,9 @@ Symbols:
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\tests\vst\processor_state_tests.cpp:118` (function) [netsdr_39bc07743e0d]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\tests\vst\processor_state_tests.cpp:127` (function) [netsdr_0c8206ece3c2]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\tests\vst\processor_state_tests.cpp:141` (function) [netsdr_2a894eeb60b9]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:184` (section) [netsdr_86984efab567]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\vst\controller\plugin_controller.cpp:52` (function) [netsdr_428c87c95776]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\vst\processor\plugin_processor.cpp:97` (function) [netsdr_e44743ce01d8]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:184` (section) [netsdr_86984efab567]
 
 ## C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\vst\common\processor_state.h
 
@@ -2380,8 +2379,8 @@ Symbols:
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\M3-implementation-plan.md:137` (section) [netsdr_88453f76941f]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\M3-implementation-plan.md:488` (section) [netsdr_2d9b31872623]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\architecture.md:234` (section) [netsdr_8e8017c47550]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:661` (section) [netsdr_df3aa309f9a7]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\vst\controller\plugin_controller.h:28` (class) [netsdr_5b7ec6f72b66]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\vst\processor\plugin_processor.cpp:61` (function) [netsdr_3f905db92532]
 - `terminate` (function, lines 48-50) - tresult PLUGIN_API PluginController::terminate()
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\tests\network\kiwi_connection_tests.cpp:34` (function) [netsdr_4f732bc894e9]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\tests\vst\plugin_processor_tests.cpp:50` (function) [netsdr_d4624880e94c]
@@ -2389,16 +2388,16 @@ Symbols:
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\tests\vst\plugin_processor_tests.cpp:133` (function) [netsdr_5b88464ea2d6]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\M3-implementation-plan.md:122` (section) [netsdr_b674b8ce5590]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\M3-implementation-plan.md:137` (section) [netsdr_88453f76941f]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:15` (section) [netsdr_ed4559899efb]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:661` (section) [netsdr_df3aa309f9a7]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\vst\controller\plugin_controller.h:28` (class) [netsdr_5b7ec6f72b66]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\vst\processor\plugin_processor.cpp:85` (function) [netsdr_5df0bb48aa41]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\vst\processor\plugin_processor.h:46` (class) [netsdr_f7536bdc62ea]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\tests\vst\plugin_processor_pipeline_tests.cpp:263` (function) [netsdr_8ad0f3a23f33]
 - `setComponentState` (function, lines 52-106) - tresult PLUGIN_API PluginController::setComponentState(IBStream* state)
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\vst\common\processor_state.h:1` (module) [netsdr_d47f4d2d7816]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\tests\vst\plugin_controller_tests.cpp:12` (function) [netsdr_0a469f468578]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\vst\controller\plugin_controller.h:28` (class) [netsdr_5b7ec6f72b66]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:184` (section) [netsdr_86984efab567]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:373` (section) [netsdr_04ed7b8c111d]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\vst\controller\plugin_controller.h:28` (class) [netsdr_5b7ec6f72b66]
 - `notify` (function, lines 111-149) - tresult PLUGIN_API PluginController::notify(IMessage* message)
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\threading\worker_thread.cpp:34` (function) [netsdr_6f68e5ee47ab]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\M3-implementation-plan.md:423` (section) [netsdr_ef8cae4187a1]
@@ -2406,10 +2405,10 @@ Symbols:
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\M3-implementation-plan.md:578` (section) [netsdr_9842f5de2c0c]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\architecture.md:67` (section) [netsdr_453ae5f869df]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\network\kiwi_client.cpp:240` (function) [netsdr_f87d0abbcd79]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:661` (section) [netsdr_df3aa309f9a7]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:1139` (section) [netsdr_b2cf1f94a290]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\vst\controller\plugin_controller.h:28` (class) [netsdr_5b7ec6f72b66]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\vst\processor\plugin_processor.cpp:161` (function) [netsdr_c06a66390698]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\vst\processor\plugin_processor.h:46` (class) [netsdr_f7536bdc62ea]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:661` (section) [netsdr_df3aa309f9a7]
 - `setStation` (function, lines 151-165) - void PluginController::setStation(const std::string& hostPort)
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\vst\common\paramids.h:1` (module) [netsdr_30a01e4158d2]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\M3-implementation-plan.md:30` (section) [netsdr_d9a402588137]
@@ -2449,24 +2448,24 @@ Symbols:
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\tests\vst\plugin_editor_tests.cpp:17` (block) [netsdr_e4850c9110d9]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\tests\vst\plugin_editor_tests.cpp:123` (module) [netsdr_afd420c2ff5c]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\tests\vst\plugin_editor_tests.cpp:168` (function) [netsdr_ab91691bd72f]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:15` (section) [netsdr_ed4559899efb]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\editor\plugin_editor.cpp:220` (function) [netsdr_d7749edae7f1]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\vst\controller\plugin_controller.h:28` (class) [netsdr_5b7ec6f72b66]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:15` (section) [netsdr_ed4559899efb]
 - `performEdit` (function, lines 201-203) - tresult PluginController::performEdit(ParamID tag, ParamValue valueNormalized)
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\architecture.md:48` (section) [netsdr_c919102c7807]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\tests\vst\plugin_editor_tests.cpp:17` (block) [netsdr_e4850c9110d9]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\tests\vst\plugin_editor_tests.cpp:123` (module) [netsdr_afd420c2ff5c]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\tests\vst\plugin_editor_tests.cpp:168` (function) [netsdr_ab91691bd72f]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:15` (section) [netsdr_ed4559899efb]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\editor\plugin_editor.cpp:220` (function) [netsdr_d7749edae7f1]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\vst\controller\plugin_controller.h:28` (class) [netsdr_5b7ec6f72b66]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:15` (section) [netsdr_ed4559899efb]
 - `endEdit` (function, lines 205-207) - tresult PluginController::endEdit(ParamID tag)
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\tests\vst\plugin_editor_tests.cpp:17` (block) [netsdr_e4850c9110d9]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\tests\vst\plugin_editor_tests.cpp:123` (module) [netsdr_afd420c2ff5c]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\tests\vst\plugin_editor_tests.cpp:168` (function) [netsdr_ab91691bd72f]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:15` (section) [netsdr_ed4559899efb]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\editor\plugin_editor.cpp:220` (function) [netsdr_d7749edae7f1]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\vst\controller\plugin_controller.h:28` (class) [netsdr_5b7ec6f72b66]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:15` (section) [netsdr_ed4559899efb]
 
 ## C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\vst\controller\plugin_controller.h
 
@@ -2506,12 +2505,12 @@ Symbols:
 
 Symbols:
 - `PipelineTelemetry` (class, lines 7-14) - struct PipelineTelemetry {
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:661` (section) [netsdr_df3aa309f9a7]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\vst\processor\plugin_processor.h:111` (class) [netsdr_19230beb4d90]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:661` (section) [netsdr_df3aa309f9a7]
 - `PipelineTelemetry::reset` (method, lines 15-22) - void reset()
 - `PipelineTelemetry` (class, lines 23-23) - struct PipelineTelemetry {
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:661` (section) [netsdr_df3aa309f9a7]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\vst\processor\plugin_processor.h:111` (class) [netsdr_19230beb4d90]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:661` (section) [netsdr_df3aa309f9a7]
 
 ## C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\vst\processor\plugin_processor.cpp
 
@@ -2550,8 +2549,8 @@ Symbols:
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\M3-implementation-plan.md:137` (section) [netsdr_88453f76941f]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\M3-implementation-plan.md:488` (section) [netsdr_2d9b31872623]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\architecture.md:234` (section) [netsdr_8e8017c47550]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:661` (section) [netsdr_df3aa309f9a7]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\vst\controller\plugin_controller.cpp:30` (function) [netsdr_94243ed3ae5f]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\vst\controller\plugin_controller.h:28` (class) [netsdr_5b7ec6f72b66]
 - `terminate` (function, lines 85-91) - tresult PLUGIN_API PluginProcessor::terminate()
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\tests\network\kiwi_connection_tests.cpp:34` (function) [netsdr_4f732bc894e9]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\tests\vst\plugin_processor_tests.cpp:50` (function) [netsdr_d4624880e94c]
@@ -2559,28 +2558,28 @@ Symbols:
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\tests\vst\plugin_processor_tests.cpp:133` (function) [netsdr_5b88464ea2d6]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\M3-implementation-plan.md:122` (section) [netsdr_b674b8ce5590]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\M3-implementation-plan.md:137` (section) [netsdr_88453f76941f]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:15` (section) [netsdr_ed4559899efb]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:661` (section) [netsdr_df3aa309f9a7]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\vst\controller\plugin_controller.cpp:48` (function) [netsdr_f98391541321]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\vst\controller\plugin_controller.h:28` (class) [netsdr_5b7ec6f72b66]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\vst\processor\plugin_processor.h:46` (class) [netsdr_f7536bdc62ea]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\tests\vst\plugin_processor_pipeline_tests.cpp:263` (function) [netsdr_8ad0f3a23f33]
 - `setState` (function, lines 97-119) - tresult PLUGIN_API PluginProcessor::setState(IBStream* state)
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\vst\common\processor_state.h:1` (module) [netsdr_d47f4d2d7816]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\M3-implementation-plan.md:30` (section) [netsdr_d9a402588137]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\M3-implementation-plan.md:488` (section) [netsdr_2d9b31872623]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\architecture.md:234` (section) [netsdr_8e8017c47550]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\architecture.md:328` (section) [netsdr_f7b8e840c12d]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\vst\processor\plugin_processor.h:46` (class) [netsdr_f7536bdc62ea]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:247` (section) [netsdr_bcd9ff227122]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:373` (section) [netsdr_04ed7b8c111d]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\vst\processor\plugin_processor.h:46` (class) [netsdr_f7536bdc62ea]
 - `getState` (function, lines 121-155) - tresult PLUGIN_API PluginProcessor::getState(IBStream* state)
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\vst\common\processor_state.h:1` (module) [netsdr_d47f4d2d7816]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\tests\vst\plugin_processor_tests.cpp:50` (function) [netsdr_d4624880e94c]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\M3-implementation-plan.md:30` (section) [netsdr_d9a402588137]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\architecture.md:328` (section) [netsdr_f7b8e840c12d]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\vst\processor\plugin_processor.h:46` (class) [netsdr_f7536bdc62ea]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:184` (section) [netsdr_86984efab567]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:247` (section) [netsdr_bcd9ff227122]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:373` (section) [netsdr_04ed7b8c111d]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\vst\processor\plugin_processor.h:46` (class) [netsdr_f7536bdc62ea]
 - `notify` (function, lines 161-195) - tresult PLUGIN_API PluginProcessor::notify(IMessage* message)
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\threading\worker_thread.cpp:34` (function) [netsdr_6f68e5ee47ab]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\M3-implementation-plan.md:423` (section) [netsdr_ef8cae4187a1]
@@ -2588,10 +2587,10 @@ Symbols:
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\M3-implementation-plan.md:578` (section) [netsdr_9842f5de2c0c]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\architecture.md:67` (section) [netsdr_453ae5f869df]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\network\kiwi_client.cpp:240` (function) [netsdr_f87d0abbcd79]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:661` (section) [netsdr_df3aa309f9a7]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:1139` (section) [netsdr_b2cf1f94a290]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\vst\controller\plugin_controller.cpp:107` (module) [netsdr_479af038f647]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\vst\controller\plugin_controller.cpp:111` (function) [netsdr_59ae326c9fec]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\vst\controller\plugin_controller.h:28` (class) [netsdr_5b7ec6f72b66]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\vst\processor\plugin_processor.h:46` (class) [netsdr_f7536bdc62ea]
 - `setBusArrangements` (function, lines 201-212) - tresult PLUGIN_API PluginProcessor::setBusArrangements(SpeakerArrangement* inputs, int32 numIns, SpeakerArrangement* outputs, int32 numOuts)
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\vst\processor\plugin_processor.h:46` (class) [netsdr_f7536bdc62ea]
 - `canProcessSampleSize` (function, lines 214-218) - tresult PLUGIN_API PluginProcessor::canProcessSampleSize(int32 symbolicSampleSize)
@@ -2603,25 +2602,24 @@ Symbols:
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\M3-implementation-plan.md:137` (section) [netsdr_88453f76941f]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\architecture.md:256` (section) [netsdr_f0bd0ba942f2]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\plan.md:70` (section) [netsdr_7bdb2e1df912]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:184` (section) [netsdr_86984efab567]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:373` (section) [netsdr_04ed7b8c111d]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:661` (section) [netsdr_df3aa309f9a7]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\vst\processor\plugin_processor.h:46` (class) [netsdr_f7536bdc62ea]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\tests\vst\plugin_processor_pipeline_tests.cpp:263` (function) [netsdr_8ad0f3a23f33]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\tests\vst\plugin_processor_pipeline_tests.cpp:356` (function) [netsdr_24e830dcb530]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\tests\vst\plugin_processor_pipeline_tests.cpp:479` (function) [netsdr_b63eeb4f0fb7]
 - `applyParamValue` (function, lines 238-263) - void PluginProcessor::applyParamValue(ParamID tag, ParamValue value)
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\tests\vst\plugin_processor_tests.cpp:50` (function) [netsdr_d4624880e94c]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\tests\vst\plugin_processor_tests.cpp:85` (function) [netsdr_0ded1724a5ee]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\M3-implementation-plan.md:885` (section) [netsdr_7b91a1bfe20e]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\M4-implementation-plan.md:504` (section) [netsdr_87eb1ecb0868]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:373` (section) [netsdr_04ed7b8c111d]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:564` (section) [netsdr_dc6865ff0621]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:661` (section) [netsdr_df3aa309f9a7]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\vst\processor\plugin_processor.h:46` (class) [netsdr_f7536bdc62ea]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\vst\processor\plugin_processor_audio.cpp:35` (function) [netsdr_ae79b73ac8df]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\tests\vst\plugin_processor_pipeline_tests.cpp:740` (function) [netsdr_5943cad12cb4]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\tests\vst\plugin_processor_pipeline_tests.cpp:782` (function) [netsdr_a63f577c406e]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\tests\vst\plugin_processor_pipeline_tests.cpp:861` (function) [netsdr_9bb4da8be566]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:373` (section) [netsdr_04ed7b8c111d]
 - `applyState` (function, lines 269-326) - void PluginProcessor::applyState(const ProcessorState& state)
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\M3-implementation-plan.md:488` (section) [netsdr_2d9b31872623]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\architecture.md:234` (section) [netsdr_8e8017c47550]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:661` (section) [netsdr_df3aa309f9a7]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\vst\processor\plugin_processor.h:46` (class) [netsdr_f7536bdc62ea]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\tests\vst\plugin_processor_pipeline_tests.cpp:263` (function) [netsdr_8ad0f3a23f33]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\tests\vst\plugin_processor_pipeline_tests.cpp:379` (function) [netsdr_10d2bd53f455]
@@ -2629,14 +2627,15 @@ Symbols:
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\tests\vst\plugin_processor_pipeline_tests.cpp:479` (function) [netsdr_b63eeb4f0fb7]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\tests\vst\plugin_processor_pipeline_tests.cpp:602` (function) [netsdr_470bb089e114]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\tests\vst\plugin_processor_pipeline_tests.cpp:740` (function) [netsdr_5943cad12cb4]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\tests\vst\plugin_processor_pipeline_tests.cpp:782` (function) [netsdr_a63f577c406e]
 - `station` (function, lines 332-335) - std::string PluginProcessor::station() const
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\workspace-workflow.md:156` (section) [netsdr_deb87cc734b4]
 - `setOnStatus` (function, lines 341-343) - void PluginProcessor::setOnStatus(StatusCallback cb)
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\M3-implementation-plan.md:578` (section) [netsdr_9842f5de2c0c]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:661` (section) [netsdr_df3aa309f9a7]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\vst\processor\plugin_processor.h:46` (class) [netsdr_f7536bdc62ea]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\tests\vst\plugin_processor_pipeline_tests.cpp:379` (function) [netsdr_10d2bd53f455]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\tests\vst\plugin_processor_pipeline_tests.cpp:431` (function) [netsdr_a983b5fe0f96]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:661` (section) [netsdr_df3aa309f9a7]
 - `setOnLevel` (function, lines 345-347) - void PluginProcessor::setOnLevel(LevelCallback cb)
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\vst\processor\plugin_processor.h:46` (class) [netsdr_f7536bdc62ea]
 - `setOnWaterfall` (function, lines 349-351) - void PluginProcessor::setOnWaterfall(WaterfallCallback cb)
@@ -2648,13 +2647,13 @@ Symbols:
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\vst\processor\plugin_processor_network.cpp:161` (function) [netsdr_125a443dfffa]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\vst\processor\plugin_processor_network.cpp:243` (function) [netsdr_d2c41d76459d]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\architecture.md:67` (section) [netsdr_453ae5f869df]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:661` (section) [netsdr_df3aa309f9a7]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\vst\processor\plugin_processor.h:111` (class) [netsdr_19230beb4d90]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:661` (section) [netsdr_df3aa309f9a7]
 - `sendLevel` (function, lines 384-394) - void PluginProcessor::sendLevel()
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:1139` (section) [netsdr_b2cf1f94a290]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\vst\processor\plugin_processor.h:111` (class) [netsdr_19230beb4d90]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\vst\processor\plugin_processor_audio.cpp:35` (function) [netsdr_ae79b73ac8df]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\vst\processor\plugin_processor_audio.cpp:154` (function) [netsdr_7e76fe9ee683]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:1139` (section) [netsdr_67f7d7f3e7db]
 - `sendWaterfall` (function, lines 406-440) - void PluginProcessor::sendWaterfall()
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\vst\processor\plugin_processor.h:111` (class) [netsdr_19230beb4d90]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\vst\processor\plugin_processor_audio.cpp:35` (function) [netsdr_ae79b73ac8df]
@@ -2720,9 +2719,9 @@ Symbols:
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\architecture.md:234` (section) [netsdr_8e8017c47550]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\logging-strategy.md:38` (section) [netsdr_bb1f31f98099]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\logging-strategy.md:108` (section) [netsdr_cfdd71c385a9]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:661` (section) [netsdr_df3aa309f9a7]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\vst\processor\plugin_processor.h:46` (class) [netsdr_f7536bdc62ea]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\vst\processor\plugin_processor.h:111` (class) [netsdr_19230beb4d90]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:661` (section) [netsdr_df3aa309f9a7]
 
 ## C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\vst\processor\plugin_processor_network.cpp
 
@@ -2733,30 +2732,30 @@ Symbols:
 - `sendPendingParams` (function, lines 31-51) - void PluginProcessor::sendPendingParams()
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\M3-implementation-plan.md:564` (section) [netsdr_27cbe3aa2061]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\M3-implementation-plan.md:885` (section) [netsdr_7b91a1bfe20e]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:661` (section) [netsdr_df3aa309f9a7]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\vst\processor\plugin_processor.h:111` (class) [netsdr_19230beb4d90]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\vst\processor\plugin_processor_audio.cpp:35` (function) [netsdr_ae79b73ac8df]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\tests\vst\plugin_processor_pipeline_tests.cpp:659` (module) [netsdr_0c04c78e462a]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:661` (section) [netsdr_df3aa309f9a7]
 - `decodeAndQueue` (function, lines 57-155) - void PluginProcessor::decodeAndQueue(const std::string& data)
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\logging-strategy.md:38` (section) [netsdr_bb1f31f98099]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:661` (section) [netsdr_df3aa309f9a7]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\vst\processor\plugin_processor.h:111` (class) [netsdr_19230beb4d90]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:661` (section) [netsdr_df3aa309f9a7]
 - `connectToStation` (function, lines 161-237) - void PluginProcessor::connectToStation(const std::string& hostPort)
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\M6-implementation-plan.md:170` (section) [netsdr_278aa74bbbd2]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\M3-implementation-plan.md:423` (section) [netsdr_ef8cae4187a1]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\M3-implementation-plan.md:488` (section) [netsdr_2d9b31872623]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\M3-implementation-plan.md:578` (section) [netsdr_9842f5de2c0c]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\architecture.md:67` (section) [netsdr_453ae5f869df]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:661` (section) [netsdr_df3aa309f9a7]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:1428` (section) [netsdr_d16f4b1c85ec]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\vst\processor\plugin_processor.cpp:161` (function) [netsdr_c06a66390698]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\vst\processor\plugin_processor.cpp:269` (function) [netsdr_f0ed32e807dc]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\vst\processor\plugin_processor.h:111` (class) [netsdr_19230beb4d90]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:661` (section) [netsdr_df3aa309f9a7]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:1437` (section) [netsdr_0a9cd3173fed]
 - `disconnectStation` (function, lines 243-257) - void PluginProcessor::disconnectStation()
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\M3-implementation-plan.md:885` (section) [netsdr_7b91a1bfe20e]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:661` (section) [netsdr_df3aa309f9a7]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\vst\processor\plugin_processor.cpp:161` (function) [netsdr_c06a66390698]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\vst\processor\plugin_processor.h:111` (class) [netsdr_19230beb4d90]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:661` (section) [netsdr_df3aa309f9a7]
 
 ## C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\webview\webview_editor.cpp
 
@@ -2771,10 +2770,10 @@ Symbols:
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\architecture.md:356` (section) [netsdr_e0f0860ad6e6]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\tests\vst\bridge_protocol_tests.cpp:1` (module) [netsdr_812d171c885e]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\vst\common\bridge_protocol.h:1` (module) [netsdr_d76608359f65]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\editor\plugin_editor.h:1` (module) [netsdr_8ff579f21cab]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\editor\plugin_editor.h:24` (class) [netsdr_65d94909e11c]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:15` (section) [netsdr_ed4559899efb]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:293` (section) [netsdr_56c65c6f1184]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:373` (section) [netsdr_04ed7b8c111d]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\editor\plugin_editor.h:1` (module) [netsdr_8ff579f21cab]
 - `WebViewHost::attach` (method, lines 24-117) - bool attach(void *parentHandle)
 - `WebViewHost` (class, lines 118-118) - class WebViewHost::Impl {
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\workspace-workflow.md:137` (section) [netsdr_2e2b20db1b9f]
@@ -2783,10 +2782,10 @@ Symbols:
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\architecture.md:356` (section) [netsdr_e0f0860ad6e6]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\tests\vst\bridge_protocol_tests.cpp:1` (module) [netsdr_812d171c885e]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\vst\common\bridge_protocol.h:1` (module) [netsdr_d76608359f65]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\editor\plugin_editor.h:1` (module) [netsdr_8ff579f21cab]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\editor\plugin_editor.h:24` (class) [netsdr_65d94909e11c]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:15` (section) [netsdr_ed4559899efb]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:293` (section) [netsdr_56c65c6f1184]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:373` (section) [netsdr_04ed7b8c111d]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\editor\plugin_editor.h:1` (module) [netsdr_8ff579f21cab]
 - `WebViewHost::detach` (method, lines 119-123) - void detach()
 - `WebViewHost` (class, lines 124-124) - class WebViewHost::Impl {
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\workspace-workflow.md:137` (section) [netsdr_2e2b20db1b9f]
@@ -2795,10 +2794,10 @@ Symbols:
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\architecture.md:356` (section) [netsdr_e0f0860ad6e6]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\tests\vst\bridge_protocol_tests.cpp:1` (module) [netsdr_812d171c885e]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\vst\common\bridge_protocol.h:1` (module) [netsdr_d76608359f65]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\editor\plugin_editor.h:1` (module) [netsdr_8ff579f21cab]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\editor\plugin_editor.h:24` (class) [netsdr_65d94909e11c]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:15` (section) [netsdr_ed4559899efb]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:293` (section) [netsdr_56c65c6f1184]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:373` (section) [netsdr_04ed7b8c111d]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\editor\plugin_editor.h:1` (module) [netsdr_8ff579f21cab]
 - `WebViewHost::navigate` (method, lines 125-134) - bool navigate(const std::string &url)
 - `WebViewHost` (class, lines 135-135) - class WebViewHost::Impl {
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\workspace-workflow.md:137` (section) [netsdr_2e2b20db1b9f]
@@ -2807,10 +2806,10 @@ Symbols:
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\architecture.md:356` (section) [netsdr_e0f0860ad6e6]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\tests\vst\bridge_protocol_tests.cpp:1` (module) [netsdr_812d171c885e]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\vst\common\bridge_protocol.h:1` (module) [netsdr_d76608359f65]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\editor\plugin_editor.h:1` (module) [netsdr_8ff579f21cab]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\editor\plugin_editor.h:24` (class) [netsdr_65d94909e11c]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:15` (section) [netsdr_ed4559899efb]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:293` (section) [netsdr_56c65c6f1184]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:373` (section) [netsdr_04ed7b8c111d]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\editor\plugin_editor.h:1` (module) [netsdr_8ff579f21cab]
 - `WebViewHost::eval` (method, lines 136-142) - bool eval(const std::string &js)
 - `WebViewHost` (class, lines 143-143) - class WebViewHost::Impl {
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\workspace-workflow.md:137` (section) [netsdr_2e2b20db1b9f]
@@ -2819,10 +2818,10 @@ Symbols:
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\architecture.md:356` (section) [netsdr_e0f0860ad6e6]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\tests\vst\bridge_protocol_tests.cpp:1` (module) [netsdr_812d171c885e]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\vst\common\bridge_protocol.h:1` (module) [netsdr_d76608359f65]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\editor\plugin_editor.h:1` (module) [netsdr_8ff579f21cab]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\editor\plugin_editor.h:24` (class) [netsdr_65d94909e11c]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:15` (section) [netsdr_ed4559899efb]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:293` (section) [netsdr_56c65c6f1184]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:373` (section) [netsdr_04ed7b8c111d]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\editor\plugin_editor.h:1` (module) [netsdr_8ff579f21cab]
 - `WebViewHost::resizeToParent` (method, lines 144-177) - void resizeToParent()
 - `WebViewHost` (class, lines 178-178) - class WebViewHost::Impl {
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\workspace-workflow.md:137` (section) [netsdr_2e2b20db1b9f]
@@ -2831,10 +2830,10 @@ Symbols:
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\architecture.md:356` (section) [netsdr_e0f0860ad6e6]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\tests\vst\bridge_protocol_tests.cpp:1` (module) [netsdr_812d171c885e]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\vst\common\bridge_protocol.h:1` (module) [netsdr_d76608359f65]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\editor\plugin_editor.h:1` (module) [netsdr_8ff579f21cab]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\editor\plugin_editor.h:24` (class) [netsdr_65d94909e11c]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:15` (section) [netsdr_ed4559899efb]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:293` (section) [netsdr_56c65c6f1184]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:373` (section) [netsdr_04ed7b8c111d]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\editor\plugin_editor.h:1` (module) [netsdr_8ff579f21cab]
 - `WebViewHost::setMessageHandler` (method, lines 179-182) - void setMessageHandler(MessageHandler handler, void *userData)
 - `WebViewHost` (class, lines 183-183) - class WebViewHost::Impl {
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\workspace-workflow.md:137` (section) [netsdr_2e2b20db1b9f]
@@ -2843,10 +2842,10 @@ Symbols:
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\architecture.md:356` (section) [netsdr_e0f0860ad6e6]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\tests\vst\bridge_protocol_tests.cpp:1` (module) [netsdr_812d171c885e]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\vst\common\bridge_protocol.h:1` (module) [netsdr_d76608359f65]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\editor\plugin_editor.h:1` (module) [netsdr_8ff579f21cab]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\editor\plugin_editor.h:24` (class) [netsdr_65d94909e11c]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:15` (section) [netsdr_ed4559899efb]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:293` (section) [netsdr_56c65c6f1184]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:373` (section) [netsdr_04ed7b8c111d]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\editor\plugin_editor.h:1` (module) [netsdr_8ff579f21cab]
 - `WebViewHost::dispatchMessage` (method, lines 184-195) - private: void dispatchMessage(const std::string &type, const std::string &payload)
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\tests\vst\bridge_protocol_tests.cpp:1` (module) [netsdr_812d171c885e]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\vst\common\bridge_protocol.h:1` (module) [netsdr_d76608359f65]
@@ -2857,10 +2856,10 @@ Symbols:
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\architecture.md:356` (section) [netsdr_e0f0860ad6e6]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\tests\vst\bridge_protocol_tests.cpp:1` (module) [netsdr_812d171c885e]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\vst\common\bridge_protocol.h:1` (module) [netsdr_d76608359f65]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\editor\plugin_editor.h:1` (module) [netsdr_8ff579f21cab]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\editor\plugin_editor.h:24` (class) [netsdr_65d94909e11c]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:15` (section) [netsdr_ed4559899efb]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:293` (section) [netsdr_56c65c6f1184]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:373` (section) [netsdr_04ed7b8c111d]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\editor\plugin_editor.h:1` (module) [netsdr_8ff579f21cab]
 - `attach` (function, lines 205-207) - bool WebViewHost::attach(void *parentHandle)
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\webview2-bundle-audit.md:56` (section) [netsdr_166303f717f0]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\workspace-workflow.md:51` (section) [netsdr_d94e22e14eac]
@@ -2869,9 +2868,9 @@ Symbols:
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\architecture.md:356` (section) [netsdr_e0f0860ad6e6]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\M4-implementation-plan.md:37` (section) [netsdr_5b5ba71225a5]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\M4-implementation-plan.md:97` (section) [netsdr_3ec62dc02bb0]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\editor\plugin_editor.cpp:210` (function) [netsdr_e4846af74af2]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:15` (section) [netsdr_ed4559899efb]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:184` (section) [netsdr_86984efab567]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\doc\checklist.md:293` (section) [netsdr_56c65c6f1184]
 - `navigate` (function, lines 209-211) - bool WebViewHost::navigate(const std::string &url)
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\webview\webview_editor.h:15` (class) [netsdr_22c414cb8c3b]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\source\editor\plugin_editor.cpp:210` (function) [netsdr_e4846af74af2]

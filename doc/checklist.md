@@ -1321,11 +1321,20 @@ implementation plans: `doc/M3-implementation-plan.md` (M3),
   - Test: Vitest 88/88 green (StatusBar 6, ExtensionPanel 5 incl. panel
     switching); UI build 176.5 kB.
 
-- [ ] **M4.9** UI parity acceptance
-  - Side-by-side check of the Vue UI against `kphsdr.com:8072` in a
-    browser: every control present, every readout live.
-  - Test: manual (documented in `doc/workspace-workflow.md`); Playwright E2E
-    for the main flows.
+- [x] **M4.9** UI parity acceptance — automated part (Playwright E2E)
+  - **Playwright E2E suite (`ui/e2e/`, 15 tests) — runs ONLY on demand:**
+    - `npm run test:e2e` in `ui/` OR VSCode task **"e2e"** (`.vscode/tasks.json`,
+      group "test"). Not part of `npm run test:unit`, the CMake build, or CI.
+    - Config: `ui/playwright.config.ts` (starts the Vite dev server via
+      `webServer` automatically, `reuseExistingServer`).
+    - Tests: smoke (all M4 panels), freq-tuning (step buttons + manual entry),
+      mode-select (USB/CW default passbands + Reset), agc (toggles), band-presets
+      (band frequency + bookmark save/load/delete), resize (640×400/1024×600
+      all panels visible, 1920×1080 waterfall canvas).
+  - **STILL PENDING (manual, user):** side-by-side acceptance against
+    `kphsdr.com:8072` in a browser + VST3PluginTestHost/DAW — every control
+    present, every readout live, resize reflow (Grundbedingung). Documented
+    in `doc/workspace-workflow.md` §3.7.
 
 ### Not in M4 (deferred)
 

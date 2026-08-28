@@ -32,3 +32,8 @@ compile_commands.json
 
 # Logs / runtime
 *.log
+
+# Playwright E2E artifacts (ui/e2e; run only on demand via task "e2e")
+ui/test-results/
+ui/playwright-report/
+ui/playwright/.cache/
