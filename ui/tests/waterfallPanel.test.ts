@@ -19,10 +19,10 @@ describe('WaterfallPanel', () => {
     delete (window as unknown as Record<string, unknown>).vstHost
   })
 
-  it('renders the waterfall canvas + controls', () => {
+  it('renders the waterfall controls (no inline canvas)', () => {
     const wrapper = mountPanel()
-    expect(wrapper.find('canvas').exists()).toBe(true)
     expect(wrapper.findAll('.k-select').length).toBe(3) // speed/color/mode
+    expect(wrapper.find('canvas').exists()).toBe(false) // canvas moved to the main waterfall
   })
 
   it('zoom + forwards wfZoom', async () => {

@@ -1,15 +1,22 @@
 import { test, expect } from '@playwright/test'
 
-test('smoke: page loads and all M4 panels are present', async ({ page }) => {
+test('smoke: page loads and all KiwiSDR regions are present', async ({ page }) => {
   await page.goto('/')
 
-  // Header: title + station input + status badge.
-  await expect(page.getByRole('heading', { name: /NetSDRStation/ })).toBeVisible()
+  // Topbar: title + station input + status badge.
+  await expect(page.locator('.kiwi-topbar__title')).toContainText('NetSDRStation')
   await expect(page.getByTestId('station-input')).toBeVisible()
 
-  // Control panels.
-  for (const id of ['mode-panel', 'freq-panel', 'band-panel', 'audio-panel', 'extension-panel', 'waterfall-panel']) {
-    await expect(page.getByTestId(id)).toBeVisible()
+  // Tuning area (mode buttons + band tags stacked above the waterfall).
+  await expect(page.getByTestId('mode-panel')).toBeVisible()
+  await expect(page.getByTestId('band-panel')).toBeVisible()
+
+  // Full-bleed waterfall + floating control panel on the right.
+  await expect(page.getByTestId('waterfall')).toBeVisible()
+  const control = page.locator('.kiwi-control-panel')
+  await expect(control).toBeVisible()
+  for (const id of ['freq-panel', 'audio-panel', 'waterfall-panel', 'extension-panel']) {
+    await expect(control.getByTestId(id)).toBeVisible()
   }
 
   // Status bar with S-meter + readouts.

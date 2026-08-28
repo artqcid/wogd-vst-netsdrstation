@@ -1,5 +1,5 @@
 <template>
-  <KPanel title="Frequency" class="kiwi-panel" data-testid="freq-panel">
+  <div class="freq-panel" data-testid="freq-panel">
     <!-- Step-tuning buttons -->
     <div class="freq-panel__steps">
       <KButton label="&larr;10" @click="stepBy(-10)" />
@@ -23,11 +23,10 @@
 
     <!-- Large digital readout (KiwiSDR 7-digit format) -->
     <KReadout class="freq-panel__readout" :value="store.freqKhz" unit="kHz" :digits="3" />
-  </KPanel>
+  </div>
 </template>
 
 <script setup lang="ts">
-import KPanel from '@/components/KPanel.vue'
 import KButton from '@/components/KButton.vue'
 import KNumberInput from '@/components/KNumberInput.vue'
 import KReadout from '@/components/KReadout.vue'

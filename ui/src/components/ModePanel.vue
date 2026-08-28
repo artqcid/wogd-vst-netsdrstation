@@ -1,5 +1,5 @@
 <template>
-  <KPanel title="Mode &amp; Passband" class="kiwi-panel" data-testid="mode-panel">
+  <div class="mode-panel" data-testid="mode-panel">
     <!-- 18 mode buttons in two rows; active = green -->
     <div class="mode-panel__modes">
       <KButton
@@ -33,12 +33,11 @@
       <KReadout :value="bandwidth" unit="Hz" label="BW" />
       <KButton label="Reset" @click="resetDefaults" />
     </div>
-  </KPanel>
+  </div>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import KPanel from '@/components/KPanel.vue'
 import KButton from '@/components/KButton.vue'
 import KNumberInput from '@/components/KNumberInput.vue'
 import KReadout from '@/components/KReadout.vue'

@@ -1,14 +1,5 @@
 <template>
-  <KPanel title="Waterfall" class="kiwi-panel" data-testid="waterfall-panel">
-    <Waterfall
-      :bins="store.waterfallBins"
-      :color-map="store.colorMap"
-      :cursor-khz="store.freqKhz"
-      :centre-khz="store.freqKhz"
-      :low-cut-hz="store.lowCut"
-      :high-cut-hz="store.highCut"
-    />
-
+  <div class="waterfall-panel" data-testid="waterfall-panel">
     <div class="waterfall-panel__controls">
       <div class="waterfall-panel__row">
         <span class="waterfall-panel__label">Zoom</span>
@@ -30,16 +21,14 @@
         <KToggle :model-value="store.wfComp" label="CIC" @update:model-value="onParamBool('wfComp', $event)" />
       </div>
     </div>
-  </KPanel>
+  </div>
 </template>
 
 <script setup lang="ts">
-import KPanel from '@/components/KPanel.vue'
 import KButton from '@/components/KButton.vue'
 import KSlider from '@/components/KSlider.vue'
 import KSelect from '@/components/KSelect.vue'
 import KToggle from '@/components/KToggle.vue'
-import Waterfall from '@/components/Waterfall.vue'
 import type { ColorMapName } from '@/components/waterfall/colorMap'
 import { useKiwiStore } from '@/store/kiwiStore'
 import type { ParamId } from '@/generated/bridge-validators'

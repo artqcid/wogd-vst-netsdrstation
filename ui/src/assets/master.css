@@ -1,14 +1,25 @@
 :root {
   color-scheme: dark;
 
-  /* KiwiSDR dark theme palette (M4.2a, mirrors web/kiwi/w3_ext.css) */
-  --kiwi-bg:       #222;
-  --kiwi-panel:    #333;
-  --kiwi-border:   #555;
-  --kiwi-text:     #ddd;
-  --kiwi-accent:   #4CAF50;   /* w3-selection-green */
-  --kiwi-warn:     hsl(0, 97%, 57%);  /* w3-red2 */
-  --kiwi-input-bg: #444;
+  /* KiwiSDR / OpenWebRX colour palette (extracted from kiwisdr.min.css) */
+  --kiwi-bg:          #1e1e1e;   /* page backdrop */
+  --kiwi-panel:       #575757;   /* .class-panel background */
+  --kiwi-panel-text:  #ffffff;   /* .class-panel color */
+  --kiwi-panel-radius: 15px;     /* .class-panel border-radius */
+  --kiwi-input-bg:    #373737;   /* .class-button background */
+  --kiwi-border:      #777777;
+  --kiwi-text:        #dddddd;
+  --kiwi-accent:      #4CAF50;
+  --kiwi-warn:        #ff6262;   /* .class-error / status-problems */
+  --kiwi-link:        hsl(212, 100%, 80%);
+
+  /* Topbar (header) */
+  --kiwi-topbar-bg:   #ececec;
+  --kiwi-topbar-text: #909090;
+
+  /* Waterfall */
+  --kiwi-waterfall-bg: #1e5f7f;
+
   --kiwi-font-sm:  11px;
   --kiwi-font-md:  12px;
   --kiwi-font-lg:  14px;
@@ -24,8 +35,10 @@ body {
   padding: 0;
   height: 100%;
   background: var(--kiwi-bg, #1e1e1e);
+  overflow: hidden;
 }
 
 #app {
   height: 100%;
+  width: 100%;
 }

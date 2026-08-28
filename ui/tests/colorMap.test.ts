@@ -3,10 +3,16 @@ import { describe, it, expect } from 'vitest'
 import { colorFor } from '@/components/waterfall/colorMap'
 
 describe('colorMap', () => {
-  it('maps silence (-160 dBFS) to the dark end', () => {
+  it('maps silence (-160 dBFS) to black (noise floor)', () => {
     const [r, g, b] = colorFor(-160, 'default')
-    expect(r).toBeLessThan(80)
-    expect(b).toBeGreaterThan(0)
+    expect(r).toBeLessThanOrEqual(40)
+    expect(g).toBeLessThanOrEqual(40)
+    expect(b).toBeLessThanOrEqual(40)
+  })
+
+  it('maps low signal to blue', () => {
+    const [r, , b] = colorFor(-110, 'default')
+    expect(b).toBeGreaterThan(r)
   })
 
   it('maps full-scale (0 dBFS) to the hot end (red)', () => {

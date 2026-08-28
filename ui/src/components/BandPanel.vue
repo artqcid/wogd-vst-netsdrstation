@@ -1,5 +1,5 @@
 <template>
-  <KPanel title="Bands &amp; Memory" class="kiwi-panel" data-testid="band-panel">
+  <div class="band-panel" data-testid="band-panel">
     <div class="band-panel__dropdowns">
       <KSelect :model-value="''" :options="amateurBands" label="Amateur" @update:model-value="onBand" />
       <KSelect :model-value="''" :options="broadcastBands" label="Broadcast" @update:model-value="onBand" />
@@ -24,12 +24,11 @@
       </ul>
       <p v-else class="band-panel__empty">No bookmarks yet.</p>
     </div>
-  </KPanel>
+  </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import KPanel from '@/components/KPanel.vue'
 import KSelect from '@/components/KSelect.vue'
 import KButton from '@/components/KButton.vue'
 import { useKiwiStore } from '@/store/kiwiStore'

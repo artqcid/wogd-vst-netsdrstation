@@ -9,9 +9,9 @@ function mountApp() {
 }
 
 describe('App', () => {
-  it('renders the plugin title', () => {
+  it('renders the plugin title in the topbar', () => {
     const wrapper = mountApp()
-    expect(wrapper.text()).toContain('NetSDRStation')
+    expect(wrapper.find('.kiwi-topbar__title').text()).toContain('NetSDRStation')
   })
 
   it('renders the PluginView', () => {
@@ -19,44 +19,45 @@ describe('App', () => {
     expect(wrapper.findComponent({ name: 'PluginView' }).exists()).toBe(true)
   })
 
-  it('renders the M4.1 kiwi-layout grid shell', () => {
+  it('renders the KiwiSDR layout regions (topbar / tuning / main / statusbar)', () => {
     const wrapper = mountApp()
-    const container = wrapper.find('.kiwi-layout')
-    expect(container.exists()).toBe(true)
-    expect(wrapper.find('.kiwi-header').exists()).toBe(true)
-    expect(wrapper.find('.kiwi-controls-row').exists()).toBe(true)
+    expect(wrapper.find('.kiwi-topbar').exists()).toBe(true)
+    expect(wrapper.find('.kiwi-tuning').exists()).toBe(true)
+    expect(wrapper.find('.kiwi-main').exists()).toBe(true)
     expect(wrapper.find('.kiwi-statusbar').exists()).toBe(true)
   })
 
-  it('renders all control panels inside the controls row', () => {
+  it('renders mode + band tags in the tuning area (above the waterfall)', () => {
     const wrapper = mountApp()
-    const row = wrapper.find('.kiwi-controls-row')
-    const panels = row.findAll('.kiwi-panel')
-    // Mode&Passband / Frequency / Bands&Memory / Audio / Extensions / Display
-    expect(panels.length).toBe(6)
+    const tuning = wrapper.find('.kiwi-tuning')
+    expect(tuning.find('[data-testid="mode-panel"]').exists()).toBe(true)
+    expect(tuning.find('[data-testid="band-panel"]').exists()).toBe(true)
   })
 
-  it('shows the status badge in the header', () => {
+  it('renders the full-bleed waterfall and the floating control panel', () => {
     const wrapper = mountApp()
-    const badge = wrapper.find('.kiwi-header .k-status-badge')
-    expect(badge.exists()).toBe(true)
+    const main = wrapper.find('.kiwi-main')
+    expect(main.find('[data-testid="waterfall"]').exists()).toBe(true)
+    const control = main.find('.kiwi-control-panel')
+    expect(control.exists()).toBe(true)
+    expect(control.find('[data-testid="freq-panel"]').exists()).toBe(true)
+    expect(control.find('[data-testid="audio-panel"]').exists()).toBe(true)
+    expect(control.find('[data-testid="waterfall-panel"]').exists()).toBe(true)
+    expect(control.find('[data-testid="extension-panel"]').exists()).toBe(true)
+  })
+
+  it('shows the status badge in the topbar', () => {
+    const wrapper = mountApp()
+    expect(wrapper.find('.kiwi-topbar .k-status-badge').exists()).toBe(true)
   })
 
   it('shows the S-meter in the status bar', () => {
     const wrapper = mountApp()
-    const statusbar = wrapper.find('.kiwi-statusbar')
-    expect(statusbar.find('.s-meter').exists()).toBe(true)
+    expect(wrapper.find('.kiwi-statusbar .s-meter').exists()).toBe(true)
   })
 
-  it('keeps all control groups visible at several viewport sizes', () => {
-    // jsdom does not perform real layout, so we assert the structural
-    // invariants that guarantee reflow (flex-wrap + panel floor) are present.
-    for (const width of [640, 1024, 1920]) {
-      ;(window as unknown as { innerWidth: number }).innerWidth = width
-      const wrapper = mountApp()
-      const row = wrapper.find('.kiwi-controls-row')
-      expect(row.classes()).toContain('kiwi-controls-row')
-      expect(row.findAll('.kiwi-panel').length).toBeGreaterThanOrEqual(4)
-    }
+  it('renders the station input in the topbar', () => {
+    const wrapper = mountApp()
+    expect(wrapper.find('.kiwi-topbar [data-testid="station-input"]').exists()).toBe(true)
   })
 })

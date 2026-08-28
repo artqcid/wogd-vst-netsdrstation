@@ -18,15 +18,18 @@ interface Rgb {
 }
 
 const STOPS: Record<ColorMapName, { at: number; rgb: Rgb }[]> = {
-  // KiwiSDR default: dark blue -> cyan -> green -> yellow -> red
+  // KiwiSDR "Default": dark blue noise floor -> blue -> cyan -> green ->
+  // yellow -> red for strong signals (standard SDR colourmap).
   default: [
-    { at: 0.0, rgb: { r: 0, g: 0, b: 40 } },
-    { at: 0.25, rgb: { r: 0, g: 80, b: 160 } },
-    { at: 0.5, rgb: { r: 0, g: 200, b: 200 } },
-    { at: 0.75, rgb: { r: 60, g: 220, b: 0 } },
-    { at: 1.0, rgb: { r: 255, g: 40, b: 0 } },
+    { at: 0.0, rgb: { r: 0, g: 0, b: 0 } },
+    { at: 0.15, rgb: { r: 0, g: 0, b: 128 } },
+    { at: 0.35, rgb: { r: 0, g: 0, b: 255 } },
+    { at: 0.5, rgb: { r: 0, g: 255, b: 255 } },
+    { at: 0.65, rgb: { r: 0, g: 255, b: 0 } },
+    { at: 0.8, rgb: { r: 255, g: 255, b: 0 } },
+    { at: 1.0, rgb: { r: 255, g: 0, b: 0 } },
   ],
-  // Rain: violet -> blue -> green -> yellow -> red
+  // Rain: violet -> blue -> green -> red
   rain: [
     { at: 0.0, rgb: { r: 120, g: 0, b: 180 } },
     { at: 0.33, rgb: { r: 0, g: 60, b: 220 } },

@@ -1,5 +1,5 @@
 <template>
-  <KPanel title="Extensions" class="kiwi-panel" data-testid="extension-panel">
+  <div class="extension-panel" data-testid="extension-panel">
     <KSelect
       :model-value="selected"
       :options="extensionOptions"
@@ -16,12 +16,11 @@
       <AntennaPanel v-else-if="selected === 'antenna'" />
       <p v-else class="extension-panel__none">No extension selected.</p>
     </div>
-  </KPanel>
+  </div>
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import KPanel from '@/components/KPanel.vue'
 import KSelect from '@/components/KSelect.vue'
 import CwPanel from '@/components/extensions/CwPanel.vue'
 import WfaxPanel from '@/components/extensions/WfaxPanel.vue'

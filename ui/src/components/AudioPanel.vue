@@ -1,5 +1,5 @@
 <template>
-  <KPanel title="Audio" class="kiwi-panel" data-testid="audio-panel">
+  <div class="audio-panel" data-testid="audio-panel">
     <!-- Volume + mute -->
     <div class="audio-panel__row">
       <KSlider
@@ -38,11 +38,10 @@
       <KSlider :model-value="store.nbThresh" :min="0" :max="1" :step="0.01" label="NB Thresh" @update:model-value="onParam('nbThresh', $event)" />
       <KToggle :model-value="store.nrOn" label="NR" @update:model-value="onParamBool('nrOn', $event)" />
     </div>
-  </KPanel>
+  </div>
 </template>
 
 <script setup lang="ts">
-import KPanel from '@/components/KPanel.vue'
 import KSlider from '@/components/KSlider.vue'
 import KToggle from '@/components/KToggle.vue'
 import KNumberInput from '@/components/KNumberInput.vue'
