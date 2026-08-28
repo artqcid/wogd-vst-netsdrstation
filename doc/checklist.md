@@ -1227,11 +1227,17 @@ implementation plans: `doc/M3-implementation-plan.md` (M3),
   - Test: Vitest 52/52 green (7 new: step deltas, clamping, text entry,
     readout format).
 
-- [ ] **M4.4** Modulation & Passband panel
-  - Mode selector with all 18 modes (`AM`…`QAM`), Low Cut / High Cut /
-    Bandwidth fields, filter-reset button.
-  - Ref: `doc/ui-architecture.md` §3.2 (full 18-mode list).
-  - Test: Vitest — mode enum + passband values map to correct parameters.
+- [x] **M4.4** Modulation & Passband panel
+  - `ModePanel.vue` (KPanel-based): 18 mode buttons in two rows (active =
+    green), KNumberInput ×2 for Low/High Cut (clamped: low ≤ 0, high ≥ 0),
+    derived bandwidth readout (high − low), Reset button.
+  - Full KiwiSDR default passband table (`MODE_DEFAULTS`): AM/AMN/AMW/USB/USN/
+    LSB/LSN/CW/CWN/NBFM/NNFM/IQ/DRM/SAM/SAU/SAL/SAS/QAM.
+  - Selecting a mode applies its default passband via the bridge.
+  - Replaces the M4.2 Receiver + Passband panels (integrated into one).
+  - _Files: `ui/src/components/ModePanel.vue`_
+  - Test: Vitest 59/59 green (7 new: 18 buttons, active highlight, USB/CW
+    default passbands, BW readout, reset, lowCut clamp).
 
 - [ ] **M4.5** Band presets & memory
   - Band dropdowns (Amateur / Broadcast / Utility / time signals) and

@@ -32,8 +32,8 @@ describe('App', () => {
     const wrapper = mountApp()
     const row = wrapper.find('.kiwi-controls-row')
     const panels = row.findAll('.kiwi-panel')
-    // Receiver / Frequency / Passband / Audio / Display panels
-    expect(panels.length).toBe(5)
+    // Mode&Passband / Frequency / Audio / Display panels
+    expect(panels.length).toBe(4)
   })
 
   it('shows the status badge in the header', () => {

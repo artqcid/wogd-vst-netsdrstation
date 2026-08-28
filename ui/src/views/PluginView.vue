@@ -17,37 +17,9 @@
 
     <!-- Main controls row (M4.1/M4.2 layout): panels wrap at narrow widths -->
     <main class="kiwi-controls-row">
-      <KPanel title="Receiver" class="kiwi-panel">
-        <KSelect
-          :model-value="store.mode"
-          :options="modeOptions"
-          label="Mode"
-          @update:model-value="onModeChange"
-        />
-      </KPanel>
+      <ModePanel />
 
       <FreqPanel />
-
-      <KPanel title="Passband" class="kiwi-panel">
-        <KNumberInput
-          :model-value="store.lowCut"
-          :min="-8000"
-          :max="0"
-          :step="100"
-          unit="Hz"
-          label="Low Cut"
-          @update:model-value="onParam('lowCut', $event)"
-        />
-        <KNumberInput
-          :model-value="store.highCut"
-          :min="0"
-          :max="8000"
-          :step="100"
-          unit="Hz"
-          label="High Cut"
-          @update:model-value="onParam('highCut', $event)"
-        />
-      </KPanel>
 
       <KPanel title="Audio" class="kiwi-panel">
         <KToggle :model-value="store.agcOn" label="AGC" @update:model-value="onParamBool('agcOn', $event)" />
@@ -79,10 +51,9 @@
 import { onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import StationInput from '@/components/StationInput.vue'
+import ModePanel from '@/components/ModePanel.vue'
 import FreqPanel from '@/components/FreqPanel.vue'
 import KPanel from '@/components/KPanel.vue'
-import KSelect from '@/components/KSelect.vue'
-import KNumberInput from '@/components/KNumberInput.vue'
 import KToggle from '@/components/KToggle.vue'
 import KSlider from '@/components/KSlider.vue'
 import KReadout from '@/components/KReadout.vue'
@@ -94,38 +65,12 @@ import type { ParamId } from '@/generated/bridge-validators'
 const store = useKiwiStore()
 const { statusText, statusState } = storeToRefs(store)
 
-// 18 KiwiSDR modes (index 0..17)
-const modeOptions = [
-  { value: 0, label: 'AM' },
-  { value: 1, label: 'AMN' },
-  { value: 2, label: 'AMW' },
-  { value: 3, label: 'USB' },
-  { value: 4, label: 'USN' },
-  { value: 5, label: 'LSB' },
-  { value: 6, label: 'LSN' },
-  { value: 7, label: 'CW' },
-  { value: 8, label: 'CWN' },
-  { value: 9, label: 'NBFM' },
-  { value: 10, label: 'NNFM' },
-  { value: 11, label: 'IQ' },
-  { value: 12, label: 'DRM' },
-  { value: 13, label: 'SAM' },
-  { value: 14, label: 'SAU' },
-  { value: 15, label: 'SAL' },
-  { value: 16, label: 'SAS' },
-  { value: 17, label: 'QAM' },
-]
-
 function onParam(id: ParamId, value: number) {
   store.setParam(id, value)
 }
 
 function onParamBool(id: ParamId, value: boolean) {
   store.setParam(id, value ? 1 : 0)
-}
-
-function onModeChange(value: string | number) {
-  store.setParam('mode', Number(value))
 }
 
 function onStation(hostPort: string) {
