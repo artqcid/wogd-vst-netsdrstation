@@ -91,12 +91,6 @@
 
         <!-- Floating control panel — position absolute, bottom-right -->
         <aside class="kiwi-cpanel" aria-label="Control panel">
-          <!-- Panel toggle arrow — top-right corner (matching original KiwiSDR) -->
-          <button class="kiwi-cpanel__toggle" @click="isPanelOpen = !isPanelOpen" aria-label="Toggle panel"
-            :title="isPanelOpen ? 'Hide panel' : 'Show panel'">
-            {{ isPanelOpen ? '▼' : '▲' }}
-          </button>
-
           <div class="kiwi-cpanel__body" :class="{ 'kiwi-cpanel__body--closed': !isPanelOpen }">
             <!-- Row 1: Freq input + dropdowns -->
             <div class="kiwi-cpanel__row kiwi-cpanel__row--freq">
@@ -347,6 +341,11 @@
                   :style="{ width: smeterWidth + '%' }"></div>
               </div>
             </div>
+          </div>
+          <!-- Visibility toggle — top-right corner of panel frame (matching KiwiSDR id-control-vis) -->
+          <div class="kiwi-cpanel__vis" @click="isPanelOpen = !isPanelOpen" title="Toggle panel">
+            <span class="kiwi-cpanel__vis-hide" :class="{ 'kiwi-cpanel__vis--hidden': !isPanelOpen }">◀</span>
+            <span class="kiwi-cpanel__vis-show" :class="{ 'kiwi-cpanel__vis--hidden': isPanelOpen }">▶</span>
           </div>
         </aside>
       </div>
@@ -831,30 +830,31 @@ onBeforeUnmount(() => {
   width: var(--kiwi-panel-width, 360px);
 }
 
-.kiwi-cpanel__toggle {
+/* Visibility toggle — top-right corner of panel frame (matching KiwiSDR id-control-vis) */
+.kiwi-cpanel__vis {
   position: absolute;
-  top: -22px;
-  right: 0;
-  width: 24px;
-  height: 20px;
-  background: #3a3a3a;
+  top: 6px;
+  right: 6px;
+  width: 22px;
+  height: 22px;
+  background: #555;
   color: #ccc;
-  border: 1px solid #555;
-  border-bottom: none;
-  border-radius: 6px 6px 0 0;
+  border-radius: 50%;
   cursor: pointer;
-  font-size: 9px;
+  font-size: 11px;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0;
-  z-index: 101;
+  z-index: 10;
   line-height: 1;
+  transition: background 0.15s;
 }
-
-.kiwi-cpanel__toggle:hover {
-  background: #555;
+.kiwi-cpanel__vis:hover {
+  background: #777;
   color: #fff;
+}
+.kiwi-cpanel__vis--hidden {
+  display: none;
 }
 
 .kiwi-cpanel__body {
@@ -885,6 +885,9 @@ onBeforeUnmount(() => {
 }
 
 /* Row 1: frequency */
+.kiwi-cpanel__row--freq {
+  padding-right: 30px;
+}
 .kiwi-cpanel__freq-input {
   background: var(--kiwi-input-bg);
   color: white;

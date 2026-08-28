@@ -1850,9 +1850,16 @@ implementation plans: `doc/M3-implementation-plan.md` (M3),
 - [x] **M4c.5d** RAG re-indiziert (`index_project_code`: 96 files, 936 symbols)
 - [x] **M4c.5e** Checkliste aktualisiert
 
-### M4c.6 — Bugfix: Cpanel-Toggle von Links-Tab zu Top-Rechts-Pfeil
+### M4c.6 — Bugfix: Cpanel-Toggle von Links-Tab zu IM-Panel-Pfeil
 
-- [x] **M4c.6** Falscher Close-Button links am Cpanel entfernt, Pfeil-Toggle oben-rechts implementiert
+- [x] **M4c.6a** Falscher Close-Button links am Cpanel entfernt.
+- [x] **M4c.6b** Erster Fix (externer Toggle über dem Panel) rückgängig gemacht — stattdessen:
+      Vis-Toggle **IM** Cpanel oben-rechts als runder Button (◀/▶) implementiert
+      (matching original KiwiSDR `id-control-vis`/`id-control-hide`/`id-control-show`).
+- [x] **M4c.6c** CSS `.kiwi-cpanel__vis` (position: absolute; top-right; 22×22px; round).
+- [x] **M4c.6d** Verifiziert: vue-tsc clean, vitest 112 passed, playwright 65 passed.
+- [x] **M4c.6e** RAG re-indiziert (96 files, 944 symbols).
+- [x] **M4c.6f** Commit + Push auf `netsdrstation`.
   - Alter Tab `.kiwi-cpanel__tab` (links, `►`/`◄`) entfernt — war ein fälschlicher Close-Button
   - Neuer `.kiwi-cpanel__toggle` (oben-rechts, `▼`/`▲`) — kleiner Pfeil-Button, positioniert über der oberen rechten Ecke des Panels
   - Klick toggled `isPanelOpen`; ▼ wenn offen, ▲ wenn geschlossen
