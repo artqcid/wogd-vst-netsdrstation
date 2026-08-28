@@ -1192,19 +1192,27 @@ implementation plans: `doc/M3-implementation-plan.md` (M3),
   - Test: C++ 92/92 green (bridge tests unchanged behavior); Vitest 42/42 green
     (incl. schema consistency + validator rejection tests); UI build 150 kB.
 
-- [ ] **M4.2** UI scaffold & component library
-  - **Prerequisite:** M4.1.5 (schema-based API) — the state store consumes the
-    generated types/validators from `ui/src/generated/*`.
-  - Vue component primitives matching the KiwiSDR w3 widgets: slider, number
-    field, select/dropdown, checkbox/toggle, button, readout, color picker.
-  - Dark SDR theme + panel/layout shell (header, control panels, status bar).
-  - Central state store bound to the existing bridge
-    (`ui/src/services/pluginService.ts`), bidirectionally synced with the C++
-    side (setParameter → message; onMessage → state).
-  - _Files: `ui/src/components/*`, `ui/src/services/pluginService.ts`,
-    `ui/src/views/PluginView.vue`_
-  - Ref: `doc/ui-architecture.md` §3 (overview), w3 widget library.
-  - Test: Vitest for each primitive; bridge roundtrip integration test.
+- [x] **M4.2** UI scaffold & component library
+  - **Prerequisite satisfied:** M4.1.5 — store consumes generated types from
+    `ui/src/generated/*`.
+  - **8 Kiwi primitives built** (w3_ext pattern): `KSlider` (3 px track /
+    18 px thumb), `KNumberInput` (arrow-key increment, clamped), `KSelect`,
+    `KToggle` (aria-pressed), `KButton` (active state), `KReadout` (monospace,
+    fixed digits), `KPanel` (title + body), `KStatusBadge` (ok/warn/error dot).
+  - **Dark SDR theme** (`master.css`): `--kiwi-*` custom-property palette.
+  - **Pinia store** (`ui/src/store/kiwiStore.ts`): all 27 parameters + display
+    state; `setParam` → pluginService + optimistic update; `applyParam` for
+    backend messages; getters `statusText`/`statusState`.
+  - **Panel shell** (`PluginView.vue`): KPanel-based Receiver / Passband /
+    Audio / Display panels in the kiwi-layout; status bar with KReadout (dBm)
+    + user count; `StationInput` kept in the header (M3 connect/disconnect,
+    replaced by M5 station tab).
+  - **Removed obsolete M3 components:** Knob, MuteButton, Slider, NumberInput,
+    Toggle, StatusBadge (replaced by K* primitives; StationInput kept).
+  - _Files: `ui/src/components/K*.vue`, `ui/src/store/kiwiStore.ts`,
+    `ui/src/views/PluginView.vue`, `ui/src/assets/master.css`_
+  - Test: Vitest 45/45 green (18 primitive tests + 7 store + 6 schema + 7 app
+    + 7 pluginService); UI build 159.5 kB (Pinia+Zod inlined).
 
 - [ ] **M4.3** Frequency & Tuning panel
   - Frequency input field (kHz, unit-aware), step-tuning buttons

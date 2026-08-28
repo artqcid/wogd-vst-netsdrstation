@@ -6,184 +6,149 @@
         <h1>NetSDRStation</h1>
         <p class="subtitle">KiwiSDR Receiver - Milestone M4</p>
       </div>
-      <div class="kiwi-panel station-panel">
-        <StationInput :station="station" :status="status" @connect="onStation" @disconnect="onDisconnect" />
-      </div>
-      <StatusBadge class="kiwi-status-badge" :status="status" />
+      <StationInput
+        :station="store.station"
+        :status="store.status"
+        @connect="onStation"
+        @disconnect="store.disconnect()"
+      />
+      <KStatusBadge class="kiwi-status-badge" :state="statusState" :label="statusText" />
     </header>
 
-    <!-- Main controls row (M4.1 layout): panels wrap at narrow widths -->
+    <!-- Main controls row (M4.1/M4.2 layout): panels wrap at narrow widths -->
     <main class="kiwi-controls-row">
-      <section class="kiwi-panel">
-        <label class="section-label">Receiver</label>
-        <select v-model.number="mode" @change="onModeChange" data-testid="mode-select">
-          <option value="0">AM</option>
-          <option value="1">AMN</option>
-          <option value="2">AMW</option>
-          <option value="3">USB</option>
-          <option value="4">USN</option>
-          <option value="5">LSB</option>
-          <option value="6">LSN</option>
-          <option value="7">CW</option>
-          <option value="8">CWN</option>
-          <option value="9">NBFM</option>
-          <option value="10">NNFM</option>
-          <option value="11">IQ</option>
-          <option value="12">DRM</option>
-          <option value="13">SAM</option>
-          <option value="14">SAU</option>
-          <option value="15">SAL</option>
-          <option value="16">SAS</option>
-          <option value="17">QAM</option>
-        </select>
-      </section>
-
-      <section class="kiwi-panel">
-        <label class="section-label">Frequency</label>
-        <NumberInput
-          label="Frequency"
-          suffix="kHz"
+      <KPanel title="Receiver" class="kiwi-panel">
+        <KSelect
+          :model-value="store.mode"
+          :options="modeOptions"
+          label="Mode"
+          @update:model-value="onModeChange"
+        />
+        <KNumberInput
+          :model-value="store.freqKhz"
           :min="0.001"
           :max="30000"
-          :step="0.1"
-          :value="freqKhz"
-          @update:value="onFreqKhz"
+          :step="0.001"
+          unit="kHz"
+          label="Frequency"
+          @update:model-value="onParam('freqKhz', $event)"
         />
-        <NumberInput
-          label="Low Cut"
-          suffix="Hz"
+      </KPanel>
+
+      <KPanel title="Passband" class="kiwi-panel">
+        <KNumberInput
+          :model-value="store.lowCut"
           :min="-8000"
           :max="0"
           :step="100"
-          :value="lowCut"
-          @update:value="onLowCut"
+          unit="Hz"
+          label="Low Cut"
+          @update:model-value="onParam('lowCut', $event)"
         />
-        <NumberInput
-          label="High Cut"
-          suffix="Hz"
+        <KNumberInput
+          :model-value="store.highCut"
           :min="0"
           :max="8000"
           :step="100"
-          :value="highCut"
-          @update:value="onHighCut"
+          unit="Hz"
+          label="High Cut"
+          @update:model-value="onParam('highCut', $event)"
         />
-      </section>
+      </KPanel>
 
-      <section class="kiwi-panel">
-        <label class="section-label">Audio</label>
-        <Toggle label="AGC" :active="agcOn" @update:active="onAgc" />
-        <Slider label="Volume" :min="0" :max="1" :step="0.01" :value="volume" @update:value="onVolume" />
-        <MuteButton :active="mute" @toggle="onMute" />
-      </section>
+      <KPanel title="Audio" class="kiwi-panel">
+        <KToggle :model-value="store.agcOn" label="AGC" @update:model-value="onParamBool('agcOn', $event)" />
+        <KSlider
+          :model-value="store.volume"
+          :min="0"
+          :max="1"
+          :step="0.01"
+          label="Volume"
+          @update:model-value="onParam('volume', $event)"
+        />
+        <KToggle :model-value="store.mute" label="Mute" @update:model-value="onParamBool('mute', $event)" />
+      </KPanel>
 
-      <section class="kiwi-panel">
-        <label class="section-label">Display</label>
-        <Toggle label="Waterfall" :active="wfOn" @update:active="onWf" />
-      </section>
+      <KPanel title="Display" class="kiwi-panel">
+        <KToggle :model-value="store.wfOn" label="Waterfall" @update:model-value="onParamBool('wfOn', $event)" />
+      </KPanel>
     </main>
 
     <!-- Status bar row (M4.1 layout) -->
     <footer class="kiwi-statusbar">
-      <StatusBadge :status="status" />
+      <KReadout :value="store.signalLevel" unit="dBm" :digits="1" />
+      <span class="kiwi-statusbar__users">users: {{ store.userCount }}</span>
     </footer>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { onMounted } from 'vue'
+import { storeToRefs } from 'pinia'
 import StationInput from '@/components/StationInput.vue'
-import NumberInput from '@/components/NumberInput.vue'
-import Toggle from '@/components/Toggle.vue'
-import Slider from '@/components/Slider.vue'
-import MuteButton from '@/components/MuteButton.vue'
-import StatusBadge from '@/components/StatusBadge.vue'
+import KPanel from '@/components/KPanel.vue'
+import KSelect from '@/components/KSelect.vue'
+import KNumberInput from '@/components/KNumberInput.vue'
+import KToggle from '@/components/KToggle.vue'
+import KSlider from '@/components/KSlider.vue'
+import KReadout from '@/components/KReadout.vue'
+import KStatusBadge from '@/components/KStatusBadge.vue'
+import { useKiwiStore } from '@/store/kiwiStore'
 import { pluginService } from '@/services/pluginService'
+import type { ParamId } from '@/generated/bridge-validators'
 
-// State refs
-const station = ref('kphsdr.com:8072')
-const status = ref('Idle')
-const mode = ref(0)
-const freqKhz = ref(14100)
-const lowCut = ref(-4900)
-const highCut = ref(4900)
-const agcOn = ref(true)
-const volume = ref(1)
-const mute = ref(false)
-const wfOn = ref(true)
+const store = useKiwiStore()
+const { statusText, statusState } = storeToRefs(store)
 
-// --- Handlers ---
+// 18 KiwiSDR modes (index 0..17)
+const modeOptions = [
+  { value: 0, label: 'AM' },
+  { value: 1, label: 'AMN' },
+  { value: 2, label: 'AMW' },
+  { value: 3, label: 'USB' },
+  { value: 4, label: 'USN' },
+  { value: 5, label: 'LSB' },
+  { value: 6, label: 'LSN' },
+  { value: 7, label: 'CW' },
+  { value: 8, label: 'CWN' },
+  { value: 9, label: 'NBFM' },
+  { value: 10, label: 'NNFM' },
+  { value: 11, label: 'IQ' },
+  { value: 12, label: 'DRM' },
+  { value: 13, label: 'SAM' },
+  { value: 14, label: 'SAU' },
+  { value: 15, label: 'SAL' },
+  { value: 16, label: 'SAS' },
+  { value: 17, label: 'QAM' },
+]
+
+function onParam(id: ParamId, value: number) {
+  store.setParam(id, value)
+}
+
+function onParamBool(id: ParamId, value: boolean) {
+  store.setParam(id, value ? 1 : 0)
+}
+
+function onModeChange(value: string | number) {
+  store.setParam('mode', Number(value))
+}
 
 function onStation(hostPort: string) {
-  pluginService.setStation(hostPort)
-  status.value = 'Connecting...'
-  // In dev mode just say Connected (dev)
+  store.setStation(hostPort)
+  store.setStatus('Connecting...')
   if (!pluginService.isInNative()) {
-    status.value = 'Connected (dev)'
+    store.setStatus('Connected (dev)')
   }
-}
-
-function onDisconnect() {
-  pluginService.disconnect()
-  status.value = 'Disconnecting...'
-}
-
-function onFreqKhz(value: number) {
-  freqKhz.value = value
-  pluginService.setParameter('freqKhz', value)
-}
-
-function onLowCut(value: number) {
-  lowCut.value = value
-  pluginService.setParameter('lowCut', value)
-}
-
-function onHighCut(value: number) {
-  highCut.value = value
-  pluginService.setParameter('highCut', value)
-}
-
-function onModeChange(event: Event) {
-  const target = event.target as HTMLSelectElement
-  const value = Number(target.value)
-  mode.value = value
-  pluginService.setParameter('mode', value)
-}
-
-function onAgc(value: boolean) {
-  agcOn.value = value
-  pluginService.setParameter('agcOn', value ? 1 : 0)
-}
-
-function onVolume(value: number) {
-  volume.value = value
-  pluginService.setParameter('volume', value)
-}
-
-function onMute() {
-  mute.value = !mute.value
-  pluginService.setParameter('mute', mute.value ? 1 : 0)
-}
-
-function onWf(value: boolean) {
-  wfOn.value = value
-  pluginService.setParameter('wfOn', value ? 1 : 0)
 }
 
 onMounted(() => {
   pluginService.onMessage(message => {
     if (message.type === 'param') {
-      const data = message.data
-      if (data.id === 'freqKhz') freqKhz.value = data.value
-      else if (data.id === 'volume') volume.value = data.value
-      else if (data.id === 'mute') mute.value = data.value > 0.5
-      else if (data.id === 'agcOn') agcOn.value = data.value > 0.5
-      else if (data.id === 'mode') mode.value = data.value
-      else if (data.id === 'lowCut') lowCut.value = data.value
-      else if (data.id === 'highCut') highCut.value = data.value
-      else if (data.id === 'wfOn') wfOn.value = data.value > 0.5
+      store.applyParam(message.data.id, message.data.value)
     }
     if (message.type === 'status') {
-      status.value = message.data
+      store.setStatus(message.data)
     }
   })
   pluginService.getParameters()
@@ -191,31 +156,28 @@ onMounted(() => {
 </script>
 
 <style scoped>
-/* M4.1 Grundbedingung: the editor fills the WebView area entirely and the
-   layout reflows at any size. Grid rows: header / controls / status bar.
-   Below kMinSize the browser scrolls instead of clipping (overflow:auto). */
+/* M4.1/M4.2 layout: full editor surface, reflows at any size. */
 .kiwi-layout {
   display: grid;
-  grid-template-rows: auto 1fr auto; /* header / main / status */
+  grid-template-rows: auto 1fr auto;
   grid-template-columns: 1fr;
   height: 100%;
   min-height: 0;
   overflow: auto;
-  background: #222;
-  color: #eee;
+  background: var(--kiwi-bg, #222);
+  color: var(--kiwi-text, #eee);
   font-family: 'Segoe UI', Arial, sans-serif;
   padding: 12px;
   gap: 10px;
 }
 
-/* Header row: title + station panel + status badge */
 .kiwi-header {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 0.5rem 1rem;
   padding-bottom: 8px;
-  border-bottom: 1px solid #444;
+  border-bottom: 1px solid var(--kiwi-border, #444);
 }
 
 .kiwi-title {
@@ -224,7 +186,7 @@ onMounted(() => {
 }
 
 h1 {
-  color: #4CAF50;
+  color: var(--kiwi-accent, #4CAF50);
   font-size: 20px;
   margin: 0;
 }
@@ -235,7 +197,6 @@ h1 {
   margin: 2px 0 0 0;
 }
 
-/* Main controls row: panels wrap at narrow widths */
 .kiwi-controls-row {
   display: flex;
   flex-wrap: wrap;
@@ -245,65 +206,22 @@ h1 {
   min-height: 0;
 }
 
-/* Each panel is a flex item that grows/shrinks with a ~220 px floor */
 .kiwi-panel {
   flex: 1 1 220px;
   min-width: 0;
-  background: #2a2a2a;
-  border: 1px solid #444;
-  border-radius: 6px;
-  padding: 10px 12px;
 }
 
-.station-panel {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-/* Status bar row */
 .kiwi-statusbar {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
   padding-top: 8px;
-  border-top: 1px solid #444;
-  font-size: 12px;
+  border-top: 1px solid var(--kiwi-border, #444);
+  font-size: var(--kiwi-font-sm, 12px);
   color: #999;
 }
 
 .kiwi-status-badge {
   margin-left: auto;
-}
-
-/* Section labels */
-.section-label {
-  color: #4CAF50;
-  font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  margin-bottom: 8px;
-  display: block;
-}
-
-/* -- Mode select --*/
-select {
-  width: 100%;
-  padding: 8px;
-  background: #333;
-  color: #fff;
-  border: 1px solid #555;
-  border-radius: 4px;
-  font-size: 13px;
-}
-
-/* -- NumberInput overrides --*/
-.number-input-wrapper {
-  margin-bottom: 12px;
-}
-
-/* -- Slider overrides --*/
-.slider-wrapper {
-  margin-bottom: 12px;
 }
 </style>

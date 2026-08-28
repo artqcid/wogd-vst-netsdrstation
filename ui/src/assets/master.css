@@ -1,5 +1,17 @@
 :root {
   color-scheme: dark;
+
+  /* KiwiSDR dark theme palette (M4.2a, mirrors web/kiwi/w3_ext.css) */
+  --kiwi-bg:       #222;
+  --kiwi-panel:    #333;
+  --kiwi-border:   #555;
+  --kiwi-text:     #ddd;
+  --kiwi-accent:   #4CAF50;   /* w3-selection-green */
+  --kiwi-warn:     hsl(0, 97%, 57%);  /* w3-red2 */
+  --kiwi-input-bg: #444;
+  --kiwi-font-sm:  11px;
+  --kiwi-font-md:  12px;
+  --kiwi-font-lg:  14px;
 }
 
 * {
@@ -11,7 +23,7 @@ body {
   margin: 0;
   padding: 0;
   height: 100%;
-  background: #1e1e1e;
+  background: var(--kiwi-bg, #1e1e1e);
 }
 
 #app {

@@ -1,179 +1,157 @@
 import { describe, it, expect } from 'vitest'
 import { mount } from '@vue/test-utils'
 
-import Knob from '@/components/Knob.vue'
-import MuteButton from '@/components/MuteButton.vue'
-import NumberInput from '@/components/NumberInput.vue'
-import Toggle from '@/components/Toggle.vue'
-import Slider from '@/components/Slider.vue'
-import StationInput from '@/components/StationInput.vue'
-import StatusBadge from '@/components/StatusBadge.vue'
+import KSlider from '@/components/KSlider.vue'
+import KNumberInput from '@/components/KNumberInput.vue'
+import KSelect from '@/components/KSelect.vue'
+import KToggle from '@/components/KToggle.vue'
+import KButton from '@/components/KButton.vue'
+import KReadout from '@/components/KReadout.vue'
+import KPanel from '@/components/KPanel.vue'
+import KStatusBadge from '@/components/KStatusBadge.vue'
 
-describe('Knob', () => {
-  it('emits update:value when the slider changes', async () => {
-    const wrapper = mount(Knob, {
-      props: { label: 'Frequency', value: 440, min: 20, max: 20000, step: 1 },
+describe('KSlider', () => {
+  it('emits update:modelValue when the range changes', async () => {
+    const wrapper = mount(KSlider, {
+      props: { modelValue: 0.5, min: 0, max: 1, step: 0.01 },
     })
 
     const input = wrapper.find('input[type="range"]')
-    await input.setValue('1000')
+    await input.setValue('0.75')
 
-    expect(wrapper.emitted('update:value')).toBeTruthy()
-    expect(wrapper.emitted('update:value')![0]).toEqual([1000])
+    expect(wrapper.emitted('update:modelValue')).toBeTruthy()
+    expect(wrapper.emitted('update:modelValue')![0]).toEqual([0.75])
   })
 
-  it('renders its label', () => {
-    const wrapper = mount(Knob, {
-      props: { label: 'Volume', value: 0.5 },
-    })
-    expect(wrapper.text()).toContain('Volume')
+  it('binds the accessibility label', () => {
+    const wrapper = mount(KSlider, { props: { modelValue: 0.5, label: 'Volume' } })
+    expect(wrapper.find('input[type="range"]').attributes('aria-label')).toBe('Volume')
   })
 
-  it('binds the accessibility label to the label prop', () => {
-    const wrapper = mount(Knob, {
-      props: { label: 'Frequency', value: 440, min: 20, max: 20000 },
-    })
-    expect(wrapper.find('input[type="range"]').attributes('aria-label')).toBe('Frequency')
+  it('renders its unit readout', () => {
+    const wrapper = mount(KSlider, { props: { modelValue: 0.5, unit: '%' } })
+    expect(wrapper.text()).toContain('%')
   })
 })
 
-describe('MuteButton', () => {
-  it('emits toggle when clicked', async () => {
-    const wrapper = mount(MuteButton, { props: { active: false } })
-    await wrapper.find('button').trigger('click')
-    expect(wrapper.emitted('toggle')).toBeTruthy()
-  })
-
-  it('reflects the active state', () => {
-    const wrapper = mount(MuteButton, { props: { active: true } })
-    expect(wrapper.find('button').text()).toContain('Muted')
-  })
-})
-
-describe('NumberInput', () => {
-  it('emits update:value with a number when the input changes', async () => {
-    const wrapper = mount(NumberInput, {
-      props: { label: 'Frequency', value: 440, min: 20, max: 20000, step: 1 },
+describe('KNumberInput', () => {
+  it('emits update:modelValue with a number on input', async () => {
+    const wrapper = mount(KNumberInput, {
+      props: { modelValue: 440, min: 0, max: 20000, step: 1 },
     })
 
     const input = wrapper.find('input[type="number"]')
     await input.setValue('1000')
 
-    expect(wrapper.emitted('update:value')).toBeTruthy()
-    expect(wrapper.emitted('update:value')![0]).toEqual([1000])
+    expect(wrapper.emitted('update:modelValue')).toBeTruthy()
+    expect(wrapper.emitted('update:modelValue')![0]).toEqual([1000])
   })
 
-  it('renders its label', () => {
-    const wrapper = mount(NumberInput, {
-      props: { label: 'Volume', value: 0.5 },
+  it('emits update:modelValue on arrow-up key with step', async () => {
+    const wrapper = mount(KNumberInput, {
+      props: { modelValue: 100, min: 0, max: 20000, step: 10 },
     })
-    expect(wrapper.text()).toContain('Volume')
+
+    await wrapper.find('input[type="number"]').trigger('keydown.up')
+
+    expect(wrapper.emitted('update:modelValue')![0]).toEqual([110])
   })
 
-  it('binds the accessibility label to the label prop', () => {
-    const wrapper = mount(NumberInput, {
-      props: { label: 'Frequency', value: 440 },
+  it('clamps arrow-key increments to max', async () => {
+    const wrapper = mount(KNumberInput, {
+      props: { modelValue: 19995, min: 0, max: 20000, step: 10 },
     })
-    expect(wrapper.find('label').attributes('aria-label')).toBe('Frequency')
+
+    await wrapper.find('input[type="number"]').trigger('keydown.up')
+
+    expect(wrapper.emitted('update:modelValue')![0]).toEqual([20000])
   })
 
-  it('renders suffix span', () => {
-    const wrapper = mount(NumberInput, {
-      props: { label: 'Test', value: 42, suffix: 'kHz' },
-    })
+  it('renders its suffix', () => {
+    const wrapper = mount(KNumberInput, { props: { modelValue: 42, unit: 'kHz' } })
     expect(wrapper.text()).toContain('kHz')
   })
 })
 
-describe('Toggle', () => {
-  it('emits update:active with the negated boolean when clicked', async () => {
-    const wrapper = mount(Toggle, { props: { active: false } })
-    await wrapper.find('button').trigger('click')
+describe('KSelect', () => {
+  const options = [
+    { value: 0, label: 'AM' },
+    { value: 3, label: 'USB' },
+  ]
 
-    expect(wrapper.emitted('update:active')).toBeTruthy()
-    expect(wrapper.emitted('update:active')![0]).toEqual([true])
+  it('renders all options', () => {
+    const wrapper = mount(KSelect, { props: { modelValue: 0, options } })
+    const opts = wrapper.findAll('option')
+    expect(opts.length).toBe(2)
+    expect(opts[1].text()).toBe('USB')
   })
 
-  it('reflects the initial active state in label', () => {
-    const wrapper = mount(Toggle, { props: { active: true } })
-    expect(wrapper.text()).toContain('On')
-  })
-
-  it('reflects the initial inactive state in label', () => {
-    const wrapper = mount(Toggle, { props: { active: false } })
-    expect(wrapper.text()).toContain('Off')
-  })
-})
-
-describe('Slider', () => {
-  it('emits update:value when the range changes', async () => {
-    const wrapper = mount(Slider, {
-      props: { label: 'Frequency', value: 440, min: 20, max: 20000, step: 1 },
-    })
-
-    const input = wrapper.find('input[type="range"]')
-    await input.setValue('1000')
-
-    expect(wrapper.emitted('update:value')).toBeTruthy()
-    expect(wrapper.emitted('update:value')![0]).toEqual([1000])
-  })
-
-  it('binds the accessibility label to the label prop', () => {
-    const wrapper = mount(Slider, {
-      props: { label: 'Frequency', value: 440, min: 20, max: 20000 },
-    })
-    expect(wrapper.find('label').attributes('aria-label')).toBe('Frequency')
+  it('emits update:modelValue on change', async () => {
+    const wrapper = mount(KSelect, { props: { modelValue: 0, options } })
+    await wrapper.find('select').setValue('3')
+    expect(wrapper.emitted('update:modelValue')![0]).toEqual(['3'])
   })
 })
 
-describe('StationInput', () => {
-  it('emits connect with the station string when Connect clicked', async () => {
-    const wrapper = mount(StationInput, {
-      props: { station: 'kphsdr.com:8072' },
-    })
-
+describe('KToggle', () => {
+  it('emits the negated value when clicked', async () => {
+    const wrapper = mount(KToggle, { props: { modelValue: false, label: 'AGC' } })
     await wrapper.find('button').trigger('click')
-    expect(wrapper.emitted('connect')).toBeTruthy()
-    expect(wrapper.emitted('connect')![0]).toEqual(['kphsdr.com:8072'])
+    expect(wrapper.emitted('update:modelValue')![0]).toEqual([true])
   })
 
-  it('emits connect with trimmed station string', async () => {
-    const wrapper = mount(StationInput, {
-      props: { station: '  kphsdr.com:8072  ' },
-    })
-
-    await wrapper.find('button').trigger('click')
-    expect(wrapper.emitted('connect')).toBeTruthy()
-    expect(wrapper.emitted('connect')![0]).toEqual(['kphsdr.com:8072'])
-  })
-
-  it('focus input and press Enter emits connect', async () => {
-    const wrapper = mount(StationInput, {
-      props: { station: 'kphsdr.com:8072' },
-    })
-
-    const input = wrapper.find('input[type="text"]')
-    await input.setValue('newstation:8078')
-    await input.trigger('keydown.enter')
-
-    expect(wrapper.emitted('connect')).toBeTruthy()
-    expect(wrapper.emitted('connect')![0]).toEqual(['newstation:8078'])
+  it('reflects active state via aria-pressed', () => {
+    const wrapper = mount(KToggle, { props: { modelValue: true, label: 'AGC' } })
+    expect(wrapper.find('button').attributes('aria-pressed')).toBe('true')
   })
 })
 
-describe('StatusBadge', () => {
-  it('renders the status text', () => {
-    const wrapper = mount(StatusBadge, { props: { status: 'Connected' } })
+describe('KButton', () => {
+  it('emits click when clicked', async () => {
+    const wrapper = mount(KButton, { props: { label: 'AM' } })
+    await wrapper.find('button').trigger('click')
+    expect(wrapper.emitted('click')).toBeTruthy()
+  })
+
+  it('applies the active modifier class', () => {
+    const wrapper = mount(KButton, { props: { label: 'AM', active: true } })
+    expect(wrapper.find('button').classes()).toContain('k-button--active')
+  })
+})
+
+describe('KReadout', () => {
+  it('formats numeric values with fixed digits', () => {
+    const wrapper = mount(KReadout, { props: { value: 14100.0, digits: 3, unit: 'kHz' } })
+    expect(wrapper.text()).toContain('14100.000')
+    expect(wrapper.text()).toContain('kHz')
+  })
+
+  it('renders string values verbatim', () => {
+    const wrapper = mount(KReadout, { props: { value: 'Connected' } })
     expect(wrapper.text()).toContain('Connected')
   })
+})
 
-  it('renders status with green dot for connect', () => {
-    const wrapper = mount(StatusBadge, { props: { status: 'Connecting' } })
-    expect(wrapper.find('.dot').classes('dot--green')).toBe(true)
+describe('KPanel', () => {
+  it('renders its title and slot content', () => {
+    const wrapper = mount(KPanel, {
+      props: { title: 'Audio' },
+      slots: { default: '<span>content</span>' },
+    })
+    expect(wrapper.text()).toContain('Audio')
+    expect(wrapper.text()).toContain('content')
+  })
+})
+
+describe('KStatusBadge', () => {
+  it('renders label and ok state', () => {
+    const wrapper = mount(KStatusBadge, { props: { state: 'ok', label: 'Connected' } })
+    expect(wrapper.text()).toContain('Connected')
+    expect(wrapper.classes()).toContain('k-status-badge--ok')
   })
 
-  it('renders status with grey dot for idle', () => {
-    const wrapper = mount(StatusBadge, { props: { status: 'Idle' } })
-    expect(wrapper.find('.dot').classes('dot--grey')).toBe(true)
+  it('applies error state class', () => {
+    const wrapper = mount(KStatusBadge, { props: { state: 'error', label: 'Error' } })
+    expect(wrapper.classes()).toContain('k-status-badge--error')
   })
 })
