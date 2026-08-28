@@ -21,9 +21,19 @@ const BOOLEAN_PARAMS: ReadonlySet<ParamId> = new Set<ParamId>([
   'nrOn',
 ])
 
+/** Default station preloaded in the UI (until the M5 station tab lands). */
+export const DEFAULT_STATION = 'kphsdr.com:8072'
+
+/** Minimal validation: "host" or "host:port", no whitespace/empty. */
+export function isValidStation(hostPort: string): boolean {
+  const trimmed = hostPort.trim()
+  if (!trimmed) return false
+  return /^[^\s:]+(:\d{1,5})?$/.test(trimmed)
+}
+
 export const useKiwiStore = defineStore('kiwi', {
   state: () => ({
-    station: '',
+    station: DEFAULT_STATION,
     connected: false,
     status: 'Idle',
     freqKhz: 14100.0,
@@ -92,9 +102,19 @@ export const useKiwiStore = defineStore('kiwi', {
     },
 
     setStation(hostPort: string) {
-      this.station = hostPort
+      const trimmed = hostPort.trim()
+      if (!trimmed) {
+        this.status = 'Error: enter a station'
+        return
+      }
+      if (!isValidStation(trimmed)) {
+        this.status = 'Error: invalid station'
+        return
+      }
+      this.station = trimmed
       this.connected = false
-      pluginService.setStation(hostPort)
+      this.status = 'Connecting...'
+      pluginService.setStation(trimmed)
     },
 
     disconnect() {

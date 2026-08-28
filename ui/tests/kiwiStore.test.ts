@@ -1,13 +1,19 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 
-import { useKiwiStore } from '@/store/kiwiStore'
+import { useKiwiStore, isValidStation, DEFAULT_STATION } from '@/store/kiwiStore'
 import { pluginService } from '@/services/pluginService'
 
 describe('kiwiStore', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
     delete (window as unknown as Record<string, unknown>).vstHost
+  })
+
+  it('preloads the default station', () => {
+    const store = useKiwiStore()
+    expect(store.station).toBe(DEFAULT_STATION)
+    expect(DEFAULT_STATION).toBe('kphsdr.com:8072')
   })
 
   it('setParam forwards to pluginService and applies an optimistic update', () => {
@@ -29,6 +35,37 @@ describe('kiwiStore', () => {
     expect(spy).toHaveBeenCalledWith('kphsdr.com:8072')
     expect(store.station).toBe('kphsdr.com:8072')
     expect(store.connected).toBe(false)
+  })
+
+  it('setStation with empty string sets error status and does NOT bridge', () => {
+    const store = useKiwiStore()
+    const spy = vi.spyOn(pluginService, 'setStation')
+
+    store.setStation('   ')
+
+    expect(spy).not.toHaveBeenCalled()
+    expect(store.status).toContain('Error')
+  })
+
+  it('setStation with an invalid station sets error status and does NOT bridge', () => {
+    const store = useKiwiStore()
+    const spy = vi.spyOn(pluginService, 'setStation')
+
+    store.setStation('no port and spaces here')
+
+    expect(spy).not.toHaveBeenCalled()
+    expect(store.status).toContain('Error')
+  })
+
+  it('isValidStation accepts host and host:port, rejects empty/garbage', () => {
+    expect(isValidStation('kphsdr.com:8072')).toBe(true)
+    expect(isValidStation('localhost')).toBe(true)
+    expect(isValidStation('g8ure.ddns.net:8075')).toBe(true)
+    expect(isValidStation('')).toBe(false)
+    expect(isValidStation('   ')).toBe(false)
+    expect(isValidStation('host with spaces')).toBe(false)
+    expect(isValidStation('host:')).toBe(false)
+    expect(isValidStation('host:999999')).toBe(false) // port > 5 digits
   })
 
   it('disconnect calls pluginService.disconnect', () => {

@@ -72,8 +72,9 @@ const { statusText, statusState } = storeToRefs(store)
 
 function onStation(hostPort: string) {
   store.setStation(hostPort)
-  store.setStatus('Connecting...')
-  if (!pluginService.isInNative()) {
+  // In dev mode (no native bridge) mark Connected, but only when the store
+  // did not reject the input (empty/invalid station -> Error status).
+  if (!pluginService.isInNative() && !/error/i.test(store.status)) {
     store.setStatus('Connected (dev)')
   }
 }

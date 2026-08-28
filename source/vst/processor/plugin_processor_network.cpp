@@ -160,6 +160,7 @@ void PluginProcessor::decodeAndQueue(const std::string& data) {
 
 void PluginProcessor::connectToStation(const std::string& hostPort) {
     if (hostPort.empty()) {
+        emitStatus("Error");
         return;
     }
 
@@ -178,6 +179,14 @@ void PluginProcessor::connectToStation(const std::string& hostPort) {
         host = hostPort;
     }
 
+    // A host of only whitespace (e.g. the user entered "   :8073") is invalid:
+    // fail gracefully instead of passing it to the WebSocket layer.
+    if (host.empty()) {
+        NETSDR_LOG_INFO("Rejecting station with empty host: '%s'", hostPort.c_str());
+        emitStatus("Error");
+        return;
+    }
+
     {
         std::lock_guard<std::mutex> lock(stationMutex_);
         station_ = hostPort;
@@ -192,45 +201,57 @@ void PluginProcessor::connectToStation(const std::string& hostPort) {
         kiwiClient_.reset();
     }
 
-    KiwiClientConfig cfg;
-    cfg.host      = host;
-    cfg.port      = port;
-    cfg.freqKhz   = freqKhz_.load();
-    const int modeIdx = mode_.load();
-    cfg.mode = (modeIdx >= 0 && modeIdx < kNumKiwiModes)
-               ? kKiwiModeNames[modeIdx]
-               : kKiwiModeNames[0];
-    cfg.lowCut    = lowCut_.load();
-    cfg.highCut   = highCut_.load();
-    cfg.agcOn     = agcOn_.load();
-    cfg.sampleRate = serverSampleRate_.load();
+    // Guard the whole client setup + connect so no exception from the
+    // WebSocket layer can escape and crash the host (defensive fix).
+    try {
+        KiwiClientConfig cfg;
+        cfg.host      = host;
+        cfg.port      = port;
+        cfg.freqKhz   = freqKhz_.load();
+        const int modeIdx = mode_.load();
+        cfg.mode = (modeIdx >= 0 && modeIdx < kNumKiwiModes)
+                   ? kKiwiModeNames[modeIdx]
+                   : kKiwiModeNames[0];
+        cfg.lowCut    = lowCut_.load();
+        cfg.highCut   = highCut_.load();
+        cfg.agcOn     = agcOn_.load();
+        cfg.sampleRate = serverSampleRate_.load();
 
-    kiwiClient_ = std::make_unique<KiwiClient>();
+        kiwiClient_ = std::make_unique<KiwiClient>();
 
-    kiwiClient_->setOnBinaryMessage([this](const std::string& data) {
-        decodeAndQueue(data);
-    });
+        kiwiClient_->setOnBinaryMessage([this](const std::string& data) {
+            decodeAndQueue(data);
+        });
 
-    kiwiClient_->setOnOpen([this]() {
-        NETSDR_LOG_INFO("Station connected");
-        emitStatus("Connected");
-        resetPipelineFlag_.store(true);
-        paramsDirty_.store(true);
-        worker_.post([this]() { sendPendingParams(); });
-    });
+        kiwiClient_->setOnOpen([this]() {
+            NETSDR_LOG_INFO("Station connected");
+            emitStatus("Connected");
+            resetPipelineFlag_.store(true);
+            paramsDirty_.store(true);
+            worker_.post([this]() { sendPendingParams(); });
+        });
 
-    kiwiClient_->setOnError([this]() {
-        NETSDR_LOG_INFO("Station connection error");
+        kiwiClient_->setOnError([this]() {
+            NETSDR_LOG_INFO("Station connection error");
+            emitStatus("Error");
+        });
+
+        kiwiClient_->setOnClose([this]() {
+            NETSDR_LOG_INFO("Station disconnected");
+            emitStatus("Disconnected");
+        });
+
+        if (!kiwiClient_->connect(cfg)) {
+            NETSDR_LOG_INFO("Failed to start connection to %s", hostPort.c_str());
+            emitStatus("Error");
+            kiwiClient_.reset();
+        }
+    } catch (const std::exception& e) {
+        NETSDR_LOG_INFO("connectToStation exception: %s", e.what());
         emitStatus("Error");
-    });
-
-    kiwiClient_->setOnClose([this]() {
-        NETSDR_LOG_INFO("Station disconnected");
-        emitStatus("Disconnected");
-    });
-
-    if (!kiwiClient_->connect(cfg)) {
-        NETSDR_LOG_INFO("Failed to start connection to %s", hostPort.c_str());
+        kiwiClient_.reset();
+    } catch (...) {
+        NETSDR_LOG_INFO("connectToStation: unknown exception");
         emitStatus("Error");
         kiwiClient_.reset();
     }
