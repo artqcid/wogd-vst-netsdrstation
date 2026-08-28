@@ -10,6 +10,13 @@
 // This header holds the pure-C++ parsers for that envelope and the stable
 // UI-facing parameter names, so the bridge logic can be unit-tested without
 // the VST3 SDK or webview.
+//
+// The message structs and their validation are GENERATED from
+// schema/bridge.schema.json (single source of truth, see
+// source/vst/common/generated/bridge_schema.h). The aliases below expose them
+// under the plain `netsdr::` namespace for the public API.
+
+#include "vst/common/generated/bridge_schema.h"
 
 #include <cstdint>
 #include <string>
@@ -47,16 +54,9 @@ inline constexpr const char* kUiParamWfComp = "wfComp";
 inline constexpr const char* kUiParamArOn = "arOn";
 inline constexpr const char* kUiParamOvOn = "ovOn";
 
-// Result of parsing a setParameter bridge message.
-struct BridgeSetParameter {
-    std::string id;      // UI parameter name (e.g. "freqKhz")
-    double value = 0.0;  // plain (unnormalized) parameter value
-};
-
-// Result of parsing a setStation bridge message.
-struct BridgeSetStation {
-    std::string hostPort; // "host:port"
-};
+// Message structs (generated from schema/bridge.schema.json).
+using BridgeSetParameter = schema::BridgeSetParameter;
+using BridgeSetStation = schema::BridgeSetStation;
 
 // Parses a bridge message envelope and fills `out` when it is a well-formed
 // setParameter message:

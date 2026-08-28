@@ -323,9 +323,24 @@ bool parseSetParameterMessage(const std::string& message, BridgeSetParameter& ou
 - `ui/src/services/pluginService.ts` (use generated Zod validators)
 
 **Dependencies:**
-- `json-schema-to-typescript`, `json-schema-to-zod` (npm, dev)
-- `nlohmann/json` (already in project)
+- `json-schema-to-typescript` (npm, dev) — used; generates `ui/src/generated/bridge.ts`
+- `zod` (npm) — runtime validators in `ui/src/generated/bridge-validators.ts`
+- `nlohmann/json` (FetchContent, MIT, header-only v3.11.3) — added 2026-08-28;
+  the plan originally assumed it was "already in project" — it was not
 - Python 3.8+ (C++ codegen script)
+
+> **Implementation notes (2026-08-28, deviations from plan):**
+> - `json-schema-to-zod` cannot resolve local `$ref`s (`#/definitions/*` all
+>   become `z.any()`), so the Zod validators are **hand-written** but
+>   structurally identical to the schema. Drift is prevented by
+>   `ui/tests/bridgeSchema.test.ts` (behaviour checks against the canonical
+>   schema). `zod-to-json-schema` has no Zod-v4-compatible release, so the
+>   test checks behaviour directly instead of converting schemas.
+> - The generated C++ header is **committed**; `netsdrstation_bridge_codegen`
+>   (CMake custom target) regenerates deterministically on schema change.
+> - `pluginService.ts` consumes the generated `ParamId` type and validates
+>   backend messages with the Zod `BackendMessageSchema` (rejects non-conforming
+>   messages with a console warning).
 
 ---
 

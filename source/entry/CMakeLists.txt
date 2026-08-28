@@ -64,6 +64,7 @@ target_link_libraries(${target}
         webview::core_static
         netsdr_network
         samplerate
+        nlohmann_json::nlohmann_json
 )
 
 # ---------------------------------------------------------------------------

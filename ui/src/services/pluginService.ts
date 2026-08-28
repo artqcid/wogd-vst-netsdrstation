@@ -5,14 +5,22 @@
  *   - UI -> DSP:  window.vstHost.setParameter(...)  (JS -> C++ binding)
  *   - DSP -> UI:  window.updateVueState(...)        (C++ eval -> JS callback)
  *
+ * Types and runtime validators are GENERATED / mirrored from
+ * schema/bridge.schema.json (the single source of truth, M4.1.5):
+ *   - TypeScript types:      src/generated/bridge.ts       (json2ts)
+ *   - Zod validators:        src/generated/bridge-validators.ts
+ *
  * In browser dev mode (Vite dev server) there is no native bridge, so calls
  * are logged instead of sent, and no global handler is installed.
  */
 
-export interface PluginMessage {
-  type: string
-  data?: unknown
-}
+import {
+  BackendMessageSchema,
+  type BackendMessage,
+  type ParamId,
+} from '@/generated/bridge-validators'
+
+export type { BackendMessage }
 
 export interface VstHost {
   setParameter(id: string, value: number): void
@@ -24,11 +32,11 @@ export interface VstHost {
 declare global {
   interface Window {
     vstHost?: VstHost
-    updateVueState?: (message: PluginMessage) => void
+    updateVueState?: (message: BackendMessage) => void
   }
 }
 
-type MessageHandler = (message: PluginMessage) => void
+type MessageHandler = (message: BackendMessage) => void
 
 class PluginService {
   private messageHandler: MessageHandler | null = null
@@ -40,8 +48,9 @@ class PluginService {
 
   /**
    * Sends a parameter change to the plugin. No-op (logged) in dev mode.
+   * `id` is a ParamId literal, validated against the bridge schema.
    */
-  setParameter(id: string, value: number): void {
+  setParameter(id: ParamId, value: number): void {
     if (this.isInNative()) {
       window.vstHost!.setParameter(id, value)
     } else {
@@ -82,11 +91,17 @@ class PluginService {
   /**
    * Registers a callback for plugin -> UI messages. Exposes
    * window.updateVueState, which the C++ side invokes via eval().
+   * Incoming messages are validated against the bridge schema (Zod).
    */
   onMessage(handler: MessageHandler): void {
     this.messageHandler = handler
-    window.updateVueState = (message: PluginMessage) => {
-      this.messageHandler?.(message)
+    window.updateVueState = (message: BackendMessage) => {
+      const parsed = BackendMessageSchema.safeParse(message)
+      if (!parsed.success) {
+        console.warn('[Bridge] rejected message not matching bridge.schema.json:', message)
+        return
+      }
+      this.messageHandler?.(parsed.data)
     }
   }
 }

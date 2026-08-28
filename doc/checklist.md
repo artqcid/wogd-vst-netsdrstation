@@ -1165,17 +1165,32 @@ implementation plans: `doc/M3-implementation-plan.md` (M3),
     responsive layout structure at 640/1024/1920 viewports (34/34 green).
   - Manual acceptance still pending: drag corner in VST3PluginTestHost/DAW.
 
-- [ ] **M4.1.5** Schema-based Bridge API (type-safe contract)
-  - Well-defined, schema-based API contract between the C++ backend and the
-    Vue.js frontend: JSON Schema as single source of truth, auto-generated
-    TypeScript/Zod validators (UI) and C++ parsers/validators (backend).
+- [x] **M4.1.5** Schema-based Bridge API (type-safe contract)
+  - **Schema (single source of truth):** `schema/bridge.schema.json`
+    (Draft 2020-12) defines all bridge message types: setParameter, setStation,
+    disconnect, getParameters (UI→C++) + status, param (C++→UI), plus the
+    ParamId enum (27 IDs) and HostPort pattern.
+  - **TS codegen:** `json-schema-to-typescript` (json2ts) → `ui/src/generated/bridge.ts`
+    (types incl. `ParamId` union, `data: [ParamId, number]` tuples).
+  - **Zod validators:** `ui/src/generated/bridge-validators.ts` — hand-written
+    (json-schema-to-zod cannot resolve local $refs; produces useless z.any()
+    schemas), guarded by `ui/tests/bridgeSchema.test.ts` which checks the
+    validators' behaviour against the canonical schema.
+  - **C++ codegen:** `schema/generate-cpp.py` → `source/vst/common/generated/bridge_schema.h`
+    (structs + validators on nlohmann::json); CMake target
+    `netsdrstation_bridge_codegen` regenerates deterministically.
+  - **Backend refactor:** `bridge_protocol.cpp` now parses via nlohmann::json
+    + generated validators (was fragile manual string-scraping); public API
+    unchanged; `bridge_protocol.h` aliases the generated structs.
+  - **NOTE (deviation from plan):** nlohmann/json was NOT already in the
+    project — added as FetchContent dependency (MIT, header-only, v3.11.3).
+    zod-to-json-schema has no Zod-v4-compatible release — consistency test
+    checks behaviour directly instead.
   - **Prerequisite for M4.2** (all UI components consume the generated types).
-  - _Files: `schema/bridge.schema.json`, `schema/generate-ts.sh`,
-    `schema/generate-cpp.py`, `ui/src/generated/*`,
-    `source/vst/common/generated/*`_
-  - Ref: `doc/M4-implementation-plan.md` M4.1.5 (Appendix A: alternatives).
-  - Test: existing bridge tests keep passing (no behavior change);
-    generated types/validators compile in both languages.
+  - _Files: `schema/*`, `ui/src/generated/*`, `ui/src/services/pluginService.ts`,
+    `source/vst/common/generated/*`, `source/vst/common/bridge_protocol.{h,cpp}`_
+  - Test: C++ 92/92 green (bridge tests unchanged behavior); Vitest 42/42 green
+    (incl. schema consistency + validator rejection tests); UI build 150 kB.
 
 - [ ] **M4.2** UI scaffold & component library
   - **Prerequisite:** M4.1.5 (schema-based API) — the state store consumes the

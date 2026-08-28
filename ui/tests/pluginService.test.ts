@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
 
-import { pluginService, type PluginMessage } from '@/services/pluginService'
+import { pluginService, type BackendMessage } from '@/services/pluginService'
 
 describe('pluginService', () => {
   beforeEach(() => {
@@ -19,24 +19,49 @@ describe('pluginService', () => {
       getParameters: vi.fn(),
     }
 
-    pluginService.setParameter('freq', 440)
+    pluginService.setParameter('freqKhz', 440)
 
-    expect(setParameter).toHaveBeenCalledWith('freq', 440)
+    expect(setParameter).toHaveBeenCalledWith('freqKhz', 440)
   })
 
   it('onMessage registers a callback invoked by window.updateVueState', () => {
     const handler = vi.fn()
     pluginService.onMessage(handler)
 
-    const message: PluginMessage = { type: 'param', data: { id: 'freq', value: 440 } }
+    const message: BackendMessage = { type: 'param', data: { id: 'freqKhz', value: 440 } }
     window.updateVueState!(message)
 
     expect(handler).toHaveBeenCalledWith(message)
   })
 
+  it('onMessage rejects messages that do not match the bridge schema', () => {
+    const handler = vi.fn()
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    pluginService.onMessage(handler)
+
+    // data.value is a string -> violates ParamUpdateMessage (id: ParamId, value: number)
+    window.updateVueState!({ type: 'param', data: { id: 'freqKhz', value: '440' } } as never)
+
+    expect(handler).not.toHaveBeenCalled()
+    expect(warn).toHaveBeenCalled()
+    warn.mockRestore()
+  })
+
+  it('onMessage rejects unknown message types', () => {
+    const handler = vi.fn()
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    pluginService.onMessage(handler)
+
+    window.updateVueState!({ type: 'nope', data: null } as never)
+
+    expect(handler).not.toHaveBeenCalled()
+    expect(warn).toHaveBeenCalled()
+    warn.mockRestore()
+  })
+
   it('setParameter logs in dev mode when window.vstHost is absent', () => {
     const log = vi.spyOn(console, 'log').mockImplementation(() => {})
-    pluginService.setParameter('freq', 440)
+    pluginService.setParameter('freqKhz', 440)
     expect(log).toHaveBeenCalled()
     log.mockRestore()
   })

@@ -72,4 +72,4 @@ target_include_directories(netsdrstation_tests
 include(CTest)
 add_test(NAME netsdrstation_tests COMMAND netsdrstation_tests)
 
-target_link_libraries(netsdrstation_tests PRIVATE sdk_common sdk webview::core_static netsdr_network samplerate)
+target_link_libraries(netsdrstation_tests PRIVATE sdk_common sdk webview::core_static netsdr_network samplerate nlohmann_json::nlohmann_json)

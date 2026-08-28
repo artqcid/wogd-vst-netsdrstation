@@ -1,0 +1,130 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://netsdrstation.dev/schemas/bridge.json",
+  "title": "NetSDRStation Bridge Protocol",
+  "description": "Message contract between the Vue.js UI (WebView) and the C++ VST backend. Single source of truth: the TypeScript types/validators (ui/src/generated/*) and the C++ parsers (source/vst/common/generated/*) are generated from this file (schema/generate-ts.sh, schema/generate-cpp.py).",
+  "definitions": {
+    "ParamId": {
+      "type": "string",
+      "enum": [
+        "mode",
+        "freqKhz",
+        "lowCut",
+        "highCut",
+        "agcOn",
+        "agcHang",
+        "agcThresh",
+        "agcSlope",
+        "agcDecay",
+        "agcManGain",
+        "volume",
+        "mute",
+        "squelchOn",
+        "squelchThr",
+        "nbOn",
+        "nbThresh",
+        "nrOn",
+        "deempOn",
+        "compOn",
+        "wfOn",
+        "wfSpeed",
+        "wfZoom",
+        "wfMaxDb",
+        "wfMinDb",
+        "wfComp",
+        "arOn",
+        "ovOn"
+      ],
+      "description": "Stable UI-facing parameter name (kUiParam* in source/vst/common/bridge_protocol.h). Must never change once released."
+    },
+    "HostPort": {
+      "type": "string",
+      "pattern": "^[^:]+:[0-9]{1,5}$",
+      "description": "KiwiSDR station as 'host:port'."
+    },
+    "SetParameterMessage": {
+      "type": "object",
+      "required": ["type", "data"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "const": "setParameter" },
+        "data": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": [
+            { "$ref": "#/definitions/ParamId" },
+            { "type": "number", "description": "Plain (unnormalized) parameter value." }
+          ]
+        }
+      }
+    },
+    "SetStationMessage": {
+      "type": "object",
+      "required": ["type", "data"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "const": "setStation" },
+        "data": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 1,
+          "items": [{ "$ref": "#/definitions/HostPort" }]
+        }
+      }
+    },
+    "DisconnectMessage": {
+      "type": "object",
+      "required": ["type", "data"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "const": "disconnect" },
+        "data": { "type": "null" }
+      }
+    },
+    "GetParametersMessage": {
+      "type": "object",
+      "required": ["type", "data"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "const": "getParameters" },
+        "data": { "type": "null" }
+      }
+    },
+    "StatusMessage": {
+      "type": "object",
+      "required": ["type", "data"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "const": "status" },
+        "data": { "type": "string", "description": "Status text (Connected / Error / Disconnected / ...)." }
+      }
+    },
+    "ParamUpdateMessage": {
+      "type": "object",
+      "required": ["type", "data"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "const": "param" },
+        "data": {
+          "type": "object",
+          "required": ["id", "value"],
+          "additionalProperties": false,
+          "properties": {
+            "id": { "$ref": "#/definitions/ParamId" },
+            "value": { "type": "number" }
+          }
+        }
+      }
+    }
+  },
+  "type": "object",
+  "title": "BridgeMessage",
+  "description": "Discriminated union of all bridge messages (UI -> C++).",
+  "oneOf": [
+    { "$ref": "#/definitions/SetParameterMessage" },
+    { "$ref": "#/definitions/SetStationMessage" },
+    { "$ref": "#/definitions/DisconnectMessage" },
+    { "$ref": "#/definitions/GetParametersMessage" }
+  ]
+}

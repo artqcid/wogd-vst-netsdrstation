@@ -201,6 +201,41 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(libsamplerate)
 
+# ---------------------------------------------------------------------------
+# nlohmann/json (MIT) - JSON parsing for the schema-based bridge protocol
+# (M4.1.5). Header-only; used by the generated validators in
+# source/vst/common/generated/bridge_schema.h.
+# ---------------------------------------------------------------------------
+FetchContent_Declare(
+    nlohmann_json
+    GIT_REPOSITORY https://github.com/nlohmann/json.git
+    GIT_TAG        v3.11.3
+    GIT_SHALLOW    TRUE
+)
+FetchContent_MakeAvailable(nlohmann_json)
+
+# ---------------------------------------------------------------------------
+# Bridge protocol codegen (M4.1.5): regenerate the C++ parsers from
+# schema/bridge.schema.json (single source of truth). The generated header is
+# committed so builds work without Python; this target regenerates it when the
+# schema changes. Invoke manually: cmake --build <dir> --target netsdrstation_bridge_codegen
+# ---------------------------------------------------------------------------
+set(NS_BRIDGE_SCHEMA "${CMAKE_CURRENT_SOURCE_DIR}/schema/bridge.schema.json")
+set(NS_BRIDGE_GENERATED "${CMAKE_CURRENT_SOURCE_DIR}/source/vst/common/generated/bridge_schema.h")
+find_package(Python3 COMPONENTS Interpreter QUIET)
+if(Python3_FOUND)
+    add_custom_target(netsdrstation_bridge_codegen
+        COMMAND ${Python3_EXECUTABLE} "${CMAKE_CURRENT_SOURCE_DIR}/schema/generate-cpp.py"
+                "${NS_BRIDGE_SCHEMA}" --output "${NS_BRIDGE_GENERATED}"
+        DEPENDS "${NS_BRIDGE_SCHEMA}"
+        BYPRODUCTS "${NS_BRIDGE_GENERATED}"
+        COMMENT "Regenerating bridge_schema.h from schema/bridge.schema.json"
+        VERBATIM)
+    message(STATUS "Bridge codegen target available: netsdrstation_bridge_codegen")
+else()
+    message(WARNING "Python3 not found; netsdrstation_bridge_codegen unavailable (generated header is committed anyway).")
+endif()
+
 if(NS_ENABLE_TESTS)
     enable_testing()
     add_subdirectory(tests)

@@ -97,7 +97,7 @@ import Toggle from '@/components/Toggle.vue'
 import Slider from '@/components/Slider.vue'
 import MuteButton from '@/components/MuteButton.vue'
 import StatusBadge from '@/components/StatusBadge.vue'
-import { pluginService, type PluginMessage } from '@/services/pluginService'
+import { pluginService } from '@/services/pluginService'
 
 // State refs
 const station = ref('kphsdr.com:8072')
@@ -170,19 +170,19 @@ function onWf(value: boolean) {
 }
 
 onMounted(() => {
-  pluginService.onMessage((message: PluginMessage) => {
-    if (message.type === 'param' && typeof message.data === 'object' && message.data !== null) {
-      const data = message.data as { id?: string; value?: number }
-      if (data.id === 'freqKhz' && typeof data.value === 'number') freqKhz.value = data.value
-      else if (data.id === 'volume' && typeof data.value === 'number') volume.value = data.value
-      else if (data.id === 'mute' && typeof data.value === 'number') mute.value = data.value > 0.5
-      else if (data.id === 'agcOn' && typeof data.value === 'number') agcOn.value = data.value > 0.5
-      else if (data.id === 'mode' && typeof data.value === 'number') mode.value = data.value
-      else if (data.id === 'lowCut' && typeof data.value === 'number') lowCut.value = data.value
-      else if (data.id === 'highCut' && typeof data.value === 'number') highCut.value = data.value
-      else if (data.id === 'wfOn' && typeof data.value === 'number') wfOn.value = data.value > 0.5
+  pluginService.onMessage(message => {
+    if (message.type === 'param') {
+      const data = message.data
+      if (data.id === 'freqKhz') freqKhz.value = data.value
+      else if (data.id === 'volume') volume.value = data.value
+      else if (data.id === 'mute') mute.value = data.value > 0.5
+      else if (data.id === 'agcOn') agcOn.value = data.value > 0.5
+      else if (data.id === 'mode') mode.value = data.value
+      else if (data.id === 'lowCut') lowCut.value = data.value
+      else if (data.id === 'highCut') highCut.value = data.value
+      else if (data.id === 'wfOn') wfOn.value = data.value > 0.5
     }
-    if (message.type === 'status' && typeof message.data === 'string') {
+    if (message.type === 'status') {
       status.value = message.data
     }
   })

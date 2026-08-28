@@ -1,93 +1,36 @@
 #include "bridge_protocol.h"
 
+#include "vst/common/generated/bridge_schema.h"
 #include "vst/common/paramids.h"
 
-#include <cstdlib>
+#include <nlohmann/json.hpp>
 
 namespace netsdr {
 
-namespace {
-
-// Extracts the first quoted string inside the "data" array of a bridge
-// envelope. Returns false when no such string exists.
-bool extractDataId(const std::string& message, std::string& outId) {
-    const std::string::size_type dataPos = message.find("\"data\":");
-    if (dataPos == std::string::npos) {
-        return false;
-    }
-    const std::string::size_type bracket = message.find('[', dataPos);
-    if (bracket == std::string::npos) {
-        return false;
-    }
-    const std::string::size_type idOpen = message.find('"', bracket);
-    if (idOpen == std::string::npos) {
-        return false;
-    }
-    const std::string::size_type idClose = message.find('"', idOpen + 1);
-    if (idClose == std::string::npos) {
-        return false;
-    }
-    outId = message.substr(idOpen + 1, idClose - idOpen - 1);
-    return true;
-}
-
-} // namespace
-
 bool parseSetParameterMessage(const std::string& message, BridgeSetParameter& out) {
-    // 1. Only setParameter messages carry an id/value; bail out otherwise.
-    if (message.find("\"setParameter\"") == std::string::npos) {
+    // Robust JSON parsing via nlohmann::json; the payload validation itself is
+    // generated from schema/bridge.schema.json (single source of truth).
+    nlohmann::json j = nlohmann::json::parse(message, nullptr, false);
+    if (j.is_discarded()) {
         return false;
     }
-
-    // 2. Locate the data array: {"type":"setParameter","data":["<id>",<value>]}
-    const std::string::size_type dataPos = message.find("\"data\":");
-    if (dataPos == std::string::npos) {
-        return false;
-    }
-    const std::string::size_type bracket = message.find('[', dataPos);
-    if (bracket == std::string::npos) {
-        return false;
-    }
-
-    // 3. Extract the id string (first quoted element of the array).
-    const std::string::size_type idOpen = message.find('"', bracket);
-    if (idOpen == std::string::npos) {
-        return false;
-    }
-    const std::string::size_type idClose = message.find('"', idOpen + 1);
-    if (idClose == std::string::npos) {
-        return false;
-    }
-    out.id = message.substr(idOpen + 1, idClose - idOpen - 1);
-
-    // 4. Extract the numeric value after the comma.
-    const std::string::size_type comma = message.find(',', idClose);
-    if (comma == std::string::npos) {
-        return false;
-    }
-    const char* numStart = message.c_str() + comma + 1;
-    char* end = nullptr;
-    out.value = std::strtod(numStart, &end);
-    if (end == numStart) {
-        return false;
-    }
-    return true;
+    return schema::parseSetParameter(j, out);
 }
 
 bool parseSetStationMessage(const std::string& message, BridgeSetStation& out) {
-    if (message.find("\"setStation\"") == std::string::npos) {
+    nlohmann::json j = nlohmann::json::parse(message, nullptr, false);
+    if (j.is_discarded()) {
         return false;
     }
-    std::string hostPort;
-    if (!extractDataId(message, hostPort) || hostPort.empty()) {
-        return false;
-    }
-    out.hostPort = hostPort;
-    return true;
+    return schema::parseSetStation(j, out);
 }
 
 bool parseDisconnectMessage(const std::string& message) {
-    return message.find("\"disconnect\"") != std::string::npos;
+    nlohmann::json j = nlohmann::json::parse(message, nullptr, false);
+    if (j.is_discarded()) {
+        return false;
+    }
+    return schema::parseDisconnect(j);
 }
 
 bool paramIdFromUiName(const std::string& id, std::uint32_t& outId) {
