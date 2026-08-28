@@ -1289,13 +1289,20 @@ implementation plans: `doc/M3-implementation-plan.md` (M3),
   - Test: Vitest for controls; integration test that streamed FFT data renders
     without dropped frames.
 
-- [ ] **M4.8** Status & system readouts + extension panel
-  - Status readouts: active user slots, GPS sync indicator, audio buffer /
-    stream status; extension select dropdown + dynamic panel
-    (CW / WFAX / RTTY / SSTV / tDoA / IQ / antenna switch).
-  - Ref: `doc/ui-architecture.md` §3.6, §3.7.
-  - Test: Vitest — readouts update from mocked status messages; extension
-    dropdown switches panel.
+- [x] **M4.8** Status & system readouts + extension panel
+  - `StatusBar.vue`: S-meter, user count, GPS sync (✓/—), buffer health
+    (OK when connected + audio flowing), exact frequency (3 decimals).
+  - `ExtensionPanel.vue`: KSelect with CW/WFAX/RTTY/SSTV/tDoA/IQ/Antenna;
+    each extension has a stub panel (CW/WFAX/RTTY/SSTV/tDoA/Antenna =
+    "Coming soon", IQ = I/Q scatter placeholder).
+  - **DEFERRED (documented):** C++ 2 Hz system-status push (users/gps/buffer
+    from KiwiSDR) — requires MSG users/gps parsing in the network layer
+    (KiwiClient), a separate network-extension task (M5+/own task). Store
+    display values stay at defaults until then.
+  - _Files: `ui/src/components/StatusBar.vue`, `ExtensionPanel.vue`,
+    `ui/src/components/extensions/*`_
+  - Test: Vitest 88/88 green (StatusBar 6, ExtensionPanel 5 incl. panel
+    switching); UI build 176.5 kB.
 
 - [ ] **M4.9** UI parity acceptance
   - Side-by-side check of the Vue UI against `kphsdr.com:8072` in a

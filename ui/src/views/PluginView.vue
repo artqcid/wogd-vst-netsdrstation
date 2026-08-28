@@ -25,15 +25,16 @@
 
       <AudioPanel />
 
+      <ExtensionPanel />
+
       <KPanel title="Display" class="kiwi-panel">
         <KToggle :model-value="store.wfOn" label="Waterfall" @update:model-value="onParamBool('wfOn', $event)" />
       </KPanel>
     </main>
 
-    <!-- Status bar row (M4.1 layout) -->
+    <!-- Status bar row (M4.1/M4.8 layout) -->
     <footer class="kiwi-statusbar">
-      <SMeter :dbm="store.signalLevel" />
-      <span class="kiwi-statusbar__users">users: {{ store.userCount }}</span>
+      <StatusBar />
     </footer>
   </div>
 </template>
@@ -46,7 +47,8 @@ import ModePanel from '@/components/ModePanel.vue'
 import FreqPanel from '@/components/FreqPanel.vue'
 import BandPanel from '@/components/BandPanel.vue'
 import AudioPanel from '@/components/AudioPanel.vue'
-import SMeter from '@/components/SMeter.vue'
+import ExtensionPanel from '@/components/ExtensionPanel.vue'
+import StatusBar from '@/components/StatusBar.vue'
 import KPanel from '@/components/KPanel.vue'
 import KToggle from '@/components/KToggle.vue'
 import KStatusBadge from '@/components/KStatusBadge.vue'
