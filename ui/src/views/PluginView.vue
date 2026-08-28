@@ -24,16 +24,9 @@
           label="Mode"
           @update:model-value="onModeChange"
         />
-        <KNumberInput
-          :model-value="store.freqKhz"
-          :min="0.001"
-          :max="30000"
-          :step="0.001"
-          unit="kHz"
-          label="Frequency"
-          @update:model-value="onParam('freqKhz', $event)"
-        />
       </KPanel>
+
+      <FreqPanel />
 
       <KPanel title="Passband" class="kiwi-panel">
         <KNumberInput
@@ -86,6 +79,7 @@
 import { onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import StationInput from '@/components/StationInput.vue'
+import FreqPanel from '@/components/FreqPanel.vue'
 import KPanel from '@/components/KPanel.vue'
 import KSelect from '@/components/KSelect.vue'
 import KNumberInput from '@/components/KNumberInput.vue'

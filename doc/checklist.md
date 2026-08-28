@@ -1214,12 +1214,18 @@ implementation plans: `doc/M3-implementation-plan.md` (M3),
   - Test: Vitest 45/45 green (18 primitive tests + 7 store + 6 schema + 7 app
     + 7 pluginService); UI build 159.5 kB (Pinia+Zod inlined).
 
-- [ ] **M4.3** Frequency & Tuning panel
-  - Frequency input field (kHz, unit-aware), step-tuning buttons
-    (`-10`/`-1`/`-0.1`/`+0.1`/`+1`/`+10` kHz), large frequency readout,
-    passband dragger overlay on the waterfall scale.
-  - Ref: `doc/ui-architecture.md` §3.1.
-  - Test: Vitest — buttons/input emit correct `freqKhz` values.
+- [x] **M4.3** Frequency & Tuning panel
+  - `FreqPanel.vue` (KPanel-based): six step-tuning buttons
+    (`←10` `←1` `←0.1` `+0.1` `+1` `+10` kHz), KNumberInput direct entry
+    (step 0.001, unit kHz), large KReadout in KiwiSDR 7-digit format
+    (e.g. `14100.000`).
+  - Values clamped to `[0.001, 30000]` kHz before bridging.
+  - Bridge mapping via store: `setParam('freqKhz', v)` → pluginService →
+    `{"type":"setParameter","data":["freqKhz",v]}` → C++ → WebSocket.
+  - Integrated into PluginView controls row (replaced inline freq input).
+  - _Files: `ui/src/components/FreqPanel.vue`_
+  - Test: Vitest 52/52 green (7 new: step deltas, clamping, text entry,
+    readout format).
 
 - [ ] **M4.4** Modulation & Passband panel
   - Mode selector with all 18 modes (`AM`…`QAM`), Low Cut / High Cut /
