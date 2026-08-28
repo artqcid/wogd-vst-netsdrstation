@@ -1,0 +1,74 @@
+{
+  "capturedAt": "2026-08-28T16:48:43.853Z",
+  "source": "http://kphsdr.com:8074",
+  "pageTitle": "",
+  "viewport": {
+    "w": 1280,
+    "h": 800
+  },
+  "dxTags": {
+    "count": 0,
+    "buttons": [],
+    "clicks": []
+  },
+  "bandSelect": {
+    "currentValue": "",
+    "allOptions": [],
+    "interactions": []
+  },
+  "extensionSelect": {
+    "currentValue": "",
+    "allOptions": [],
+    "interactions": []
+  },
+  "colormapSelect": {
+    "id": "id-wf.cmap",
+    "allOptions": [],
+    "interactions": []
+  },
+  "apertureSelect": {
+    "id": "id-wf.aper",
+    "allOptions": [],
+    "interactions": []
+  },
+  "wfFilterSelect": {
+    "id": "id-wf_filter",
+    "allOptions": [],
+    "interactions": []
+  },
+  "specFilterSelect": {
+    "id": "id-spec_filter",
+    "allOptions": [],
+    "interactions": []
+  },
+  "smeter": {
+    "scaleCanvas": null,
+    "dbmValueText": "",
+    "dbmUnitsText": "",
+    "statusGps": "",
+    "statusAdc": "",
+    "statusAudio": "",
+    "statusWf": "",
+    "screenshot": "smeter-status.png"
+  },
+  "colorPicker": {
+    "found": false,
+    "elements": [],
+    "presets": [],
+    "screenshot": "",
+    "note": ""
+  },
+  "screenshotFiles": [
+    "dx-tags.png",
+    "smeter-status.png"
+  ],
+  "issues": [
+    "Band select not visible",
+    "Extension select not visible",
+    "Colormap select not visible",
+    "Aperture select not visible",
+    "WF filter select not visible",
+    "Spec filter select not visible",
+    "S-meter scale canvas not visible"
+  ]
+}

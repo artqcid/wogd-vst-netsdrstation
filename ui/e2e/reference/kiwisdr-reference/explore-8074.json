@@ -1,0 +1,3150 @@
+{
+  "timestamp": "2026-08-28T17:14:34.295Z",
+  "url": "http://kphsdr.com:8074/",
+  "title": "KPH Kiwi74",
+  "totalElements": 127,
+  "totalIds": 272,
+  "elements": [
+    {
+      "id": "id-ident-input1",
+      "tag": "INPUT",
+      "text": "",
+      "cls": "w3-custom-events w3-padding-1 id-ident-input1 w3-input w3-border w3-hover-shadow",
+      "type": "text",
+      "rect": {
+        "x": 840,
+        "y": 23,
+        "w": 192,
+        "h": 21
+      },
+      "title": ""
+    },
+    {
+      "id": "id-band-canvas",
+      "tag": "CANVAS",
+      "text": "",
+      "cls": "",
+      "type": "CANVAS",
+      "rect": {
+        "x": 0,
+        "y": 67,
+        "w": 1280,
+        "h": 30
+      },
+      "title": ""
+    },
+    {
+      "id": "id-dx-label_0",
+      "tag": "BUTTON",
+      "text": "LW 243",
+      "cls": "w3-custom-events w3-hold cl-dx-label dx-92 w3-btn w3-ext-btn",
+      "type": "BUTTON",
+      "rect": {
+        "x": -1,
+        "y": 102,
+        "w": 49,
+        "h": 22
+      },
+      "title": ""
+    },
+    {
+      "id": "id-dx-label_1",
+      "tag": "BUTTON",
+      "text": "NAVTEX",
+      "cls": "w3-custom-events w3-hold cl-dx-label dx-has-ext cl-dx-label-ext dx-98",
+      "type": "BUTTON",
+      "rect": {
+        "x": 9,
+        "y": 137,
+        "w": 55,
+        "h": 22
+      },
+      "title": ""
+    },
+    {
+      "id": "id-dx-label_2",
+      "tag": "BUTTON",
+      "text": "WSPR",
+      "cls": "w3-custom-events w3-hold cl-dx-label dx-has-ext cl-dx-label-ext dx-104",
+      "type": "BUTTON",
+      "rect": {
+        "x": 67,
+        "y": 102,
+        "w": 43,
+        "h": 22
+      },
+      "title": ""
+    },
+    {
+      "id": "id-dx-label_3",
+      "tag": "BUTTON",
+      "text": "DSC",
+      "cls": "w3-custom-events w3-hold cl-dx-label dx-has-ext cl-dx-label-ext dx-108",
+      "type": "BUTTON",
+      "rect": {
+        "x": 82,
+        "y": 137,
+        "w": 34,
+        "h": 22
+      },
+      "title": ""
+    },
+    {
+      "id": "id-dx-label_4",
+      "tag": "BUTTON",
+      "text": "STANAG DHO26",
+      "cls": "w3-custom-events w3-hold cl-dx-label dx-113 w3-btn w3-ext-btn",
+      "type": "BUTTON",
+      "rect": {
+        "x": 93,
+        "y": 102,
+        "w": 95,
+        "h": 22
+      },
+      "title": "German Navy, Rostock, Germany"
+    },
+    {
+      "id": "id-dx-label_5",
+      "tag": "BUTTON",
+      "text": "STANAG OUA4",
+      "cls": "w3-custom-events w3-hold cl-dx-label dx-127 w3-btn w3-ext-btn",
+      "type": "BUTTON",
+      "rect": {
+        "x": 102,
+        "y": 137,
+        "w": 87,
+        "h": 22
+      },
+      "title": "Danish Navy, Aarhaus, Denmark"
+    },
+    {
+      "id": "id-dx-label_6",
+      "tag": "BUTTON",
+      "text": "MWARA CAR",
+      "cls": "w3-custom-events w3-hold cl-dx-label dx-137 w3-btn w3-ext-btn",
+      "type": "BUTTON",
+      "rect": {
+        "x": 112,
+        "y": 102,
+        "w": 76,
+        "h": 22
+      },
+      "title": "New York"
+    },
+    {
+      "id": "id-dx-label_7",
+      "tag": "BUTTON",
+      "text": "STANAG IDN",
+      "cls": "w3-custom-events w3-hold cl-dx-label dx-152 w3-btn w3-ext-btn",
+      "type": "BUTTON",
+      "rect": {
+        "x": 127,
+        "y": 137,
+        "w": 76,
+        "h": 22
+      },
+      "title": "Naples, Italy"
+    },
+    {
+      "id": "id-dx-label_8",
+      "tag": "BUTTON",
+      "text": "MWARA SAT-1,2",
+      "cls": "w3-custom-events w3-hold cl-dx-label dx-164 w3-btn w3-ext-btn",
+      "type": "BUTTON",
+      "rect": {
+        "x": 136,
+        "y": 102,
+        "w": 95,
+        "h": 22
+      },
+      "title": "Las Palmas"
+    },
+    {
+      "id": "id-dx-label_9",
+      "tag": "BUTTON",
+      "text": "SSTV EU",
+      "cls": "w3-custom-events w3-hold cl-dx-label dx-has-ext cl-dx-label-ext dx-186",
+      "type": "BUTTON",
+      "rect": {
+        "x": 148,
+        "y": 137,
+        "w": 58,
+        "h": 22
+      },
+      "title": ""
+    },
+    {
+      "id": "id-dx-label_10",
+      "tag": "BUTTON",
+      "text": "FAX ZAF",
+      "cls": "w3-custom-events w3-hold cl-dx-label dx-has-ext cl-dx-label-ext dx-194",
+      "type": "BUTTON",
+      "rect": {
+        "x": 160,
+        "y": 102,
+        "w": 56,
+        "h": 22
+      },
+      "title": "ZSJ"
+    },
+    {
+      "id": "id-dx-label_11",
+      "tag": "BUTTON",
+      "text": "STANAG DHJ58",
+      "cls": "w3-custom-events w3-hold cl-dx-label dx-213 w3-btn w3-ext-btn",
+      "type": "BUTTON",
+      "rect": {
+        "x": 171,
+        "y": 137,
+        "w": 90,
+        "h": 22
+      },
+      "title": "German Navy, Gluecksburg, Germany"
+    },
+    {
+      "id": "id-dx-label_12",
+      "tag": "BUTTON",
+      "text": "FAX GRC",
+      "cls": "w3-custom-events w3-hold cl-dx-label dx-has-ext cl-dx-label-ext dx-235",
+      "type": "BUTTON",
+      "rect": {
+        "x": 180,
+        "y": 102,
+        "w": 58,
+        "h": 22
+      },
+      "title": "SVJ4"
+    },
+    {
+      "id": "id-dx-label_13",
+      "tag": "BUTTON",
+      "text": "The Air Horn",
+      "cls": "w3-custom-events w3-hold cl-dx-label dx-257 w3-btn w3-ext-btn",
+      "type": "BUTTON",
+      "rect": {
+        "x": 199,
+        "y": 137,
+        "w": 77,
+        "h": 22
+      },
+      "title": "RUS"
+    },
+    {
+      "id": "id-dx-label_14",
+      "tag": "BUTTON",
+      "text": "L marker",
+      "cls": "w3-custom-events w3-hold cl-dx-label dx-272 w3-btn w3-ext-btn",
+      "type": "BUTTON",
+      "rect": {
+        "x": 209,
+        "y": 102,
+        "w": 57,
+        "h": 22
+      },
+      "title": "Tirana ALB"
+    },
+    {
+      "id": "id-dx-label_15",
+      "tag": "BUTTON",
+      "text": "The Pip",
+      "cls": "w3-custom-events w3-hold cl-dx-label dx-283 w3-btn w3-ext-btn",
+      "type": "BUTTON",
+      "rect": {
+        "x": 221,
+        "y": 137,
+        "w": 48,
+        "h": 22
+      },
+      "title": "RUS"
+    },
+    {
+      "id": "id-dx-label_16",
+      "tag": "BUTTON",
+      "text": "VOLMET",
+      "cls": "w3-custom-events w3-hold cl-dx-label dx-324 w3-btn w3-ext-btn",
+      "type": "BUTTON",
+      "rect": {
+        "x": 231,
+        "y": 102,
+        "w": 53,
+        "h": 22
+      },
+      "title": "SEA"
+    },
+    {
+      "id": "id-dx-label_17",
+      "tag": "BUTTON",
+      "text": "R. Mi Amigo Intl",
+      "cls": "w3-custom-events w3-hold cl-dx-label dx-331 w3-btn w3-ext-btn",
+      "type": "BUTTON",
+      "rect": {
+        "x": 249,
+        "y": 137,
+        "w": 94,
+        "h": 22
+      },
+      "title": "0900-1800 CET\nwww.radiomiamigointernational.com"
+    },
+    {
+      "id": "id-dx-label_18",
+      "tag": "BUTTON",
+      "text": "DSC (distress)",
+      "cls": "w3-custom-events w3-hold cl-dx-label dx-has-ext cl-dx-label-ext dx-335",
+      "type": "BUTTON",
+      "rect": {
+        "x": 258,
+        "y": 102,
+        "w": 89,
+        "h": 22
+      },
+      "title": ""
+    },
+    {
+      "id": "id-dx-label_19",
+      "tag": "BUTTON",
+      "text": "MWARA SEA-1",
+      "cls": "w3-custom-events w3-hold cl-dx-label dx-362 w3-btn w3-ext-btn",
+      "type": "BUTTON",
+      "rect": {
+        "x": 269,
+        "y": 137,
+        "w": 86,
+        "h": 22
+      },
+      "title": ""
+    },
+    {
+      "id": "id-dx-label_20",
+      "tag": "BUTTON",
+      "text": "WSPR ISM",
+      "cls": "w3-custom-events w3-hold cl-dx-label dx-has-ext cl-dx-label-ext dx-396",
+      "type": "BUTTON",
+      "rect": {
+        "x": 278,
+        "y": 102,
+        "w": 66,
+        "h": 22
+      },
+      "title": ""
+    },
+    {
+      "id": "id-dx-label_21",
+      "tag": "BUTTON",
+      "text": "V marker",
+      "cls": "w3-custom-events w3-hold cl-dx-label dx-405 w3-btn w3-ext-btn",
+      "type": "BUTTON",
+      "rect": {
+        "x": 289,
+        "y": 137,
+        "w": 58,
+        "h": 22
+      },
+      "title": "Khiva UZB"
+    },
+    {
+      "id": "id-dx-label_22",
+      "tag": "BUTTON",
+      "text": "FAX THA",
+      "cls": "w3-custom-events w3-hold cl-dx-label dx-has-ext cl-dx-label-ext dx-413",
+      "type": "BUTTON",
+      "rect": {
+        "x": 305,
+        "y": 102,
+        "w": 57,
+        "h": 22
+      },
+      "title": "HSW64"
+    },
+    {
+      "id": "id-dx-label_23",
+      "tag": "BUTTON",
+      "text": "DDH7 GER",
+      "cls": "w3-custom-events w3-hold cl-dx-label dx-has-ext cl-dx-label-ext dx-425",
+      "type": "BUTTON",
+      "rect": {
+        "x": 315,
+        "y": 137,
+        "w": 70,
+        "h": 22
+      },
+      "title": "FSK WX"
+    },
+    {
+      "id": "id-dx-label_24",
+      "tag": "BUTTON",
+      "text": "FAX GER",
+      "cls": "w3-custom-events w3-hold cl-dx-label dx-has-ext cl-dx-label-ext dx-432",
+      "type": "BUTTON",
+      "rect": {
+        "x": 325,
+        "y": 102,
+        "w": 58,
+        "h": 22
+      },
+      "title": "DDK3"
+    },
+    {
+      "id": "id-dx-label_25",
+      "tag": "BUTTON",
+      "text": "VMW AUS",
+      "cls": "w3-custom-events w3-hold cl-dx-label dx-440 w3-btn w3-ext-btn",
+      "type": "BUTTON",
+      "rect": {
+        "x": 335,
+        "y": 137,
+        "w": 62,
+        "h": 22
+      },
+      "title": "marine weather"
+    },
+    {
+      "id": "id-dx-label_26",
+      "tag": "BUTTON",
+      "text": "STANAG PBC",
+      "cls": "w3-custom-events w3-hold cl-dx-label dx-450 w3-btn w3-ext-btn",
+      "type": "BUTTON",
+      "rect": {
+        "x": 348,
+        "y": 102,
+        "w": 78,
+        "h": 22
+      },
+      "title": "Royal Netherlands Navy, Goeree Island, Netherlands"
+    },
+    {
+      "id": "id-dx-label_27",
+      "tag": "BUTTON",
+      "text": "STANAG FUM",
+      "cls": "w3-custom-events w3-hold cl-dx-label dx-485 w3-btn w3-ext-btn",
+      "type": "BUTTON",
+      "rect": {
+        "x": 357,
+        "y": 137,
+        "w": 80,
+        "h": 22
+      },
+      "title": "Tahiti"
+    },
+    {
+      "id": "id-dx-label_28",
+      "tag": "BUTTON",
+      "text": "MWARA SAT-1",
+      "cls": "w3-custom-events w3-hold cl-dx-label dx-509 w3-btn w3-ext-btn",
+      "type": "BUTTON",
+      "rect": {
+        "x": 367,
+        "y": 102,
+        "w": 84,
+        "h": 22
+      },
+      "title": "Canarias, Dakar"
+    },
+    {
+      "id": "id-dx-label_29",
+      "tag": "BUTTON",
+      "text": "STANAG FUG",
+      "cls": "w3-custom-events w3-hold cl-dx-label dx-544 w3-btn w3-ext-btn",
+      "type": "BUTTON",
+      "rect": {
+        "x": 377,
+        "y": 137,
+        "w": 79,
+        "h": 22
+      },
+      "title": "French Navy, La Regine, France"
+    },
+    {
+      "id": "id-dx-label_30",
+      "tag": "BUTTON",
+      "text": "HM01 CUB",
+      "cls": "w3-custom-events w3-hold cl-dx-label dx-549 w3-btn w3-ext-btn",
+      "type": "BUTTON",
+      "rect": {
+        "x": 387,
+        "y": 102,
+        "w": 67,
+        "h": 22
+      },
+      "title": "Numbers station"
+    },
+    {
+      "id": "id-dx-label_31",
+      "tag": "BUTTON",
+      "text": "SuperDARN radar",
+      "cls": "w3-custom-events w3-hold cl-dx-label dx-551 w3-btn w3-ext-btn",
+      "type": "BUTTON",
+      "rect": {
+        "x": 411,
+        "y": 137,
+        "w": 105,
+        "h": 22
+      },
+      "title": ""
+    },
+    {
+      "id": "id-dx-label_32",
+      "tag": "BUTTON",
+      "text": "FAX RUS",
+      "cls": "w3-custom-events w3-hold cl-dx-label dx-has-ext cl-dx-label-ext dx-574",
+      "type": "BUTTON",
+      "rect": {
+        "x": 421,
+        "y": 102,
+        "w": 58,
+        "h": 22
+      },
+      "title": "RBW"
+    },
+    {
+      "id": "id-dx-label_33",
+      "tag": "BUTTON",
+      "text": "FAX AUS",
+      "cls": "w3-custom-events w3-hold cl-dx-label dx-has-ext cl-dx-label-ext dx-583",
+      "type": "BUTTON",
+      "rect": {
+        "x": 439,
+        "y": 137,
+        "w": 57,
+        "h": 22
+      },
+      "title": "VMW"
+    },
+    {
+      "id": "id-dx-label_34",
+      "tag": "BUTTON",
+      "text": "D marker",
+      "cls": "w3-custom-events w3-hold cl-dx-label dx-585 w3-btn w3-ext-btn",
+      "type": "BUTTON",
+      "rect": {
+        "x": 453,
+        "y": 102,
+        "w": 59,
+        "h": 22
+      },
+      "title": "Sevastopol UKR"
+    },
+    {
+      "id": "id-dx-label_35",
+      "tag": "BUTTON",
+      "text": "FAX UK",
+      "cls": "w3-custom-events w3-hold cl-dx-label dx-has-ext cl-dx-label-ext dx-595",
+      "type": "BUTTON",
+      "rect": {
+        "x": 462,
+        "y": 137,
+        "w": 50,
+        "h": 22
+      },
+      "title": "GYA"
+    },
+    {
+      "id": "id-dx-label_36",
+      "tag": "BUTTON",
+      "text": "HFDL ZAF",
+      "cls": "w3-custom-events w3-hold cl-dx-label dx-has-ext cl-dx-label-ext dx-609",
+      "type": "BUTTON",
+      "rect": {
+        "x": 472,
+        "y": 102,
+        "w": 65,
+        "h": 22
+      },
+      "title": "Johannesburg"
+    },
+    {
+      "id": "id-dx-label_37",
+      "tag": "BUTTON",
+      "text": "HM01 CUB",
+      "cls": "w3-custom-events w3-hold cl-dx-label dx-625 w3-btn w3-ext-btn",
+      "type": "BUTTON",
+      "rect": {
+        "x": 485,
+        "y": 137,
+        "w": 67,
+        "h": 22
+      },
+      "title": "Numbers station"
+    },
+    {
+      "id": "id-dx-label_38",
+      "tag": "BUTTON",
+      "text": "STANAG FUJ",
+      "cls": "w3-custom-events w3-hold cl-dx-label dx-626 w3-btn w3-ext-btn",
+      "type": "BUTTON",
+      "rect": {
+        "x": 507,
+        "y": 102,
+        "w": 74,
+        "h": 22
+      },
+      "title": "French Navy, Noumea, New Caledonia"
+    },
+    {
+      "id": "id-dx-label_39",
+      "tag": "BUTTON",
+      "text": "VMW AUS",
+      "cls": "w3-custom-events w3-hold cl-dx-label dx-629 w3-btn w3-ext-btn",
+      "type": "BUTTON",
+      "rect": {
+        "x": 517,
+        "y": 137,
+        "w": 62,
+        "h": 22
+      },
+      "title": "marine weather"
+    },
+    {
+      "id": "id-dx-label_40",
+      "tag": "BUTTON",
+      "text": "FAX CHN",
+      "cls": "w3-custom-events w3-hold cl-dx-label dx-has-ext cl-dx-label-ext dx-642",
+      "type": "BUTTON",
+      "rect": {
+        "x": 526,
+        "y": 102,
+        "w": 59,
+        "h": 22
+      },
+      "title": "UNID"
+    },
+    {
+      "id": "id-dx-label_41",
+      "tag": "BUTTON",
+      "text": "PBB NLD",
+      "cls": "w3-custom-events w3-hold cl-dx-label dx-has-ext cl-dx-label-ext dx-659",
+      "type": "BUTTON",
+      "rect": {
+        "x": 537,
+        "y": 137,
+        "w": 59,
+        "h": 22
+      },
+      "title": "Dutch Navy"
+    },
+    {
+      "id": "id-dx-label_42",
+      "tag": "BUTTON",
+      "text": "FAX JPN",
+      "cls": "w3-custom-events w3-hold cl-dx-label dx-has-ext cl-dx-label-ext dx-672",
+      "type": "BUTTON",
+      "rect": {
+        "x": 547,
+        "y": 102,
+        "w": 53,
+        "h": 22
+      },
+      "title": "JFX"
+    },
+    {
+      "id": "id-dx-label_43",
+      "tag": "BUTTON",
+      "text": "MWARA NAT-B/D/F",
+      "cls": "w3-custom-events w3-hold cl-dx-label dx-689 w3-btn w3-ext-btn",
+      "type": "BUTTON",
+      "rect": {
+        "x": 556,
+        "y": 137,
+        "w": 107,
+        "h": 22
+      },
+      "title": "Gander, Iceland"
+    },
+    {
+      "id": "id-dx-label_44",
+      "tag": "BUTTON",
+      "text": "D marker",
+      "cls": "w3-custom-events w3-hold cl-dx-label dx-707 w3-btn w3-ext-btn",
+      "type": "BUTTON",
+      "rect": {
+        "x": 566,
+        "y": 102,
+        "w": 59,
+        "h": 22
+      },
+      "title": "Sevastopol UKR"
+    },
+    {
+      "id": "id-dx-label_45",
+      "tag": "BUTTON",
+      "text": "FAX GER",
+      "cls": "w3-custom-events w3-hold cl-dx-label dx-has-ext cl-dx-label-ext dx-720",
+      "type": "BUTTON",
+      "rect": {
+        "x": 581,
+        "y": 137,
+        "w": 58,
+        "h": 22
+      },
+      "title": "DDK6"
+    },
+    {
+      "id": "id-dx-label_46",
+      "tag": "BUTTON",
+      "text": "SSTV",
+      "cls": "w3-custom-events w3-hold cl-dx-label dx-has-ext cl-dx-label-ext dx-727",
+      "type": "BUTTON",
+      "rect": {
+        "x": 596,
+        "y": 102,
+        "w": 39,
+        "h": 22
+      },
+      "title": ""
+    },
+    {
+      "id": "id-dx-label_47",
+      "tag": "BUTTON",
+      "text": "DDH8 GER",
+      "cls": "w3-custom-events w3-hold cl-dx-label dx-has-ext cl-dx-label-ext dx-732",
+      "type": "BUTTON",
+      "rect": {
+        "x": 606,
+        "y": 137,
+        "w": 70,
+        "h": 22
+      },
+      "title": "FSK WX"
+    },
+    {
+      "id": "id-dx-label_48",
+      "tag": "BUTTON",
+      "text": "STANAG FUG",
+      "cls": "w3-custom-events w3-hold cl-dx-label dx-734 w3-btn w3-ext-btn",
+      "type": "BUTTON",
+      "rect": {
+        "x": 617,
+        "y": 102,
+        "w": 79,
+        "h": 22
+      },
+      "title": "French Navy, La Regine, France"
+    },
+    {
+      "id": "id-dx-label_49",
+      "tag": "BUTTON",
+      "text": "RWM RUS",
+      "cls": "w3-custom-events w3-hold cl-dx-label dx-736 w3-btn w3-ext-btn",
+      "type": "BUTTON",
+      "rect": {
+        "x": 629,
+        "y": 137,
+        "w": 62,
+        "h": 22
+      },
+      "title": "time signal"
+    },
+    {
+      "id": "id-dx-label_50",
+      "tag": "BUTTON",
+      "text": "FAX AUS",
+      "cls": "w3-custom-events w3-hold cl-dx-label dx-has-ext cl-dx-label-ext dx-741",
+      "type": "BUTTON",
+      "rect": {
+        "x": 655,
+        "y": 102,
+        "w": 57,
+        "h": 22
+      },
+      "title": "VMW"
+    },
+    {
+      "id": "id-dx-label_51",
+      "tag": "BUTTON",
+      "text": "FAX GER",
+      "cls": "w3-custom-events w3-hold cl-dx-label dx-has-ext cl-dx-label-ext dx-742",
+      "type": "BUTTON",
+      "rect": {
+        "x": 671,
+        "y": 137,
+        "w": 58,
+        "h": 22
+      },
+      "title": "DDK7"
+    },
+    {
+      "id": "id-dx-label_52",
+      "tag": "BUTTON",
+      "text": "D marker",
+      "cls": "w3-custom-events w3-hold cl-dx-label dx-747 w3-btn w3-ext-btn",
+      "type": "BUTTON",
+      "rect": {
+        "x": 686,
+        "y": 102,
+        "w": 59,
+        "h": 22
+      },
+      "title": "Sevastopol UKR"
+    },
+    {
+      "id": "id-dx-label_53",
+      "tag": "BUTTON",
+      "text": "FAX CHN",
+      "cls": "w3-custom-events w3-hold cl-dx-label dx-has-ext cl-dx-label-ext dx-758",
+      "type": "BUTTON",
+      "rect": {
+        "x": 696,
+        "y": 137,
+        "w": 59,
+        "h": 22
+      },
+      "title": "XSG"
+    },
+    {
+      "id": "id-dx-label_54",
+      "tag": "BUTTON",
+      "text": "DSC (distress)",
+      "cls": "w3-custom-events w3-hold cl-dx-label dx-has-ext cl-dx-label-ext dx-759",
+      "type": "BUTTON",
+      "rect": {
+        "x": 706,
+        "y": 102,
+        "w": 89,
+        "h": 22
+      },
+      "title": ""
+    },
+    {
+      "id": "id-dx-label_55",
+      "tag": "BUTTON",
+      "text": "FAX JPN",
+      "cls": "w3-custom-events w3-hold cl-dx-label dx-has-ext cl-dx-label-ext dx-780",
+      "type": "BUTTON",
+      "rect": {
+        "x": 717,
+        "y": 137,
+        "w": 53,
+        "h": 22
+      },
+      "title": ""
+    },
+    {
+      "id": "id-dx-label_56",
+      "tag": "BUTTON",
+      "text": "FAX SGP",
+      "cls": "w3-custom-events w3-hold cl-dx-label dx-has-ext cl-dx-label-ext dx-786",
+      "type": "BUTTON",
+      "rect": {
+        "x": 733,
+        "y": 102,
+        "w": 57,
+        "h": 22
+      },
+      "title": "9VF"
+    },
+    {
+      "id": "id-dx-label_57",
+      "tag": "BUTTON",
+      "text": "HFDL PAN",
+      "cls": "w3-custom-events w3-hold cl-dx-label dx-has-ext cl-dx-label-ext dx-788",
+      "type": "BUTTON",
+      "rect": {
+        "x": 753,
+        "y": 137,
+        "w": 65,
+        "h": 22
+      },
+      "title": "Albrook"
+    },
+    {
+      "id": "id-dx-label_58",
+      "tag": "BUTTON",
+      "text": "FAX ZAF",
+      "cls": "w3-custom-events w3-hold cl-dx-label dx-has-ext cl-dx-label-ext dx-813",
+      "type": "BUTTON",
+      "rect": {
+        "x": 767,
+        "y": 102,
+        "w": 56,
+        "h": 22
+      },
+      "title": "ZSJ"
+    },
+    {
+      "id": "id-dx-label_59",
+      "tag": "BUTTON",
+      "text": "STANAG FUV",
+      "cls": "w3-custom-events w3-hold cl-dx-label dx-815 w3-btn w3-ext-btn",
+      "type": "BUTTON",
+      "rect": {
+        "x": 778,
+        "y": 137,
+        "w": 78,
+        "h": 22
+      },
+      "title": "French Navy, Djibouti, Africa"
+    },
+    {
+      "id": "id-dx-label_60",
+      "tag": "BUTTON",
+      "text": "DSC",
+      "cls": "w3-custom-events w3-hold cl-dx-label dx-has-ext cl-dx-label-ext dx-816",
+      "type": "BUTTON",
+      "rect": {
+        "x": 795,
+        "y": 102,
+        "w": 34,
+        "h": 22
+      },
+      "title": ""
+    },
+    {
+      "id": "id-dx-label_61",
+      "tag": "BUTTON",
+      "text": "NAVTEX",
+      "cls": "w3-custom-events w3-hold cl-dx-label dx-has-ext cl-dx-label-ext dx-819",
+      "type": "BUTTON",
+      "rect": {
+        "x": 829,
+        "y": 137,
+        "w": 55,
+        "h": 22
+      },
+      "title": "Safety"
+    },
+    {
+      "id": "id-dx-label_62",
+      "tag": "BUTTON",
+      "text": "WWV",
+      "cls": "w3-custom-events w3-hold cl-dx-label dx-820 w3-btn w3-ext-btn",
+      "type": "BUTTON",
+      "rect": {
+        "x": 842,
+        "y": 102,
+        "w": 37,
+        "h": 22
+      },
+      "title": "time signal"
+    },
+    {
+      "id": "id-dx-label_63",
+      "tag": "BUTTON",
+      "text": "FAX AUS",
+      "cls": "w3-custom-events w3-hold cl-dx-label dx-has-ext cl-dx-label-ext dx-825",
+      "type": "BUTTON",
+      "rect": {
+        "x": 862,
+        "y": 137,
+        "w": 57,
+        "h": 22
+      },
+      "title": "VMC"
+    },
+    {
+      "id": "id-dx-label_64",
+      "tag": "BUTTON",
+      "text": "FT8",
+      "cls": "w3-custom-events w3-hold cl-dx-label dx-has-ext cl-dx-label-ext dx-826",
+      "type": "BUTTON",
+      "rect": {
+        "x": 888,
+        "y": 102,
+        "w": 31,
+        "h": 22
+      },
+      "title": ""
+    },
+    {
+      "id": "id-dx-label_65",
+      "tag": "BUTTON",
+      "text": "SSTV",
+      "cls": "w3-custom-events w3-hold cl-dx-label dx-has-ext cl-dx-label-ext dx-830",
+      "type": "BUTTON",
+      "rect": {
+        "x": 900,
+        "y": 137,
+        "w": 39,
+        "h": 22
+      },
+      "title": ""
+    },
+    {
+      "id": "id-dx-label_66",
+      "tag": "BUTTON",
+      "text": "MWARA NP",
+      "cls": "w3-custom-events w3-hold cl-dx-label dx-831 w3-btn w3-ext-btn",
+      "type": "BUTTON",
+      "rect": {
+        "x": 925,
+        "y": 102,
+        "w": 68,
+        "h": 22
+      },
+      "title": "San Francisco"
+    },
+    {
+      "id": "id-dx-label_67",
+      "tag": "BUTTON",
+      "text": "DSC",
+      "cls": "w3-custom-events w3-hold cl-dx-label dx-has-ext cl-dx-label-ext dx-849",
+      "type": "BUTTON",
+      "rect": {
+        "x": 944,
+        "y": 137,
+        "w": 34,
+        "h": 22
+      },
+      "title": ""
+    },
+    {
+      "id": "id-dx-label_68",
+      "tag": "BUTTON",
+      "text": "FT8",
+      "cls": "w3-custom-events w3-hold cl-dx-label dx-has-ext cl-dx-label-ext dx-858",
+      "type": "BUTTON",
+      "rect": {
+        "x": 1052,
+        "y": 102,
+        "w": 31,
+        "h": 22
+      },
+      "title": ""
+    },
+    {
+      "id": "id-dx-label_69",
+      "tag": "BUTTON",
+      "text": "DSC",
+      "cls": "w3-custom-events w3-hold cl-dx-label dx-has-ext cl-dx-label-ext dx-863",
+      "type": "BUTTON",
+      "rect": {
+        "x": 1065,
+        "y": 137,
+        "w": 34,
+        "h": 22
+      },
+      "title": ""
+    },
+    {
+      "id": "id-dx-label_70",
+      "tag": "BUTTON",
+      "text": "NAVTEX",
+      "cls": "w3-custom-events w3-hold cl-dx-label dx-has-ext cl-dx-label-ext dx-866",
+      "type": "BUTTON",
+      "rect": {
+        "x": 1103,
+        "y": 102,
+        "w": 55,
+        "h": 22
+      },
+      "title": "Safety"
+    },
+    {
+      "id": "id-dx-label_71",
+      "tag": "BUTTON",
+      "text": "FT8",
+      "cls": "w3-custom-events w3-hold cl-dx-label dx-has-ext cl-dx-label-ext dx-867",
+      "type": "BUTTON",
+      "rect": {
+        "x": 1187,
+        "y": 137,
+        "w": 31,
+        "h": 22
+      },
+      "title": ""
+    },
+    {
+      "id": "id-dx-label_72",
+      "tag": "BUTTON",
+      "text": "SSTV",
+      "cls": "w3-custom-events w3-hold cl-dx-label dx-has-ext cl-dx-label-ext dx-871",
+      "type": "BUTTON",
+      "rect": {
+        "x": 1213,
+        "y": 102,
+        "w": 39,
+        "h": 22
+      },
+      "title": ""
+    },
+    {
+      "id": "id-dx-canvas",
+      "tag": "CANVAS",
+      "text": "",
+      "cls": "",
+      "type": "CANVAS",
+      "rect": {
+        "x": 0,
+        "y": 165,
+        "w": 14,
+        "h": 14
+      },
+      "title": ""
+    },
+    {
+      "id": "id-scale-canvas",
+      "tag": "CANVAS",
+      "text": "",
+      "cls": "",
+      "type": "CANVAS",
+      "rect": {
+        "x": 0,
+        "y": 177,
+        "w": 1280,
+        "h": 47
+      },
+      "title": ""
+    },
+    {
+      "id": "id-annotation-canvas",
+      "tag": "CANVAS",
+      "text": "",
+      "cls": "",
+      "type": "CANVAS",
+      "rect": {
+        "x": 0,
+        "y": 224,
+        "w": 1280,
+        "h": 576
+      },
+      "title": ""
+    },
+    {
+      "id": "id-wf-canvas",
+      "tag": "CANVAS",
+      "text": "",
+      "cls": "",
+      "type": "CANVAS",
+      "rect": {
+        "x": 0,
+        "y": 56,
+        "w": 1280,
+        "h": 200
+      },
+      "title": ""
+    },
+    {
+      "id": "id-freq-input",
+      "tag": "INPUT",
+      "text": "",
+      "cls": "w3-custom-events w3-font-16px id-freq-input w3-input w3-border w3-hover-shadow",
+      "type": "text",
+      "rect": {
+        "x": 892,
+        "y": 435,
+        "w": 100,
+        "h": 23
+      },
+      "title": "type h or ? for help"
+    },
+    {
+      "id": "(no id)",
+      "tag": "SELECT",
+      "text": "select bandBROADCASTLWMW120m90m75m60m49m41m31m25m22m19m16m15m13m11mUTILITYVLFLFNDBTime 2.5Time 3.33T",
+      "cls": "id-select-band w3-pointer w3-select-menu",
+      "type": "SELECT",
+      "rect": {
+        "x": 1005,
+        "y": 437,
+        "w": 97,
+        "h": 18
+      },
+      "title": ""
+    },
+    {
+      "id": "(no id)",
+      "tag": "SELECT",
+      "text": "extensionALE_2Gant_switchcolormapCW_decoderCW_skimmerDRMDX spotsFAXFFTFSKFT8/FT4HFDLIBP_scaniframeIQ",
+      "cls": "id-select-ext w3-pointer w3-select-menu",
+      "type": "SELECT",
+      "rect": {
+        "x": 1114,
+        "y": 437,
+        "w": 101,
+        "h": 18
+      },
+      "title": ""
+    },
+    {
+      "id": "(no id)",
+      "tag": "BUTTON",
+      "text": "A",
+      "cls": "id-freq-vfo w3-text-in-circle w3-wh-20px w3-aqua w3-hold w3-hold-done",
+      "type": "BUTTON",
+      "rect": {
+        "x": 912,
+        "y": 465,
+        "w": 20,
+        "h": 20
+      },
+      "title": "VFO A/B\nclick-hold for A=B"
+    },
+    {
+      "id": "(no id)",
+      "tag": "BUTTON",
+      "text": "9",
+      "cls": "id-button-9-10 class-button-small id-btn-grp-5 w3-btn w3-ext-btn w3-round-6px",
+      "type": "BUTTON",
+      "rect": {
+        "x": 955,
+        "y": 465,
+        "w": 16,
+        "h": 20
+      },
+      "title": "LW/MW 9/10 kHz tuning step"
+    },
+    {
+      "id": "(no id)",
+      "tag": "BUTTON",
+      "text": "",
+      "cls": "w3-hold w3-hold-done w3-padding-0 w3-575757 id-btn-grp-6 w3-btn",
+      "type": "BUTTON",
+      "rect": {
+        "x": 975,
+        "y": 464,
+        "w": 23,
+        "h": 22
+      },
+      "title": ""
+    },
+    {
+      "id": "(no id)",
+      "tag": "BUTTON",
+      "text": "",
+      "cls": "w3-hold w3-hold-done w3-padding-0 w3-575757 id-btn-grp-7 w3-btn",
+      "type": "BUTTON",
+      "rect": {
+        "x": 998,
+        "y": 465,
+        "w": 21,
+        "h": 21
+      },
+      "title": ""
+    },
+    {
+      "id": "(no id)",
+      "tag": "BUTTON",
+      "text": "",
+      "cls": "w3-hold w3-hold-done w3-padding-0 w3-575757 id-btn-grp-8 w3-btn",
+      "type": "BUTTON",
+      "rect": {
+        "x": 1019,
+        "y": 465,
+        "w": 19,
+        "h": 20
+      },
+      "title": ""
+    },
+    {
+      "id": "(no id)",
+      "tag": "BUTTON",
+      "text": "",
+      "cls": "w3-hold w3-hold-done w3-padding-0 w3-575757 id-btn-grp-9 w3-btn",
+      "type": "BUTTON",
+      "rect": {
+        "x": 1038,
+        "y": 465,
+        "w": 19,
+        "h": 20
+      },
+      "title": ""
+    },
+    {
+      "id": "(no id)",
+      "tag": "BUTTON",
+      "text": "",
+      "cls": "w3-hold w3-hold-done w3-padding-0 w3-575757 id-btn-grp-10 w3-btn",
+      "type": "BUTTON",
+      "rect": {
+        "x": 1057,
+        "y": 465,
+        "w": 21,
+        "h": 21
+      },
+      "title": ""
+    },
+    {
+      "id": "(no id)",
+      "tag": "BUTTON",
+      "text": "",
+      "cls": "w3-hold w3-hold-done w3-padding-0 w3-575757 id-btn-grp-11 w3-btn",
+      "type": "BUTTON",
+      "rect": {
+        "x": 1078,
+        "y": 464,
+        "w": 23,
+        "h": 22
+      },
+      "title": ""
+    },
+    {
+      "id": "(no id)",
+      "tag": "BUTTON",
+      "text": "Spectrum",
+      "cls": "id-button-spectrum class-button id-btn-grp-12 w3-btn w3-ext-btn w3-round-6px",
+      "type": "BUTTON",
+      "rect": {
+        "x": 1106,
+        "y": 464,
+        "w": 75,
+        "h": 22
+      },
+      "title": "toggle spectrum display"
+    },
+    {
+      "id": "0-id-mode-col",
+      "tag": "BUTTON",
+      "text": "AM",
+      "cls": "id-button-am id-mode-am class-button id-btn-grp-18 w3-btn w3-ext-btn",
+      "type": "BUTTON",
+      "rect": {
+        "x": 890,
+        "y": 494,
+        "w": 33,
+        "h": 23
+      },
+      "title": ""
+    },
+    {
+      "id": "1-id-mode-col",
+      "tag": "BUTTON",
+      "text": "SAM",
+      "cls": "id-button-sam id-mode-sa class-button id-btn-grp-19 w3-btn w3-ext-btn",
+      "type": "BUTTON",
+      "rect": {
+        "x": 930,
+        "y": 494,
+        "w": 42,
+        "h": 23
+      },
+      "title": ""
+    },
+    {
+      "id": "2-id-mode-col",
+      "tag": "BUTTON",
+      "text": "DRM",
+      "cls": "id-button-drm id-mode-dr class-button id-btn-grp-20 w3-btn w3-ext-btn",
+      "type": "BUTTON",
+      "rect": {
+        "x": 979,
+        "y": 494,
+        "w": 43,
+        "h": 23
+      },
+      "title": ""
+    },
+    {
+      "id": "3-id-mode-col",
+      "tag": "BUTTON",
+      "text": "LSB",
+      "cls": "id-button-lsb id-mode-ls class-button id-btn-grp-21 w3-btn w3-ext-btn",
+      "type": "BUTTON",
+      "rect": {
+        "x": 1029,
+        "y": 494,
+        "w": 37,
+        "h": 23
+      },
+      "title": ""
+    },
+    {
+      "id": "4-id-mode-col",
+      "tag": "BUTTON",
+      "text": "USB",
+      "cls": "id-button-usb id-mode-us class-button id-btn-grp-22 w3-btn w3-ext-btn",
+      "type": "BUTTON",
+      "rect": {
+        "x": 1073,
+        "y": 494,
+        "w": 39,
+        "h": 23
+      },
+      "title": ""
+    },
+    {
+      "id": "5-id-mode-col",
+      "tag": "BUTTON",
+      "text": "CW",
+      "cls": "id-button-cw id-mode-cw class-button id-btn-grp-23 w3-btn w3-ext-btn",
+      "type": "BUTTON",
+      "rect": {
+        "x": 1120,
+        "y": 494,
+        "w": 33,
+        "h": 23
+      },
+      "title": ""
+    },
+    {
+      "id": "6-id-mode-col",
+      "tag": "BUTTON",
+      "text": "NBFM",
+      "cls": "id-button-nbfm id-mode-nb class-button id-btn-grp-24 w3-btn w3-ext-btn",
+      "type": "BUTTON",
+      "rect": {
+        "x": 1160,
+        "y": 494,
+        "w": 52,
+        "h": 23
+      },
+      "title": ""
+    },
+    {
+      "id": "7-id-mode-col",
+      "tag": "BUTTON",
+      "text": "IQ",
+      "cls": "id-button-iq id-mode-iq class-button id-btn-grp-25 w3-btn w3-ext-btn",
+      "type": "BUTTON",
+      "rect": {
+        "x": 1219,
+        "y": 494,
+        "w": 26,
+        "h": 23
+      },
+      "title": ""
+    },
+    {
+      "id": "id-aper-canvas",
+      "tag": "CANVAS",
+      "text": "",
+      "cls": "",
+      "type": "CANVAS",
+      "rect": {
+        "x": 890,
+        "y": 603,
+        "w": 330,
+        "h": 16
+      },
+      "title": ""
+    },
+    {
+      "id": "(no id)",
+      "tag": "INPUT",
+      "text": "",
+      "cls": "id-input-ceildb w3-wheel-shift",
+      "type": "range",
+      "rect": {
+        "x": 947,
+        "y": 624,
+        "w": 179,
+        "h": 22
+      },
+      "title": ""
+    },
+    {
+      "id": "(no id)",
+      "tag": "INPUT",
+      "text": "",
+      "cls": "id-input-floordb w3-wheel-shift",
+      "type": "range",
+      "rect": {
+        "x": 947,
+        "y": 651,
+        "w": 179,
+        "h": 22
+      },
+      "title": ""
+    },
+    {
+      "id": "(no id)",
+      "tag": "INPUT",
+      "text": "",
+      "cls": "id-slider-rate w3-wheel-shift",
+      "type": "range",
+      "rect": {
+        "x": 947,
+        "y": 678,
+        "w": 179,
+        "h": 22
+      },
+      "title": ""
+    },
+    {
+      "id": "(no id)",
+      "tag": "BUTTON",
+      "text": "Spec Δ",
+      "cls": "id-wf-sp-button class-button w3-font-12px id-btn-grp-31 w3-btn w3-ext-btn",
+      "type": "BUTTON",
+      "rect": {
+        "x": 890,
+        "y": 707,
+        "w": 56,
+        "h": 22
+      },
+      "title": ""
+    },
+    {
+      "id": "(no id)",
+      "tag": "INPUT",
+      "text": "",
+      "cls": "id-wf-sp-slider w3-wheel-shift id-wf_sp_param",
+      "type": "range",
+      "rect": {
+        "x": 947,
+        "y": 704,
+        "w": 179,
+        "h": 22
+      },
+      "title": ""
+    },
+    {
+      "id": "(no id)",
+      "tag": "BUTTON",
+      "text": "AutoScale",
+      "cls": "id-button-wf-autoscale class-button id-btn-grp-32 w3-btn w3-ext-btn w3-round-6px",
+      "type": "BUTTON",
+      "rect": {
+        "x": 1195,
+        "y": 624,
+        "w": 44,
+        "h": 35
+      },
+      "title": "waterfall auto scale"
+    },
+    {
+      "id": "(no id)",
+      "tag": "BUTTON",
+      "text": "SpecColor",
+      "cls": "id-button-spec-color class-button id-btn-grp-33 w3-btn w3-ext-btn w3-round-6px",
+      "type": "BUTTON",
+      "rect": {
+        "x": 1195,
+        "y": 664,
+        "w": 43,
+        "h": 35
+      },
+      "title": "spectrum color mode"
+    },
+    {
+      "id": "(no id)",
+      "tag": "BUTTON",
+      "text": "P1",
+      "cls": "id-button-spec-peak0 w3-margin-L-16 class-button w3-noactive w3-hold id-btn-grp-34",
+      "type": "BUTTON",
+      "rect": {
+        "x": 1204,
+        "y": 703,
+        "w": 26,
+        "h": 21
+      },
+      "title": "toggle peak hold\n#1: off-on-hold\nshift: toggle backwards"
+    },
+    {
+      "id": "(no id)",
+      "tag": "SELECT",
+      "text": "colormapKiwiCSDRgreylinearturboSdrDxcust1cust2cust3cust4",
+      "cls": "w3-text-red id-wf.cmap w3-select-menu",
+      "type": "SELECT",
+      "rect": {
+        "x": 890,
+        "y": 735,
+        "w": 61,
+        "h": 19
+      },
+      "title": "colormap selection"
+    },
+    {
+      "id": "(no id)",
+      "tag": "SELECT",
+      "text": "apermanauto",
+      "cls": "w3-text-red id-wf.aper w3-select-menu",
+      "type": "SELECT",
+      "rect": {
+        "x": 968,
+        "y": 735,
+        "w": 51,
+        "h": 19
+      },
+      "title": "aperture selection"
+    },
+    {
+      "id": "(no id)",
+      "tag": "SELECT",
+      "text": "wfIIRMMAEMAoff",
+      "cls": "w3-text-red id-wf_filter w3-select-menu",
+      "type": "SELECT",
+      "rect": {
+        "x": 1036,
+        "y": 735,
+        "w": 53,
+        "h": 19
+      },
+      "title": "waterfall filter selection"
+    },
+    {
+      "id": "(no id)",
+      "tag": "SELECT",
+      "text": "specIIRMMAEMAoff",
+      "cls": "w3-text-red id-spec_filter w3-select-menu",
+      "type": "SELECT",
+      "rect": {
+        "x": 1107,
+        "y": 735,
+        "w": 53,
+        "h": 19
+      },
+      "title": "spectrum filter selection"
+    },
+    {
+      "id": "(no id)",
+      "tag": "BUTTON",
+      "text": "P2",
+      "cls": "id-button-spec-peak1 w3-margin-R-10 class-button w3-noactive w3-hold id-btn-grp-36",
+      "type": "BUTTON",
+      "rect": {
+        "x": 1207,
+        "y": 733,
+        "w": 28,
+        "h": 23
+      },
+      "title": "toggle peak hold\n#2: off-on-hold\nshift: toggle backwards"
+    },
+    {
+      "id": "(no id)",
+      "tag": "SELECT",
+      "text": "avgIIRMMAEMAoff",
+      "cls": "id-wfext-aper-algo w3-text-red id-wfext.aper_algo w3-select-menu",
+      "type": "SELECT",
+      "rect": {
+        "x": 906,
+        "y": 818,
+        "w": 53,
+        "h": 19
+      },
+      "title": ""
+    },
+    {
+      "id": "(no id)",
+      "tag": "BUTTON",
+      "text": "AutoScale",
+      "cls": "id-wfext-aper-autoscale class-button w3-btn-right w3-selection-green w3-font-11_25px id-btn-grp-61",
+      "type": "BUTTON",
+      "rect": {
+        "x": 1185,
+        "y": 810,
+        "w": 44,
+        "h": 35
+      },
+      "title": "waterfall auto scale"
+    },
+    {
+      "id": "(no id)",
+      "tag": "BUTTON",
+      "text": "",
+      "cls": "",
+      "type": "BUTTON",
+      "rect": {
+        "x": 911,
+        "y": 923,
+        "w": 22,
+        "h": 22
+      },
+      "title": ""
+    },
+    {
+      "id": "id-wfext.spb_color",
+      "tag": "INPUT",
+      "text": "",
+      "cls": "coloris coloris-instance1 coloris-input w3-input-evt id-wfext.spb_color w3-input",
+      "type": "text",
+      "rect": {
+        "x": 906,
+        "y": 918,
+        "w": 125,
+        "h": 32
+      },
+      "title": ""
+    },
+    {
+      "id": "(no id)",
+      "tag": "INPUT",
+      "text": "",
+      "cls": "w3-label-inline w3-label-not-bold w3-input w3-width-auto w3-border w3-pointer",
+      "type": "checkbox",
+      "rect": {
+        "x": 1047,
+        "y": 927,
+        "w": 13,
+        "h": 13
+      },
+      "title": ""
+    },
+    {
+      "id": "(no id)",
+      "tag": "SELECT",
+      "text": "off2s5s10s30s1m5m10m30m60mcustom",
+      "cls": "id-wfext-tstamp w3-text-red id-wfext.tstamp_i w3-select-menu",
+      "type": "SELECT",
+      "rect": {
+        "x": 906,
+        "y": 984,
+        "w": 69,
+        "h": 19
+      },
+      "title": ""
+    },
+    {
+      "id": "(no id)",
+      "tag": "SELECT",
+      "text": "UTClocal",
+      "cls": "w3-text-red id-wf.ts_tz w3-select-menu",
+      "type": "SELECT",
+      "rect": {
+        "x": 991,
+        "y": 984,
+        "w": 52,
+        "h": 19
+      },
+      "title": ""
+    },
+    {
+      "id": "(no id)",
+      "tag": "BUTTON",
+      "text": "Save WF",
+      "cls": "w3-padding-smaller w3-aqua id-btn-grp-62 w3-btn w3-ext-btn w3-round-6px",
+      "type": "BUTTON",
+      "rect": {
+        "x": 1059,
+        "y": 982,
+        "w": 67,
+        "h": 23
+      },
+      "title": ""
+    },
+    {
+      "id": "(no id)",
+      "tag": "SELECT",
+      "text": "window functionHanningHammingBlackman-Harrisnone",
+      "cls": "w3-text-red id-wfext.winf_i w3-select-menu",
+      "type": "SELECT",
+      "rect": {
+        "x": 906,
+        "y": 1037,
+        "w": 128,
+        "h": 19
+      },
+      "title": ""
+    },
+    {
+      "id": "(no id)",
+      "tag": "SELECT",
+      "text": "interpmaxminlastdrop sampCMA",
+      "cls": "w3-text-red id-wfext.interp_i w3-select-menu",
+      "type": "SELECT",
+      "rect": {
+        "x": 1050,
+        "y": 1037,
+        "w": 90,
+        "h": 19
+      },
+      "title": ""
+    },
+    {
+      "id": "(no id)",
+      "tag": "INPUT",
+      "text": "",
+      "cls": "w3-input w3-width-auto w3-border w3-pointer w3-hover-shadow id-wfext.cic_comp",
+      "type": "checkbox",
+      "rect": {
+        "x": 906,
+        "y": 1068,
+        "w": 13,
+        "h": 13
+      },
+      "title": ""
+    },
+    {
+      "id": "id-smeter-scale",
+      "tag": "CANVAS",
+      "text": "",
+      "cls": "class-smeter-scale",
+      "type": "CANVAS",
+      "rect": {
+        "x": 890,
+        "y": 753,
+        "w": 355,
+        "h": 37
+      },
+      "title": ""
+    },
+    {
+      "id": "(no id)",
+      "tag": "BUTTON",
+      "text": "help",
+      "cls": "id-ext-controls-help-btn w3-green w3-small w3-padding-small w3-disabled id-btn-grp-2",
+      "type": "BUTTON",
+      "rect": {
+        "x": 453,
+        "y": 500,
+        "w": 42,
+        "h": 24
+      },
+      "title": ""
+    },
+    {
+      "id": "id-ident-input3",
+      "tag": "INPUT",
+      "text": "",
+      "cls": "w3-custom-events w3-margin-T-10 w3-font-18px w3-normal w3-padding-1 id-ident-input3",
+      "type": "text",
+      "rect": {
+        "x": 490,
+        "y": 537,
+        "w": 300,
+        "h": 27
+      },
+      "title": ""
+    }
+  ],
+  "ids": [
+    {
+      "id": "0-id-mode-col",
+      "tag": "BUTTON",
+      "text": "AM"
+    },
+    {
+      "id": "1-id-mode-col",
+      "tag": "BUTTON",
+      "text": "SAM"
+    },
+    {
+      "id": "2-id-mode-col",
+      "tag": "BUTTON",
+      "text": "DRM"
+    },
+    {
+      "id": "3-id-mode-col",
+      "tag": "BUTTON",
+      "text": "LSB"
+    },
+    {
+      "id": "4-id-mode-col",
+      "tag": "BUTTON",
+      "text": "USB"
+    },
+    {
+      "id": "5-id-mode-col",
+      "tag": "BUTTON",
+      "text": "CW"
+    },
+    {
+      "id": "6-id-mode-col",
+      "tag": "BUTTON",
+      "text": "NBFM"
+    },
+    {
+      "id": "7-id-mode-col",
+      "tag": "BUTTON",
+      "text": "IQ"
+    },
+    {
+      "id": "clr-alpha-marker",
+      "tag": "DIV",
+      "text": ""
+    },
+    {
+      "id": "clr-alpha-slider",
+      "tag": "INPUT",
+      "text": ""
+    },
+    {
+      "id": "clr-clear",
+      "tag": "BUTTON",
+      "text": "Clear"
+    },
+    {
+      "id": "clr-close",
+      "tag": "BUTTON",
+      "text": "Close"
+    },
+    {
+      "id": "clr-color-area",
+      "tag": "DIV",
+      "text": ""
+    },
+    {
+      "id": "clr-color-marker",
+      "tag": "DIV",
+      "text": ""
+    },
+    {
+      "id": "clr-color-preview",
+      "tag": "DIV",
+      "text": "Close"
+    },
+    {
+      "id": "clr-color-value",
+      "tag": "INPUT",
+      "text": ""
+    },
+    {
+      "id": "clr-f1",
+      "tag": "INPUT",
+      "text": ""
+    },
+    {
+      "id": "clr-f2",
+      "tag": "INPUT",
+      "text": ""
+    },
+    {
+      "id": "clr-f3",
+      "tag": "INPUT",
+      "text": ""
+    },
+    {
+      "id": "clr-format",
+      "tag": "DIV",
+      "text": "Color formatHexRGBHSL"
+    },
+    {
+      "id": "clr-hue-marker",
+      "tag": "DIV",
+      "text": ""
+    },
+    {
+      "id": "clr-hue-slider",
+      "tag": "INPUT",
+      "text": ""
+    },
+    {
+      "id": "clr-open-label",
+      "tag": "SPAN",
+      "text": "Open color picker"
+    },
+    {
+      "id": "clr-picker",
+      "tag": "DIV",
+      "text": "Color formatHexRGBHSL#ff000044#eeff0044#00ff2244#00f7ff44#f2"
+    },
+    {
+      "id": "clr-swatch-0",
+      "tag": "BUTTON",
+      "text": "#ff000044"
+    },
+    {
+      "id": "clr-swatch-1",
+      "tag": "BUTTON",
+      "text": "#eeff0044"
+    },
+    {
+      "id": "clr-swatch-2",
+      "tag": "BUTTON",
+      "text": "#00ff2244"
+    },
+    {
+      "id": "clr-swatch-3",
+      "tag": "BUTTON",
+      "text": "#00f7ff44"
+    },
+    {
+      "id": "clr-swatch-4",
+      "tag": "BUTTON",
+      "text": "#f200ff44"
+    },
+    {
+      "id": "clr-swatch-5",
+      "tag": "BUTTON",
+      "text": "#ffffff44"
+    },
+    {
+      "id": "clr-swatch-label",
+      "tag": "SPAN",
+      "text": "Color swatch"
+    },
+    {
+      "id": "clr-swatches",
+      "tag": "DIV",
+      "text": "#ff000044#eeff0044#00ff2244#00f7ff44#f200ff44#ffffff44"
+    },
+    {
+      "id": "id-annotation-canvas",
+      "tag": "CANVAS",
+      "text": ""
+    },
+    {
+      "id": "id-annotation-div",
+      "tag": "DIV",
+      "text": ""
+    },
+    {
+      "id": "id-aper-canvas",
+      "tag": "CANVAS",
+      "text": ""
+    },
+    {
+      "id": "id-band-canvas",
+      "tag": "CANVAS",
+      "text": ""
+    },
+    {
+      "id": "id-band-container",
+      "tag": "DIV",
+      "text": "LW 243NAVTEXWSPRDSCSTANAG DHO26STANAG OUA4MWARA CARSTANAG ID"
+    },
+    {
+      "id": "id-confirmation-close",
+      "tag": "A",
+      "text": ""
+    },
+    {
+      "id": "id-control",
+      "tag": "DIV",
+      "text": "select bandBROADCASTLWMW120m90m75m60m49m41m31m25m22m19m16m15"
+    },
+    {
+      "id": "id-control-hide",
+      "tag": "A",
+      "text": ""
+    },
+    {
+      "id": "id-control-inner",
+      "tag": "DIV",
+      "text": "select bandBROADCASTLWMW120m90m75m60m49m41m31m25m22m19m16m15"
+    },
+    {
+      "id": "id-control-show",
+      "tag": "A",
+      "text": ""
+    },
+    {
+      "id": "id-control-vis",
+      "tag": "DIV",
+      "text": ""
+    },
+    {
+      "id": "id-dx-canvas",
+      "tag": "CANVAS",
+      "text": ""
+    },
+    {
+      "id": "id-dx-container",
+      "tag": "DIV",
+      "text": "LW 243NAVTEXWSPRDSCSTANAG DHO26STANAG OUA4MWARA CARSTANAG ID"
+    },
+    {
+      "id": "id-dx-label_0",
+      "tag": "BUTTON",
+      "text": "LW 243"
+    },
+    {
+      "id": "id-dx-label_1",
+      "tag": "BUTTON",
+      "text": "NAVTEX"
+    },
+    {
+      "id": "id-dx-label_10",
+      "tag": "BUTTON",
+      "text": "FAX ZAF"
+    },
+    {
+      "id": "id-dx-label_11",
+      "tag": "BUTTON",
+      "text": "STANAG DHJ58"
+    },
+    {
+      "id": "id-dx-label_12",
+      "tag": "BUTTON",
+      "text": "FAX GRC"
+    },
+    {
+      "id": "id-dx-label_13",
+      "tag": "BUTTON",
+      "text": "The Air Horn"
+    },
+    {
+      "id": "id-dx-label_14",
+      "tag": "BUTTON",
+      "text": "L marker"
+    },
+    {
+      "id": "id-dx-label_15",
+      "tag": "BUTTON",
+      "text": "The Pip"
+    },
+    {
+      "id": "id-dx-label_16",
+      "tag": "BUTTON",
+      "text": "VOLMET"
+    },
+    {
+      "id": "id-dx-label_17",
+      "tag": "BUTTON",
+      "text": "R. Mi Amigo Intl"
+    },
+    {
+      "id": "id-dx-label_18",
+      "tag": "BUTTON",
+      "text": "DSC (distress)"
+    },
+    {
+      "id": "id-dx-label_19",
+      "tag": "BUTTON",
+      "text": "MWARA SEA-1"
+    },
+    {
+      "id": "id-dx-label_2",
+      "tag": "BUTTON",
+      "text": "WSPR"
+    },
+    {
+      "id": "id-dx-label_20",
+      "tag": "BUTTON",
+      "text": "WSPR ISM"
+    },
+    {
+      "id": "id-dx-label_21",
+      "tag": "BUTTON",
+      "text": "V marker"
+    },
+    {
+      "id": "id-dx-label_22",
+      "tag": "BUTTON",
+      "text": "FAX THA"
+    },
+    {
+      "id": "id-dx-label_23",
+      "tag": "BUTTON",
+      "text": "DDH7 GER"
+    },
+    {
+      "id": "id-dx-label_24",
+      "tag": "BUTTON",
+      "text": "FAX GER"
+    },
+    {
+      "id": "id-dx-label_25",
+      "tag": "BUTTON",
+      "text": "VMW AUS"
+    },
+    {
+      "id": "id-dx-label_26",
+      "tag": "BUTTON",
+      "text": "STANAG PBC"
+    },
+    {
+      "id": "id-dx-label_27",
+      "tag": "BUTTON",
+      "text": "STANAG FUM"
+    },
+    {
+      "id": "id-dx-label_28",
+      "tag": "BUTTON",
+      "text": "MWARA SAT-1"
+    },
+    {
+      "id": "id-dx-label_29",
+      "tag": "BUTTON",
+      "text": "STANAG FUG"
+    },
+    {
+      "id": "id-dx-label_3",
+      "tag": "BUTTON",
+      "text": "DSC"
+    },
+    {
+      "id": "id-dx-label_30",
+      "tag": "BUTTON",
+      "text": "HM01 CUB"
+    },
+    {
+      "id": "id-dx-label_31",
+      "tag": "BUTTON",
+      "text": "SuperDARN radar"
+    },
+    {
+      "id": "id-dx-label_32",
+      "tag": "BUTTON",
+      "text": "FAX RUS"
+    },
+    {
+      "id": "id-dx-label_33",
+      "tag": "BUTTON",
+      "text": "FAX AUS"
+    },
+    {
+      "id": "id-dx-label_34",
+      "tag": "BUTTON",
+      "text": "D marker"
+    },
+    {
+      "id": "id-dx-label_35",
+      "tag": "BUTTON",
+      "text": "FAX UK"
+    },
+    {
+      "id": "id-dx-label_36",
+      "tag": "BUTTON",
+      "text": "HFDL ZAF"
+    },
+    {
+      "id": "id-dx-label_37",
+      "tag": "BUTTON",
+      "text": "HM01 CUB"
+    },
+    {
+      "id": "id-dx-label_38",
+      "tag": "BUTTON",
+      "text": "STANAG FUJ"
+    },
+    {
+      "id": "id-dx-label_39",
+      "tag": "BUTTON",
+      "text": "VMW AUS"
+    },
+    {
+      "id": "id-dx-label_4",
+      "tag": "BUTTON",
+      "text": "STANAG DHO26"
+    },
+    {
+      "id": "id-dx-label_40",
+      "tag": "BUTTON",
+      "text": "FAX CHN"
+    },
+    {
+      "id": "id-dx-label_41",
+      "tag": "BUTTON",
+      "text": "PBB NLD"
+    },
+    {
+      "id": "id-dx-label_42",
+      "tag": "BUTTON",
+      "text": "FAX JPN"
+    },
+    {
+      "id": "id-dx-label_43",
+      "tag": "BUTTON",
+      "text": "MWARA NAT-B/D/F"
+    },
+    {
+      "id": "id-dx-label_44",
+      "tag": "BUTTON",
+      "text": "D marker"
+    },
+    {
+      "id": "id-dx-label_45",
+      "tag": "BUTTON",
+      "text": "FAX GER"
+    },
+    {
+      "id": "id-dx-label_46",
+      "tag": "BUTTON",
+      "text": "SSTV"
+    },
+    {
+      "id": "id-dx-label_47",
+      "tag": "BUTTON",
+      "text": "DDH8 GER"
+    },
+    {
+      "id": "id-dx-label_48",
+      "tag": "BUTTON",
+      "text": "STANAG FUG"
+    },
+    {
+      "id": "id-dx-label_49",
+      "tag": "BUTTON",
+      "text": "RWM RUS"
+    },
+    {
+      "id": "id-dx-label_5",
+      "tag": "BUTTON",
+      "text": "STANAG OUA4"
+    },
+    {
+      "id": "id-dx-label_50",
+      "tag": "BUTTON",
+      "text": "FAX AUS"
+    },
+    {
+      "id": "id-dx-label_51",
+      "tag": "BUTTON",
+      "text": "FAX GER"
+    },
+    {
+      "id": "id-dx-label_52",
+      "tag": "BUTTON",
+      "text": "D marker"
+    },
+    {
+      "id": "id-dx-label_53",
+      "tag": "BUTTON",
+      "text": "FAX CHN"
+    },
+    {
+      "id": "id-dx-label_54",
+      "tag": "BUTTON",
+      "text": "DSC (distress)"
+    },
+    {
+      "id": "id-dx-label_55",
+      "tag": "BUTTON",
+      "text": "FAX JPN"
+    },
+    {
+      "id": "id-dx-label_56",
+      "tag": "BUTTON",
+      "text": "FAX SGP"
+    },
+    {
+      "id": "id-dx-label_57",
+      "tag": "BUTTON",
+      "text": "HFDL PAN"
+    },
+    {
+      "id": "id-dx-label_58",
+      "tag": "BUTTON",
+      "text": "FAX ZAF"
+    },
+    {
+      "id": "id-dx-label_59",
+      "tag": "BUTTON",
+      "text": "STANAG FUV"
+    },
+    {
+      "id": "id-dx-label_6",
+      "tag": "BUTTON",
+      "text": "MWARA CAR"
+    },
+    {
+      "id": "id-dx-label_60",
+      "tag": "BUTTON",
+      "text": "DSC"
+    },
+    {
+      "id": "id-dx-label_61",
+      "tag": "BUTTON",
+      "text": "NAVTEX"
+    },
+    {
+      "id": "id-dx-label_62",
+      "tag": "BUTTON",
+      "text": "WWV"
+    },
+    {
+      "id": "id-dx-label_63",
+      "tag": "BUTTON",
+      "text": "FAX AUS"
+    },
+    {
+      "id": "id-dx-label_64",
+      "tag": "BUTTON",
+      "text": "FT8"
+    },
+    {
+      "id": "id-dx-label_65",
+      "tag": "BUTTON",
+      "text": "SSTV"
+    },
+    {
+      "id": "id-dx-label_66",
+      "tag": "BUTTON",
+      "text": "MWARA NP"
+    },
+    {
+      "id": "id-dx-label_67",
+      "tag": "BUTTON",
+      "text": "DSC"
+    },
+    {
+      "id": "id-dx-label_68",
+      "tag": "BUTTON",
+      "text": "FT8"
+    },
+    {
+      "id": "id-dx-label_69",
+      "tag": "BUTTON",
+      "text": "DSC"
+    },
+    {
+      "id": "id-dx-label_7",
+      "tag": "BUTTON",
+      "text": "STANAG IDN"
+    },
+    {
+      "id": "id-dx-label_70",
+      "tag": "BUTTON",
+      "text": "NAVTEX"
+    },
+    {
+      "id": "id-dx-label_71",
+      "tag": "BUTTON",
+      "text": "FT8"
+    },
+    {
+      "id": "id-dx-label_72",
+      "tag": "BUTTON",
+      "text": "SSTV"
+    },
+    {
+      "id": "id-dx-label_8",
+      "tag": "BUTTON",
+      "text": "MWARA SAT-1,2"
+    },
+    {
+      "id": "id-dx-label_9",
+      "tag": "BUTTON",
+      "text": "SSTV EU"
+    },
+    {
+      "id": "id-dx-line_0",
+      "tag": "DIV",
+      "text": ""
+    },
+    {
+      "id": "id-dx-line_1",
+      "tag": "DIV",
+      "text": ""
+    },
+    {
+      "id": "id-dx-line_10",
+      "tag": "DIV",
+      "text": ""
+    },
+    {
+      "id": "id-dx-line_11",
+      "tag": "DIV",
+      "text": ""
+    },
+    {
+      "id": "id-dx-line_12",
+      "tag": "DIV",
+      "text": ""
+    },
+    {
+      "id": "id-dx-line_13",
+      "tag": "DIV",
+      "text": ""
+    },
+    {
+      "id": "id-dx-line_14",
+      "tag": "DIV",
+      "text": ""
+    },
+    {
+      "id": "id-dx-line_15",
+      "tag": "DIV",
+      "text": ""
+    },
+    {
+      "id": "id-dx-line_16",
+      "tag": "DIV",
+      "text": ""
+    },
+    {
+      "id": "id-dx-line_17",
+      "tag": "DIV",
+      "text": ""
+    },
+    {
+      "id": "id-dx-line_18",
+      "tag": "DIV",
+      "text": ""
+    },
+    {
+      "id": "id-dx-line_19",
+      "tag": "DIV",
+      "text": ""
+    },
+    {
+      "id": "id-dx-line_2",
+      "tag": "DIV",
+      "text": ""
+    },
+    {
+      "id": "id-dx-line_20",
+      "tag": "DIV",
+      "text": ""
+    },
+    {
+      "id": "id-dx-line_21",
+      "tag": "DIV",
+      "text": ""
+    },
+    {
+      "id": "id-dx-line_22",
+      "tag": "DIV",
+      "text": ""
+    },
+    {
+      "id": "id-dx-line_23",
+      "tag": "DIV",
+      "text": ""
+    },
+    {
+      "id": "id-dx-line_24",
+      "tag": "DIV",
+      "text": ""
+    },
+    {
+      "id": "id-dx-line_25",
+      "tag": "DIV",
+      "text": ""
+    },
+    {
+      "id": "id-dx-line_26",
+      "tag": "DIV",
+      "text": ""
+    },
+    {
+      "id": "id-dx-line_27",
+      "tag": "DIV",
+      "text": ""
+    },
+    {
+      "id": "id-dx-line_28",
+      "tag": "DIV",
+      "text": ""
+    },
+    {
+      "id": "id-dx-line_29",
+      "tag": "DIV",
+      "text": ""
+    },
+    {
+      "id": "id-dx-line_3",
+      "tag": "DIV",
+      "text": ""
+    },
+    {
+      "id": "id-dx-line_30",
+      "tag": "DIV",
+      "text": ""
+    },
+    {
+      "id": "id-dx-line_31",
+      "tag": "DIV",
+      "text": ""
+    },
+    {
+      "id": "id-dx-line_32",
+      "tag": "DIV",
+      "text": ""
+    },
+    {
+      "id": "id-dx-line_33",
+      "tag": "DIV",
+      "text": ""
+    },
+    {
+      "id": "id-dx-line_34",
+      "tag": "DIV",
+      "text": ""
+    },
+    {
+      "id": "id-dx-line_35",
+      "tag": "DIV",
+      "text": ""
+    },
+    {
+      "id": "id-dx-line_36",
+      "tag": "DIV",
+      "text": ""
+    },
+    {
+      "id": "id-dx-line_37",
+      "tag": "DIV",
+      "text": ""
+    },
+    {
+      "id": "id-dx-line_38",
+      "tag": "DIV",
+      "text": ""
+    },
+    {
+      "id": "id-dx-line_39",
+      "tag": "DIV",
+      "text": ""
+    },
+    {
+      "id": "id-dx-line_4",
+      "tag": "DIV",
+      "text": ""
+    },
+    {
+      "id": "id-dx-line_40",
+      "tag": "DIV",
+      "text": ""
+    },
+    {
+      "id": "id-dx-line_41",
+      "tag": "DIV",
+      "text": ""
+    },
+    {
+      "id": "id-dx-line_42",
+      "tag": "DIV",
+      "text": ""
+    },
+    {
+      "id": "id-dx-line_43",
+      "tag": "DIV",
+      "text": ""
+    },
+    {
+      "id": "id-dx-line_44",
+      "tag": "DIV",
+      "text": ""
+    },
+    {
+      "id": "id-dx-line_45",
+      "tag": "DIV",
+      "text": ""
+    },
+    {
+      "id": "id-dx-line_46",
+      "tag": "DIV",
+      "text": ""
+    },
+    {
+      "id": "id-dx-line_47",
+      "tag": "DIV",
+      "text": ""
+    },
+    {
+      "id": "id-dx-line_48",
+      "tag": "DIV",
+      "text": ""
+    },
+    {
+      "id": "id-dx-line_49",
+      "tag": "DIV",
+      "text": ""
+    },
+    {
+      "id": "id-dx-line_5",
+      "tag": "DIV",
+      "text": ""
+    },
+    {
+      "id": "id-dx-line_50",
+      "tag": "DIV",
+      "text": ""
+    },
+    {
+      "id": "id-dx-line_51",
+      "tag": "DIV",
+      "text": ""
+    },
+    {
+      "id": "id-dx-line_52",
+      "tag": "DIV",
+      "text": ""
+    },
+    {
+      "id": "id-dx-line_53",
+      "tag": "DIV",
+      "text": ""
+    },
+    {
+      "id": "id-dx-line_54",
+      "tag": "DIV",
+      "text": ""
+    },
+    {
+      "id": "id-dx-line_55",
+      "tag": "DIV",
+      "text": ""
+    },
+    {
+      "id": "id-dx-line_56",
+      "tag": "DIV",
+      "text": ""
+    },
+    {
+      "id": "id-dx-line_57",
+      "tag": "DIV",
+      "text": ""
+    },
+    {
+      "id": "id-dx-line_58",
+      "tag": "DIV",
+      "text": ""
+    },
+    {
+      "id": "id-dx-line_59",
+      "tag": "DIV",
+      "text": ""
+    },
+    {
+      "id": "id-dx-line_6",
+      "tag": "DIV",
+      "text": ""
+    },
+    {
+      "id": "id-dx-line_60",
+      "tag": "DIV",
+      "text": ""
+    },
+    {
+      "id": "id-dx-line_61",
+      "tag": "DIV",
+      "text": ""
+    },
+    {
+      "id": "id-dx-line_62",
+      "tag": "DIV",
+      "text": ""
+    },
+    {
+      "id": "id-dx-line_63",
+      "tag": "DIV",
+      "text": ""
+    },
+    {
+      "id": "id-dx-line_64",
+      "tag": "DIV",
+      "text": ""
+    },
+    {
+      "id": "id-dx-line_65",
+      "tag": "DIV",
+      "text": ""
+    },
+    {
+      "id": "id-dx-line_66",
+      "tag": "DIV",
+      "text": ""
+    },
+    {
+      "id": "id-dx-line_67",
+      "tag": "DIV",
+      "text": ""
+    },
+    {
+      "id": "id-dx-line_68",
+      "tag": "DIV",
+      "text": ""
+    },
+    {
+      "id": "id-dx-line_69",
+      "tag": "DIV",
+      "text": ""
+    },
+    {
+      "id": "id-dx-line_7",
+      "tag": "DIV",
+      "text": ""
+    },
+    {
+      "id": "id-dx-line_70",
+      "tag": "DIV",
+      "text": ""
+    },
+    {
+      "id": "id-dx-line_71",
+      "tag": "DIV",
+      "text": ""
+    },
+    {
+      "id": "id-dx-line_72",
+      "tag": "DIV",
+      "text": ""
+    },
+    {
+      "id": "id-dx-line_8",
+      "tag": "DIV",
+      "text": ""
+    },
+    {
+      "id": "id-dx-line_9",
+      "tag": "DIV",
+      "text": ""
+    },
+    {
+      "id": "id-ext-controls",
+      "tag": "DIV",
+      "text": "help"
+    },
+    {
+      "id": "id-ext-controls-close",
+      "tag": "A",
+      "text": ""
+    },
+    {
+      "id": "id-ext-data-container",
+      "tag": "DIV",
+      "text": ""
+    },
+    {
+      "id": "id-freq-form",
+      "tag": "FORM",
+      "text": ""
+    },
+    {
+      "id": "id-freq-input",
+      "tag": "INPUT",
+      "text": ""
+    },
+    {
+      "id": "id-ident",
+      "tag": "DIV",
+      "text": "Your name or callsign:"
+    },
+    {
+      "id": "id-ident-input1",
+      "tag": "INPUT",
+      "text": ""
+    },
+    {
+      "id": "id-ident-input2",
+      "tag": "INPUT",
+      "text": ""
+    },
+    {
+      "id": "id-ident-input3",
+      "tag": "INPUT",
+      "text": ""
+    },
+    {
+      "id": "id-kiwi-msg",
+      "tag": "DIV",
+      "text": ""
+    },
+    {
+      "id": "id-kiwi-msg-logo-container",
+      "tag": "DIV",
+      "text": ""
+    },
+    {
+      "id": "id-kiwi-user-login",
+      "tag": "DIV",
+      "text": ""
+    },
+    {
+      "id": "id-left-logo",
+      "tag": "IMG",
+      "text": ""
+    },
+    {
+      "id": "id-left-logo",
+      "tag": "IMG",
+      "text": ""
+    },
+    {
+      "id": "id-main-container",
+      "tag": "DIV",
+      "text": "LW 243NAVTEXWSPRDSCSTANAG DHO26STANAG OUA4MWARA CARSTANAG ID"
+    },
+    {
+      "id": "id-nav-optbar-agc",
+      "tag": "A",
+      "text": "AGC"
+    },
+    {
+      "id": "id-nav-optbar-audio",
+      "tag": "A",
+      "text": "Audio"
+    },
+    {
+      "id": "id-nav-optbar-off",
+      "tag": "A",
+      "text": "Off"
+    },
+    {
+      "id": "id-nav-optbar-rf",
+      "tag": "A",
+      "text": "RF"
+    },
+    {
+      "id": "id-nav-optbar-stat",
+      "tag": "A",
+      "text": "Stat"
+    },
+    {
+      "id": "id-nav-optbar-user",
+      "tag": "A",
+      "text": "User"
+    },
+    {
+      "id": "id-nav-optbar-wf",
+      "tag": "A",
+      "text": "WF0"
+    },
+    {
+      "id": "id-news",
+      "tag": "DIV",
+      "text": ""
+    },
+    {
+      "id": "id-news-close",
+      "tag": "A",
+      "text": ""
+    },
+    {
+      "id": "id-news-inner",
+      "tag": "DIV",
+      "text": ""
+    },
+    {
+      "id": "id-news-vis",
+      "tag": "DIV",
+      "text": ""
+    },
+    {
+      "id": "id-non-waterfall-container",
+      "tag": "DIV",
+      "text": "LW 243NAVTEXWSPRDSCSTANAG DHO26STANAG OUA4MWARA CARSTANAG ID"
+    },
+    {
+      "id": "id-owner-info",
+      "tag": "DIV",
+      "text": "MRHS"
+    },
+    {
+      "id": "id-page-title",
+      "tag": "TITLE",
+      "text": "KPH Kiwi74"
+    },
+    {
+      "id": "id-panels-container",
+      "tag": "DIV",
+      "text": "select bandBROADCASTLWMW120m90m75m60m49m41m31m25m22m19m16m15"
+    },
+    {
+      "id": "id-pb-adj-car",
+      "tag": "DIV",
+      "text": "7020.000 kHz"
+    },
+    {
+      "id": "id-pb-adj-car-ttip",
+      "tag": "SPAN",
+      "text": "7020.000 kHz"
+    },
+    {
+      "id": "id-pb-adj-cf",
+      "tag": "DIV",
+      "text": "cf -1500, bw 2400"
+    },
+    {
+      "id": "id-pb-adj-cf-ttip",
+      "tag": "SPAN",
+      "text": "cf -1500, bw 2400"
+    },
+    {
+      "id": "id-pb-adj-hi",
+      "tag": "DIV",
+      "text": "hi -300, bw 2400"
+    },
+    {
+      "id": "id-pb-adj-hi-ttip",
+      "tag": "SPAN",
+      "text": "hi -300, bw 2400"
+    },
+    {
+      "id": "id-pb-adj-lo",
+      "tag": "DIV",
+      "text": "lo -2700, bw 2400"
+    },
+    {
+      "id": "id-pb-adj-lo-ttip",
+      "tag": "SPAN",
+      "text": "lo -2700, bw 2400"
+    },
+    {
+      "id": "id-phantom-canvas",
+      "tag": "DIV",
+      "text": ""
+    },
+    {
+      "id": "id-readme",
+      "tag": "DIV",
+      "text": "Welcome!   Project website: kiwisdr.com    Here are some tip"
+    },
+    {
+      "id": "id-readme-hide",
+      "tag": "A",
+      "text": ""
+    },
+    {
+      "id": "id-readme-inner",
+      "tag": "DIV",
+      "text": "Welcome!   Project website: kiwisdr.com    Here are some tip"
+    },
+    {
+      "id": "id-readme-show",
+      "tag": "A",
+      "text": ""
+    },
+    {
+      "id": "id-readme-vis",
+      "tag": "DIV",
+      "text": ""
+    },
+    {
+      "id": "id-rx-antenna",
+      "tag": "DIV",
+      "text": "Antenna: TCI-530 Omni 3-30 Log Periodic"
+    },
+    {
+      "id": "id-rx-desc",
+      "tag": "DIV",
+      "text": "Point Reyes National Seashore, Northern California | Grid CM"
+    },
+    {
+      "id": "id-rx-photo-desc",
+      "tag": "DIV",
+      "text": "Historic Building - Open to the public on Saturdays - Kiwi r"
+    },
+    {
+      "id": "id-rx-photo-title",
+      "tag": "DIV",
+      "text": "KPH Site"
+    },
+    {
+      "id": "id-rx-title",
+      "tag": "DIV",
+      "text": "KPH Kiwi74"
+    },
+    {
+      "id": "id-scale-canvas",
+      "tag": "CANVAS",
+      "text": ""
+    },
+    {
+      "id": "id-scale-container",
+      "tag": "DIV",
+      "text": "7020.000 kHz\n                                lo -2700, bw 24"
+    },
+    {
+      "id": "id-smeter-scale",
+      "tag": "CANVAS",
+      "text": ""
+    },
+    {
+      "id": "id-spectrum-af-canvas",
+      "tag": "CANVAS",
+      "text": ""
+    },
+    {
+      "id": "id-spectrum-canvas",
+      "tag": "CANVAS",
+      "text": ""
+    },
+    {
+      "id": "id-spectrum-container",
+      "tag": "DIV",
+      "text": ""
+    },
+    {
+      "id": "id-spectrum-dB",
+      "tag": "DIV",
+      "text": ""
+    },
+    {
+      "id": "id-spectrum-dB-ttip",
+      "tag": "SPAN",
+      "text": ""
+    },
+    {
+      "id": "id-spectrum-pb-canvas",
+      "tag": "CANVAS",
+      "text": ""
+    },
+    {
+      "id": "id-time-display-logo",
+      "tag": "IMG",
+      "text": ""
+    },
+    {
+      "id": "id-top-container",
+      "tag": "DIV",
+      "text": "KPH Site\n                    Historic Building - Open to the"
+    },
+    {
+      "id": "id-top-photo",
+      "tag": "DIV",
+      "text": ""
+    },
+    {
+      "id": "id-top-photo-clip",
+      "tag": "DIV",
+      "text": "KPH Site\n                    Historic Building - Open to the"
+    },
+    {
+      "id": "id-top-photo-img",
+      "tag": "IMG",
+      "text": ""
+    },
+    {
+      "id": "id-top-photo-spacer",
+      "tag": "DIV",
+      "text": ""
+    },
+    {
+      "id": "id-topbar",
+      "tag": "DIV",
+      "text": "KPH Kiwi74\n                            Point Reyes National "
+    },
+    {
+      "id": "id-topbar-arrow",
+      "tag": "DIV",
+      "text": ""
+    },
+    {
+      "id": "id-topbar-arrow-down",
+      "tag": "A",
+      "text": ""
+    },
+    {
+      "id": "id-topbar-arrow-up",
+      "tag": "A",
+      "text": ""
+    },
+    {
+      "id": "id-topbar-container",
+      "tag": "DIV",
+      "text": "KPH Kiwi74\n                            Point Reyes National "
+    },
+    {
+      "id": "id-topbar-L-container",
+      "tag": "DIV",
+      "text": "KPH Kiwi74\n                            Point Reyes National "
+    },
+    {
+      "id": "id-topbar-ML-container",
+      "tag": "DIV",
+      "text": "MRHS"
+    },
+    {
+      "id": "id-topbar-MR-container",
+      "tag": "DIV",
+      "text": "Your name or callsign:"
+    },
+    {
+      "id": "id-topbar-R-container",
+      "tag": "DIV",
+      "text": "17:14UTC10:14LocalAmerica/Los Angeles (PDT)Powered by"
+    },
+    {
+      "id": "id-tuning-container",
+      "tag": "DIV",
+      "text": "LW 243NAVTEXWSPRDSCSTANAG DHO26STANAG OUA4MWARA CARSTANAG ID"
+    },
+    {
+      "id": "id-waterfall-container",
+      "tag": "DIV",
+      "text": ""
+    },
+    {
+      "id": "id-wf-canvas",
+      "tag": "CANVAS",
+      "text": ""
+    },
+    {
+      "id": "id-wfext.spb_color",
+      "tag": "INPUT",
+      "text": ""
+    },
+    {
+      "id": "id-wfext.tstamp_f",
+      "tag": "INPUT",
+      "text": ""
+    },
+    {
+      "id": "id-wheel_fast",
+      "tag": "INPUT",
+      "text": ""
+    },
+    {
+      "id": "id-wheel_poll",
+      "tag": "INPUT",
+      "text": ""
+    },
+    {
+      "id": "id-wheel_unlock",
+      "tag": "INPUT",
+      "text": ""
+    }
+  ],
+  "bodyText": "KPH Site\nHistoric Building - Open to the public on Saturdays - Kiwi rack is in the far corner - TCi530 - Kiwi rack closeup\nKPH Kiwi74\nPoint Reyes National Seashore, Northern California | Grid CM88mc, ASL 30m, [map], SNR 20/20 dB\nAntenna: TCI-530 Omni 3-30 Log Periodic\nMRHS\nYour name or callsign:\n17:14\nUTC\n10:14\nLocal\nAmerica/Los Angeles (PDT)\nPowered by\nLW 243\nNAVTEX\nWSPR\nDSC\nSTANAG DHO26\nSTANAG OUA4\nMWARA CAR\nSTANAG IDN\nMWARA SAT-1,2\nSSTV EU\nFAX ZAF\nSTANAG DHJ58\nFAX GRC\nThe Air Horn\nL marker\nThe Pip\nVOLMET\nR. Mi Amigo Intl\nDSC (distress)\nMWARA SEA-1\nWSPR ISM\nV marker\nFAX THA\nDDH7 GER\nFAX GER\nVMW AUS\nSTANAG PBC\nSTANAG FUM\nMWARA SAT-1\nSTANAG FUG\nHM01 CUB\nSuperDARN radar\nFAX RUS\nFAX AUS\nD marker\nFAX UK\nHFDL ZAF\nHM01 CUB\nSTANAG FUJ\nVMW AUS\nFAX CHN\nPBB NLD\nFAX JPN\nMWARA NAT-B/D/F\nD marker\nFAX GER\nSSTV\nDDH8 GER\nSTANAG FUG\nRWM RUS\nFAX AUS\nFAX GER\nD marker\nFAX CHN\nDSC (distress)\nFAX JPN\nFAX SGP\nHFDL PAN\nFAX ZAF\nSTANAG FUV\nDSC\nNAVTEX\nWWV\nFAX AUS\nFT8\nSSTV\nMWARA NP\nDSC\nFT8\nDSC\nNAVTEX\nFT8\nSSTV\nselect band\nBROADCAST\nLW\nMW\n120m\n90m\n75m\n60m\n49m\n41m\n31m\n25m\n22m\n19m\n16m\n15m\n13m\n11m\nUTILITY\nVLF\nLF\nNDB\nTime 2.5\nTime 3.33\nTime 5\nTime 7.85\nTime 10\nTime 14.67\nTime 15\nTime 20\nAMATEUR\nLF\nMF\n160m\n80m\n60m\n40m\n30m\n20m\n17m\n15m\n12m\n10m\nBEACONS\nIBP 20m\nIBP 17m\nIBP 15m\nIBP 12m\nIBP 10m\nMARINE\nMF\n2 MHz\n4 MHz\n6 MHz\n8 MHz\n12 MHz\n22 MHz\n25 MHz\nAERO\n2 MHz\n3 MHz\n3 MHz\n4 MHz\n5 MHz\n6 MHz\n8 MHz\n10 MHz\n11 MHz\n13 MHz\n15 MHz\n17 MHz\n22 MHz\nMARKERS\n3594\n4558\n5154\n5156 L\n5292 D/B\n6928 V\n7039\n7509\n8000 C\n8495\n10872\n13528\n16332\n20048\nextension\nALE_2G\nant_switch\ncolormap\nCW_decoder\nCW_skimmer\nDRM\nDX spots\nFAX\nFFT\nFSK\nFT8/FT4\nHFDL\nIBP_scan\niframe\nIQ_display\nLoran_C\nNAVTEX/DSC\nnoise_blank\nnoise_filter\nS_meter\nSSTV\nTDoA\ntimecode\nwaterfall\nWSPR\nA\n9\nSpectrum\nAM\nSAM\nDRM\nLSB\nUSB\nCW\nNBFM\nIQ\nRF\nWF0\nAudio\nAGC\nUser\nStat\nOff\nWF ceil\n+5 dB\nWF floor\n0 dB\nWF rate\nfast\nSpec Δ\n0.2 gain\nAuto\nScale\nSpec\nColor\nP1\ncolor\nmap\nKiwi\nCSDR\ngrey\nlinear\nturbo\nSdrDx\ncust1\ncust2\ncust3\ncust4\naper\nman\nauto\nwf\nIIR\nMMA\nEMA\noff\nspec\nIIR\nMMA\nEMA\noff\n"
+}

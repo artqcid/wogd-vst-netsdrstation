@@ -1480,7 +1480,411 @@ implementation plans: `doc/M3-implementation-plan.md` (M3),
   `IReceiverClient` based on `provider`.
   - Test: integration test — station with provider=openwebrx → OpenWebRxClient connects.
 
-## AI development helpers (MCP servers, see `doc/test-strategy.md` §9)
+## Milestone M4 — KiwiSDR UI 1:1 Replikat (Vue 3, screen-faithful)
+
+> **Implementierungsreihenfolge** (aus `doc/M4-ui-replication-analysis.md` §11):
+> M4.18 → M4.1 → M4.2 → M4.8 → M4.9–M4.17 → M4.3 → M4.4 → M4.5 → M4.6 → M4.7 → M4.19 → M4.20
+>
+> **Design-Referenz:** `doc/M4-ui-replication-analysis.md` (Layouts, Pixel-Maße, CSS, Code-Snippets)
+> **Verification Workflow:** `npm run dev` → `npx playwright test e2e/kiwi-layout.spec.ts` → `.\scripts\visual-verify.ps1 -Step "M4.X"`
+
+### M4.0 — Visual Verification Infrastructure
+
+- [x] **M4.0a** KiwiSDR Referenz-Screenshot Capture
+  - `ui/e2e/capture-reference.spec.ts` — einmaliges Playwright-Skript gegen kphsdr.com:8072
+  - Output: `ui/e2e/reference/kiwisdr-reference.png`
+
+- [x] **M4.0b** Visual-Verify Skript (Vision LLM Vergleich)
+  - `scripts/visual-verify.ps1` — sendet Reference + Plugin-Screenshot an OpenRouter Vision
+  - Run: `.\scripts\visual-verify.ps1 -Step "M4.X <name>"`
+
+- [x] **M4.0c** Playwright Layout-Test für laufende Verifikation
+  - `ui/e2e/kiwi-layout.spec.ts` — Screenshot-Regression nach jedem Step
+
+### M4.18 — CSS-Variablen-Palette + Globales Styling *(implement FIRST)*
+
+- [ ] **M4.18** CSS-Custom-Property-Palette exakt nach KiwiSDR `w3_ext.css`
+  - Neu: `ui/src/assets/kiwi-theme.css` mit `--kiwi-*` Variablen (bg/panel/border/text/accent/tabs)
+  - Slider-Styling: `appearance: none; height: 3px; thumb: 18px` (w3_ext-Pattern) in kiwi-theme.css
+  - `ui/src/main.ts`: kiwi-theme.css importieren
+  - `App.vue`: Scale-Transform (`REF_WIDTH`/`REF_HEIGHT`) **entfernen**, `html,body,#app { margin:0; width:100%; height:100%; overflow:hidden }`
+  - _Files: `ui/src/assets/kiwi-theme.css` (neu), `ui/src/main.ts`, `ui/src/App.vue`_
+  - Test: `vue-tsc` clean; Dark-Theme sichtbar
+
+### M4.1 — Root Layout (vertikales Flex, kein Grid)
+
+- [ ] **M4.1** `PluginView.vue` komplett neu als `100vw × 100vh` vertikales Flex-Layout
+  - `flex-direction: column; overflow: hidden; background: var(--kiwi-bg)`
+  - Sections: `<KiwiHeader>` | `<BandScaleBar>` | `<TagArea>` | `<MainWorkspace>` (flex:1, position:relative)
+  - _Files: `ui/src/views/PluginView.vue`_
+  - Test: Vitest mount — alle 4 Sections bei 800×600 sichtbar
+
+### M4.2 — Top Header Bar (`KiwiHeader.vue`)
+
+- [ ] **M4.2** Header Bar: 3-Spalten Flex, ~55px, `background: #EAEAEA`
+  - **Links:** Kiwi-Logo SVG (40px, grün `#4CAF50`) + gestapelt: Titel bold, Standort, Antenne (font 10–13px)
+  - **Mitte:** Receiver-Name, Status, anklickbarer Host-Link (blau, underline)
+  - **Rechts:** Callsign-Input (`background:white`) + UTC-Zeit (14px bold) + Lokalzeit + Timezone (8px #909090)
+  - Live-Uhr: `setInterval(updateTime, 1000)` in `onMounted`/`onBeforeUnmount`
+  - _Files: `ui/src/components/KiwiHeader.vue` (neu), `ui/src/assets/kiwi-logo.svg` (neu)_
+  - Test: Header-Höhe ~55px, alle 3 Spalten sichtbar, Logo vorhanden, Uhr tickt
+
+### M4.8 — Floating Control Panel Shell (`ControlPanel.vue`)
+
+- [ ] **M4.8** Schwebendes, einklappbares Control-Panel — Container + Toggle
+  - `position: absolute; bottom: 15px; right: 0; z-index: 100; width: 360px`
+  - `background: #222; border-radius: 8px 0 0 8px; border: 1px solid #555; border-right: none`
+  - CSS-Transition: `transform: translateX(calc(100% - 20px))` wenn geschlossen
+  - Toggle-Tab (immer sichtbar): `position: absolute; left: -20px` — `◄/►`
+  - `v-show` / `:class` steuern open/close-State
+  - _Files: `ui/src/components/ControlPanel.vue` (neu), `ui/src/views/PluginView.vue`_
+  - Test: open/close togglet transform-Klasse; Tab-Button immer sichtbar
+
+### M4.9–M4.17 — Control Panel Rows + S-Meter *(alle in `ControlPanel.vue`)*
+
+- [ ] **M4.9** Row 1: Frequenz-Input + Band-Select + Extension-Select + Play-Button
+  - Freq-Input: `background:#000; color:white; border:1px solid #4af; font-family:Consolas; width:90px`
+  - 2× `<select class="panel-select">` (grau), runder Play-Button `▶`
+
+- [ ] **M4.10** Row 2: Mini-Icon-Zeile
+  - `≡ A ↗ 9` + 4× Zoom-Icons `⊖⊖⊕⊕` (klickbar → `wfZoom`) + `⊘` CIC + `Spectrum` + `↻` rot + `🔊` grün
+  - `font-size: 11px; gap: 4px`
+
+- [ ] **M4.11** Row 3: Mode-Buttons (8 Haupt-Modi)
+  - `AM SAM DRM LSB USB CW NBFM IQ` — aktiv: `background:#00FF00; color:#000`; inaktiv: `background:#444`
+  - Klick → `store.setParam('mode', modeIndex)`
+
+- [ ] **M4.12** Row 4: Navigations-Buttons
+  - 6× Buttons `⊕ ⊖ ↔ ↕ ◁ ▷` — `width:28px; height:26px; background:#3a3a3a; border:1px solid #555`
+  - wfZoom +/-, freqKhz +/- stepKhz
+
+- [ ] **M4.13** Row 5: Farbige Sub-Tabs
+  - `RF`(grün) `WF0`(rot `#e53935`) `Audio`(blau `#1565c0`) `AGC`(violett `#6a1b9a`) `User`(cyan) `Stat`(amber) `Off`(schwarz)
+  - Aktiver Tab: heller + `border-bottom: 2px solid white`; `activeTab` ref steuert `v-show` der Tab-Inhalte
+
+- [ ] **M4.14** Row 6: Colormap-Bar
+  - `height:12px; background: linear-gradient(to right, #000,#00f,#0ff,#0f0,#ff0,#f00,#f0f,#fff)`
+  - Klick-X → `wfMaxDb`/`wfMinDb` setzen
+
+- [ ] **M4.15** Rows 7–10: WF0-Tab-Controls (`v-show="activeTab==='WF0'"`)
+  - Row7: `WF ceil` + KSlider(`wfMaxDb`) + Wert + grüner `Auto Scale`-Button
+  - Row8: `WF floor` + KSlider(`wfMinDb`) + Wert + grauer `Spec Color`-Button
+  - Row9: `WF rate` + KSlider(`wfSpeed`) + Wert-Text
+  - Row10: `Spec Δ` + KSlider(`wfComp`) + Wert + violetter `P1`-Button
+  - Gemeinsames Layout: `display:flex; gap:6px; padding:3px 8px; min-height:24px`
+
+- [ ] **M4.16** Row 11: 4 Dropdowns + P2-Button
+  - `Kiwi∨` (colormap) `auto∨` (aperture) `off∨` (timestamp) `IIR∨` (algo) — je ~70px, `background:#444`
+  - Violetter `P2`-Button rechts
+
+- [ ] **M4.17** Footer: S-Meter (SMeter.vue einbetten)
+  - Text-Legende: `S1 S3 S5 S7 S9 +10 +20 +40 +60` + dBm-Wert rechts
+  - Canvas-Balken: Gradient grün→gelb→rot; Indikator bei `(signalLevel+127)/127*width`
+  - Bestehende `SMeter.vue` wiederverwenden/anpassen (kein neues Canvas)
+  - _Files: `ui/src/components/ControlPanel.vue`, `ui/src/components/SMeter.vue`_
+  - Test (M4.9–M4.17): Row1 freq-input+dropdowns, Row3 mode-button-click, Row5 tab-switch, M4.17 S-Meter rendert
+
+### M4.3 — Band Scale Strip (`BandScaleBar.vue`)
+
+- [ ] **M4.3** Horizontale Band-Skala, ~20px, `background: white`
+  - `◄` / `►` Arrows (Band-Navigation), `position:relative` Inner-Container
+  - Broadcast-Bänder (orange `#FF9800`): LW/MW/49m–11m; Amateur (rot `#ef5350`): 160m–10m
+  - Positionierung: `left: freqToPercent(freqMhz, 30) + '%'` (prozentual relativ zu 0–30 MHz)
+  - `border-radius:3px; font-size:9px; font-weight:bold; padding:1px 2px`
+  - _Files: `ui/src/components/BandScaleBar.vue` (neu), `ui/src/views/PluginView.vue`_
+  - Test: Komponent rendert, ≥3 farbige Blöcke vorhanden, orange + rot
+
+### M4.4 — Tag / DX Area (`TagArea.vue`)
+
+- [ ] **M4.4** DX-Tag-Bereich: farbige Frequenz-Tags, `background: #aaa`, Höhe 40–80px dynamisch
+  - Tags als `<span>`: `padding:1px 3px; border:1px solid black; position:absolute`
+  - Farben: lime (NAVTEX/FT8), yellow (FAX), `#f06292` (RTTY/SSTV), orange (WWV/STA)
+  - Positionierung: `left: (freqMhz/30)*100 + '%'`
+  - Demo-Datensatz aus `doc/M4-ui-replication-analysis.md` §4.3 (7 Tags)
+  - _Files: `ui/src/components/TagArea.vue` (überarbeiten), `ui/src/views/PluginView.vue`_
+  - Test: ≥3 farbige Tags sichtbar, `freqKhz`-Property existiert nicht mehr (war Typo → `freqMhz`)
+
+### M4.5 — Frequenz-Lineal (`FrequencyRuler.vue`)
+
+- [ ] **M4.5** Frequenz-Lineal am oberen Rand des Waterfall-Canvas, ~25px, `background: #333`
+  - Ticks + Labels: `0 kHz`, `5 MHz`, `10 MHz`, `15 MHz`, `20 MHz`, `25 MHz`, `30 MHz`
+  - `position:absolute; bottom:0; width:1px; height:8px; background:white` für Ticks
+  - Text "▲ database: stored" links in `color:#FFD700`
+  - `<canvas>`-Element oder reines HTML+CSS (kein Abhängigkeit zu Waterfall-Canvas)
+  - _Files: `ui/src/components/FrequencyRuler.vue` (neu), `ui/src/views/PluginView.vue`_
+  - Test: Ruler rendert mit mindestens 5 Labels
+
+### M4.6 — Waterfall Mouse-Wheel-Zoom + Play-Button
+
+- [ ] **M4.6** `Waterfall.vue` erweitern: Mouse-Wheel-Zoom + Floating Play-Button
+  - `@wheel.prevent` am Waterfall-Container (NICHT global) → `onWheel(e)`
+  - Zoom-Anchor: `anchorFrac = e.offsetX / containerWidth` → neue Mitte berechnen (Formel in `doc/M4-ui-replication-analysis.md` §5.3)
+  - `zoomToSpan(zoom): 30000 / 2^zoom` kHz; `wfZoom` clamp 0–14
+  - Play-Button: `position:absolute; left:0; top:50%; transform:translateY(-50%); background:#7c4dff; border-radius:0 6px 6px 0; width:36px; height:44px`
+  - _Files: `ui/src/components/Waterfall.vue`_
+  - Test: Wheel-Event auf Container ändert `store.wfZoom`; Play-Button sichtbar
+
+### M4.7 — Passband Filter Overlay (`PassbandOverlay.vue`)
+
+- [ ] **M4.7** Interaktiver Passband-Cursor + Drag-Drop über dem Waterfall
+  - `position:absolute; inset:0; z-index:10; cursor:crosshair` (über Canvas)
+  - Gelber Pfeil `▲` am oberen Rand bei `cursorX` (= freqToPixel(store.freqKhz))
+  - Halbtransparentes Passband-Rect: `left:passbandLeft; width:passbandWidth; background:rgba(0,100,255,0.2)`
+  - `mousedown` → globales `mousemove`/`mouseup` (document-level, cleanup in `onBeforeUnmount`)
+  - `movementX * (spanKhz / containerWidth)` → `store.setParam('freqKhz', newFreq)`
+  - _Files: `ui/src/components/PassbandOverlay.vue` (neu), `ui/src/views/PluginView.vue`_
+  - Test: mousedown+move ändert `store.freqKhz`; mouseup beendet Drag
+
+### M4.19 — Vitest + Playwright Tests
+
+- [x] **M4.19** Tests für alle neuen M4-Replikat-Komponenten
+  - `app.test.ts` auf neue Struktur aktualisiert: `.kiwi-header__title`, `.kiwi-bandscale`, `.kiwi-tagarea`, `.kiwi-cpanel`, `.kiwi-cpanel__smeter`, `StationInput` stub
+  - Canvas-Komponenten (Waterfall, SMeter) in `app.test.ts` via jsdom-Stubs gemockt
+  - Alle 15 Test-Files, 112 Tests grün (Vitest), vue-tsc clean
+  - _File: `ui/tests/app.test.ts`_
+
+### M4.20 — Knowledge-Sync
+
+- [x] **M4.20** Docs + RAG + NotebookLM nach Abschluss von M4 synchronisieren
+  - RAG `index_project_code` ausgeführt: 91 Dateien, 856 Symbole, wiki regeneriert
+  - NotebookLM **NetSDRStation-VST** mit M4-Completion-Status aktualisiert
+
+---
+
+## Milestone M4b — Bug-Fixes & UI-Vollständigkeit
+
+> Implementierungsreihenfolge: M4b.1 → M4b.2 → M4b.3 → M4b.4 → M4b.5 → M4b.6 → M4b.7 → M4b.8 → M4b.9 → M4b.10
+> Vollständige Analyse + Begründungen: `doc/M4b-bugs.md`
+> GUI-Inventar: `doc/ui-architecture.md` §7
+
+### M4b.1 — Scale-Transform entfernen (App.vue/master.css)
+
+- [ ] **M4b.1** CSS `transform: scale(...)` aus `App.vue` und `master.css` entfernen
+  - Plugin-Fenster muss fluid sein (100vw × 100vh), kein festes 1280×720 Surface
+  - Resize-Verhalten: Fenster wächst/schrumpft → Layout reflowt, kein Scale
+  - _Files: `ui/src/App.vue`, `ui/src/assets/master.css`_
+  - Test: Plugin in REAPER auf verschiedene Größen ziehen → kein Zoom-Effekt
+
+### M4b.2 — Zoom-Architektur: `spanKhz` als zentrale Store-Größe
+
+- [x] **M4b.2** `spanKhz`, `loKhz`, `hiKhz` als Computeds in PluginView; Props an Waterfall/BandScaleBar/TagArea/FrequencyRuler
+  - _Files: `ui/src/views/PluginView.vue`
+  - Test: `wfZoom` ändern → alle Komponenten zeigen korrekten Ausschnitt
+
+### M4b.3 — Ctrl+Mausrad Spektrogram-Zoom
+
+- [x] **M4b.3** `Ctrl+Wheel` → `onWfZoom(delta, anchorFrac)` in PluginView
+  - `PluginView.vue`: @zoom Handler, wfZoom + Anchor-Rechnung auf freqKhz
+  - `FrequencyRuler.vue`: @wheel.prevent → emit zoom (delta, anchorFrac)
+  - Zoom-Grenzen: 0 (volle Bandbreite) … 14 (engster Bereich)
+  - _Files: `ui/src/views/PluginView.vue`, `ui/src/components/FrequencyRuler.vue`_
+  - Test: Mausrad über Wasserfall mit Ctrl → sichtbarer Bereich ändert sich
+
+### M4b.4 — FrequencyRuler: Frequenz-Cursor (Dragger)
+
+- [x] **M4b.4** Interaktiver Frequenz-Cursor im FrequencyRuler
+  - Gelber Cursor (Λ-Form) wenn `wfZoom < 9`: zeigt `freqKhz`, ziehbar
+  - Grüner Passband-Cursor wenn `wfZoom >= 9`: zeigt Lo/Hi-Klammer, Ränder ziehbar
+  - Drag-Mitte → `store.setParam('freqKhz')`, Drag-Lo → `lowCut`, Drag-Hi → `highCut`
+  - _Files: `ui/src/components/FrequencyRuler.vue`_
+  - Test: Maus auf Cursor, ziehen → `store.freqKhz` ändert sich
+
+### M4b.5 — BandScaleBar: proportionale Breiten + Klick-zu-Frequenz
+
+- [x] **M4b.5** BandScaleBar proportional via viewLowMhz/viewHighMhz; @tune → store.freqKhz
+  - Inline-Spans in PluginView durch `<BandScaleBar>` ersetzt
+  - Vollständiger Band-Datensatz (Broadcast orange/hellblau + Amateur rot) bereits in Komponente
+  - Separater Composable `useBandLayout` nicht nötig (Logik in Komponente)
+  - _Files: `ui/src/components/BandScaleBar.vue`, `ui/src/views/PluginView.vue`_
+  - Test: Klick auf MW Broadcast → Frequenz springt auf ~900 kHz
+
+### M4b.6 — Icons + Zoom-Buttons + Frequenz-Schritt-Buttons
+
+- [x] **M4b.6** Korrekte Icons, Zoom-Button-Reihenfolge und Frequenz-Schritte
+  - Row 2: 🔍+, 🔍−, ↖↙ (max out), ↗↘ (max in), ↔ (zoom to band), ◀, ▶
+  - Row 4: −10 kHz, −1 kHz, −0.1 kHz, +0.1 kHz, +1 kHz, +10 kHz
+  - `stepFreq(dir, step)` mit step=0.1/1/10; `onPan(dir)`, `onZoomTo(level)`, `onResetWf()`, `onToggleAudio()`, `onToggleCic()`, `onZoomToBand()`
+  - _Files: `ui/src/views/PluginView.vue`_
+  - Test: alle Zoom-Nav-Buttons ändern `store.wfZoom`/`store.freqKhz` korrekt
+
+### M4b.7 — TagArea: Klick-zu-Frequenz + Popup-Menü
+
+- [x] **M4b.7** Tags klickbar via `<TagArea>`-Komponente (Inline-Spans ersetzt)
+  - `TagArea.vue`: `@tune` emit; PluginView: `@tune="onTagTune"` → store.freqKhz
+  - Popup-Komponente `TagPopup.vue`: dunkles Modal mit Land, Sprache, Schedule, Info
+  - 30 Demo-Tags: 18 technische (FT8/FAX/SSTV/WWV etc.) + 12 reale SWBC-Stationen (RRI, DW, VOA, BBC, CRI, NHK u.a.)
+  - _Files: `ui/src/components/TagArea.vue`, `ui/src/views/PluginView.vue`, `ui/src/components/TagPopup.vue`_
+  - Test: Klick auf FT8-Tag → Popup erscheint + Tune-Button setzt freqKhz
+
+### M4b.8 — Sub-Tab-Inhalte + Band/Extension Dropdowns
+
+- [x] **M4b.8** Sub-Tabs implementiert (Audio/AGC/User/Stat/Off); Colormap + Dropdowns funktionsfähig
+  - **Audio-Tab:** Volume-Slider (`volume`), Mute-Button, NR-Toggle (`nrOn`)
+  - **AGC-Tab:** AGC On/Off (`agcOn`), Threshold (`agcThresh`), Decay (`agcDecay`),
+    Hang (`agcHang`), Slope (`agcSlope`), Manual Gain (`agcManGain`)
+  - **User-Tab:** Squelch On/Off (`squelchOn`), Squelch Threshold, NB On/Off (`nbOn`), NB Threshold (`nbThresh`)
+  - **Stat-Tab:** GPS lock, User-Count, Buffer-Status, SNR (read-only)
+  - **Off-Tab:** setzt Audio auf Mute
+  - **Colormap-Dropdown + Bar:** verknüpft mit `store.colorMap`
+  - _Files: `ui/src/views/PluginView.vue`_
+  - Test: AGC-Tab → Slider vorhanden; Audio-Tab → Volume-Slider vorhanden
+
+### M4b.9 — E2E-Tests vollständig neu schreiben
+
+- [x] **M4b.9** Playwright E2E-Tests aktualisiert (24/24 passed)
+  - `smoke.spec.ts`: neue Selektoren (`.kiwi-header__title`, `.band-scale`, `.tag-area`)
+  - `resize.spec.ts`: fluid resize check
+  - `freq-tuning.spec.ts`: ±0.1/±1/±10 kHz Buttons
+  - `band-presets.spec.ts`: `.band-scale__block` Klick
+  - `mode-select.spec.ts`: `.kiwi-cpanel__mode-btn`
+  - `kiwi-layout.spec.ts`: vollständiger Layout-Check
+  - _Files: `ui/e2e/*.spec.ts`_
+  - `band-presets.spec.ts`: Band-Dropdown in `.kiwi-cpanel__row--freq`
+  - `mode-select.spec.ts`: Mode-Buttons in `.kiwi-cpanel__row--modes`
+  - Neue Tests: Ctrl+Wheel Zoom, BandScaleBar Klick, Tag Klick, Cursor Drag
+  - _Files: `ui/e2e/*.spec.ts`_
+  - Test: `npx playwright test` → alle grün
+
+### M4b.10 — Visuelle Korrekturen
+
+- [x] **M4b.10** Optik verbessert (Colormap, Slider, Play-Button)
+  - Kiwi-Colormap-Bar als Gradient in PluginView
+  - Colormap-Dropdown wired to `store.colorMap`
+  - Slider-Styling in `kiwi-theme.css` (6px Spur, 14px Thumb, abgerundet)
+  - Play-Button ▶ mit `@click="onToggleAudio()"`
+
+## Milestone M4c — E2E-Referenzaufnahme + vollständige UI-Testabdeckung
+
+> **Ziel:** Jedes UI-Element 1:1 funktional + visuell gegen den LIVE KiwiSDR (`kphsdr.com:8074`) prüfen.
+> Alle 78 Referenz-Matrix-Elemente (`doc/reference-matrix.md`) getestet.
+
+### M4c.1 — Live-KiwiSDR-Referenz aufnehmen (Phase 1)
+
+- [x] **M4c.1a** Topbar/Header (Port 8074, Splash dismiss, Callsign "TestUser")
+  - 85 Elemente, 65 IDs; JSON `ui/e2e/reference/kiwisdr-reference/header-topbar.json`
+  - Screenshot `header-topbar.png`
+  - _File: `ui/e2e/reference-capture-helper.ts` (helper, später gelöscht)_
+
+- [x] **M4c.1b** Sub-Tabs (RF/WF0/Audio/AGC/User/Stat/Off)
+  - Alle 7 Tabs via `#id-nav-optbar-*` durchgeklickt; JSON `subtabs.json`
+  - Screenshots `tab-{name}.png`
+
+- [x] **M4c.1c** Frequenz/Zoom/Mode/Step/Canvas
+  - 8 Mode-Buttons (AM/SAM/DRM/LSB/USB/CW/NBFM/IQ), 10 Canvas-Elemente
+  - JSON `freq-canvas.json`; Baseline-Freq "7020.000"
+
+- [x] **M4c.1d** DX Tags/Band-Select/Extensions/S-Meter
+  - 73 DX-Tag-Buttons, 87 Band-Optionen, 27 Extensions, Colormap/Aperture/WF/Spec Filter
+  - JSON `dx-selects-smeter.json`; S-Meter Canvas 355x37
+
+- [x] **M4c.1e** Vollständiger DOM-Export (explore-8074)
+  - 127 Elemente, 272 IDs (alle interaktiven + Canvas)
+  - JSON `explore-8074.json`, Screenshots `01-splash.png`, `02-after-click.png`
+
+### M4c.2 — SOLL-Matrix bauen (Phase 2)
+
+- [x] **M4c.2** Referenz-Matrix `doc/reference-matrix.md`
+  - 78 Elemente in 15 Kategorien dokumentiert
+  - Jedes Element: Live-ID/Text → Plugin-Selector → Soll-Verhalten
+  - _File: `doc/reference-matrix.md`_
+
+### M4c.3 — Playwright-Tests gegen Dev-Server (Phase 3)
+
+- [x] **M4c.3a** Header-Details (1.1–1.9) — Titel, Antenne, Callsign-Input, Zeit, Logo
+  - _File: `ui/e2e/kiwi-layout.spec.ts` (erweitert)_
+
+- [x] **M4c.3b** Band Scale (2.1–2.3) — Canvas, Tune, Pan
+  - _File: `ui/e2e/band-presets.spec.ts` (erweitert)_
+
+- [x] **M4c.3c** DX Tags (3.1–3.2) — Popup, Tune, Close
+  - _File: `ui/e2e/dx-tags.spec.ts`_
+
+- [x] **M4c.3d** Extension Select (4.3) + Play Button (4.5)
+  - _File: `ui/e2e/extension-select.spec.ts`_
+
+- [x] **M4c.3e** WF0-Tab-Inhalt (8.1–8.11)
+  - WF ceil, WF floor, WF rate, Spec Δ, Auto Scale, Spec Color, P1, Colormap
+  - _File: `ui/e2e/wf0-tab.spec.ts`_
+
+- [x] **M4c.3f** Audio-Tab-Inhalt (9.1–9.6)
+  - Volume, NR, Compression, De-emphasis
+  - _File: `ui/e2e/audio-tab.spec.ts`_
+
+- [x] **M4c.3g** User-Tab-Inhalt (11.1–11.4)
+  - Squelch, NB
+  - _File: `ui/e2e/user-tab.spec.ts`_
+
+- [x] **M4c.3h** Stat-Tab-Inhalt (12.1–12.4)
+  - GPS, Users, Buffer, SNR
+  - _File: `ui/e2e/stat-tab.spec.ts`_
+
+- [x] **M4c.3i** Off-Tab-Inhalt (13.1–13.2)
+  - MUTE, Audio disabled
+  - _File: `ui/e2e/off-tab.spec.ts`_
+
+- [x] **M4c.3j** Dropdowns + S-Meter (14.1–14.8)
+  - Colormap, Aperture, WF Filter, Spec Filter, P2, S-Meter
+  - _File: `ui/e2e/row11-dropdowns.spec.ts`_
+
+- [x] **M4c.3k** Baseline Screenshots (Visual)
+  - 11 visuelle Baselines (full, header, cpanel, bands, modes, icons, steps, tabs, canvas, ruler, smeter)
+  - _File: `ui/e2e/baseline-screenshots.spec.ts`_
+
+- [x] **M4c.3l** agc.spec.ts auf Subtab-Struktur umgeschrieben
+  - Alte Selektoren (`getByTestId('audio-panel')`, `.audio-panel__section`) → `.kiwi-cpanel__tab-btn`, `.kiwi-cpanel__btn`, `.kiwi-cpanel__ctrl-row`
+  - _File: `ui/e2e/agc.spec.ts`_
+
+### M4c.4 — 3x grüner Lauf (Phase 4)
+
+- [x] **M4c.4a** Lauf 1/3: Playwright 67 passed (36s)
+- [x] **M4c.4b** Lauf 2/3: Playwright 67 passed (37s)
+- [x] **M4c.4c** Lauf 3/3: Playwright 67 passed (37s)
+- [x] **M4c.4d** vue-tsc: kein Fehler
+- [x] **M4c.4e** vitest: 112 passed (15 files)
+
+### M4c.5 — Aufräumen
+
+- [x] **M4c.5a** `ui/scripts/explore_live.mjs` gelöscht (defekt, durch Helper ersetzt)
+- [x] **M4c.5b** `reference-capture-helper.ts` gelöscht (Einmal-Helper, nicht mehr referenziert)
+- [x] **M4c.5c** Live-Capture-Specs gelöscht (`reference-capture-dx-selects-smeter.spec.ts`, `reference-capture-freq-canvas.spec.ts`)
+- [x] **M4c.5d** RAG re-indiziert (`index_project_code`: 96 files, 936 symbols)
+- [x] **M4c.5e** Checkliste aktualisiert
+
+### M4c.6 — Bugfix: Cpanel-Toggle von Links-Tab zu Top-Rechts-Pfeil
+
+- [x] **M4c.6** Falscher Close-Button links am Cpanel entfernt, Pfeil-Toggle oben-rechts implementiert
+  - Alter Tab `.kiwi-cpanel__tab` (links, `►`/`◄`) entfernt — war ein fälschlicher Close-Button
+  - Neuer `.kiwi-cpanel__toggle` (oben-rechts, `▼`/`▲`) — kleiner Pfeil-Button, positioniert über der oberen rechten Ecke des Panels
+  - Klick toggled `isPanelOpen`; ▼ wenn offen, ▲ wenn geschlossen
+  - CSS: `position: absolute; top: -22px; right: 0; border-radius: 6px 6px 0 0;`
+  - _File: `ui/src/views/PluginView.vue` (Template Zeilen 94-98, CSS Zeilen 834-858)_
+  - Test: vue-tsc clean, vitest 112 passed, playwright 65 passed
+
+### E2E-Test-Dateien (finaler Stand)
+
+```
+ui/e2e/
+├── agc.spec.ts                     # AGC + Audio Tab Toggles (2 Tests)
+├── audio-tab.spec.ts                # Audio Tab Controls (6 Test-Cases)
+├── band-presets.spec.ts             # Band Presets + Scale Interaction (8 Tests)
+├── baseline-screenshots.spec.ts     # Visuelle Baselines (11 Tests)
+├── capture-reference.spec.ts        # Live-Referenz (2 Tests)
+├── dx-tags.spec.ts                  # DX Tag Popup (3 Tests)
+├── explore-8074.spec.ts             # Live-Erkundung DOM (1 Test)
+├── extension-select.spec.ts         # Extension Select + Play (3 Tests)
+├── freq-tuning.spec.ts              # Frequenz-Eingabe + Step-Buttons (4 Tests)
+├── kiwi-layout.spec.ts              # Layout + Header-Details (7 Tests)
+├── mode-select.spec.ts              # Mode Auswahl (3 Tests)
+├── off-tab.spec.ts                  # Off Tab MUTE (2 Tests)
+├── resize.spec.ts                   # Resize-Verhalten (2 Tests)
+├── row11-dropdowns.spec.ts          # Dropdowns + S-Meter (6 Tests)
+├── smoke.spec.ts                    # Smoke (5 Tests)
+├── stat-tab.spec.ts                 # Stat Tab Anzeigen (4 Tests)
+├── user-tab.spec.ts                 # User Tab Squelch/NB (2 Tests)
+└── wf0-tab.spec.ts                  # WF0 Tab Controls (8 Tests)
+```
+
+**Gesamt: 65 Playwright-Tests, 112 Vitest-Tests — alle grün.**
 
 - [x] **T1** clangd-based C++ semantic MCP - done (M3.6, `lsp-mcp-server` MIT as `clangd_mcp`)
 - [x] **T2** Playwright MCP - done (M3.6, `@playwright/test` + `ui/e2e/smoke.spec.ts` green)

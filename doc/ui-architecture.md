@@ -187,3 +187,226 @@ the UI side the Vue layout is fully responsive (fluid grid/flex, no
 hard-coded pixel dimensions) and reflows continuously at any size. The only
 clamp is the documented `kMinWidth`/`kMinHeight` floor
 (`source/editor/plugin_editor.cpp`).
+
+---
+
+## 7. Complete GUI Element Inventory (KiwiSDR reference → Vue implementation)
+
+_Updated 2026-08-28. Every GUI element that exists in the KiwiSDR web UI or
+must exist in the VST plugin UI. "Impl" = implementation status:_
+_✅ done · ⚠️ partial · ❌ missing · 🔧 needs fix_
+
+### 7.1 Header Bar (`PluginView.vue .kiwi-header`)
+
+| Element | Function | Impl | Note |
+|---------|----------|------|------|
+| Kiwi bird logo (green circle) | branding, no interaction | ✅ | SVG inline |
+| Station name + sub-info | shows connected station, antenna, SNR | ⚠️ | SNR missing |
+| Host/center info | station hostname:port, share text | ⚠️ | static text |
+| StationInput (URL field + Connect/Disconnect) | user enters station URL, triggers connect | ✅ | |
+| Status badge | connection state (Connecting/Connected/Error) | ⚠️ | text only, no colour |
+| Your name / callsign input | sent to KiwiSDR server as user ID | ⚠️ | field exists, not wired |
+| UTC clock | displays current UTC time, updates every second | ✅ | |
+| Local time + timezone | local time + tz name | ✅ | |
+
+### 7.2 Band Scale Strip (`BandScaleBar.vue .kiwi-bandscale`)
+
+| Element | Function | Impl | Note |
+|---------|----------|------|------|
+| Band blocks (proportional width) | shows each frequency band proportional to actual bandwidth | 🔧 | Bug 3: hardcoded positions |
+| Band block colours | Broadcast=teal, Amateur=pink/red, Utility=yellow, Maritime=blue | ⚠️ | colours exist, layout wrong |
+| Scroll arrows (◀ ▶) | pan band scale left/right if wider than viewport | ❌ | not implemented |
+| Click on band block | sets `freqKhz` to band centre, adjusts zoom to show full band | ❌ | Bug 3 |
+| Zoom-reactive layout | blocks reposition/resize when `wfZoom` changes | ❌ | Bug 8 |
+
+### 7.3 DX Tag / Station Label Area (`TagArea.vue .kiwi-tagarea`)
+
+| Element | Function | Impl | Note |
+|---------|----------|------|------|
+| DX tags (coloured pills) | shows broadcast stations/DX spots at their frequencies | ⚠️ | demo data only |
+| Tag position (proportional) | x-position derived from `freqKhz` relative to visible span | ❌ | Bug 8 |
+| Click on tag → jump to frequency | sets `store.freqKhz` to `tag.freqKhz` | ❌ | Bug 4 |
+| Tag popup on click | modal with station name, frequency, language, time info | ❌ | Bug 4 |
+| EiBi/SWBC dataset | real broadcast schedule data | ❌ | only 7 hard-coded demo tags |
+| Multi-row layout (staggered) | tags that overlap stack into multiple rows | ⚠️ | partial |
+
+### 7.4 Frequency Ruler (`FrequencyRuler.vue .kiwi-freq-ruler`)
+
+| Element | Function | Impl | Note |
+|---------|----------|------|------|
+| Tick marks + frequency labels | dynamic, computed from loKhz/hiKhz + zoom | ⚠️ | static 0–30 MHz |
+| Zoom-reactive ticks | more ticks at higher zoom levels | ❌ | Bug 8 |
+| Frequency cursor (yellow, low zoom) | Λ-shaped yellow dragger at current `freqKhz` | ❌ | Bug 5 |
+| Frequency cursor (green, high zoom) | bracket showing passband LoKhz–HiKhz | ❌ | Bug 5 |
+| Drag cursor to tune | mousedown+move → `store.setParam('freqKhz', ...)` | ❌ | Bug 5 |
+| Drag Lo/Hi edge | mousedown+move on bracket edges → `lowCut`/`highCut` | ❌ | Bug 5 |
+| Ctrl+Wheel zoom | zoom in/out centred on cursor position | ❌ | Bug 2 |
+| Database label | shows active DX database name ("database: EiBi-A26") | ⚠️ | static text |
+
+### 7.5 Waterfall Canvas (`Waterfall.vue`)
+
+| Element | Function | Impl | Note |
+|---------|----------|------|------|
+| Waterfall pixel rows | each frame pushed from DSP, scrolls downward | ✅ | |
+| Spectrum overlay | spectrum line above waterfall (optional mode) | ❌ | not implemented |
+| Passband shade (green overlay) | semi-transparent green rectangle between Lo/Hi cut | ✅ | `drawOverlay()` |
+| Frequency cursor line (yellow) | vertical yellow line at `cursorKhz` | ✅ | `drawOverlay()` |
+| Ctrl+Wheel zoom | zoom in/out at mouse anchor position → `store.wfZoom` | ❌ | Bug 2 (emitted but not handled) |
+| Wheel zoom without Ctrl | pan left/right | ❌ | not implemented |
+| Span-reactive rendering | bins mapped to `loKhz..hiKhz` visible range | 🔧 | Bug 8: no spanKhz prop |
+| Click to tune | click sets `freqKhz` to clicked frequency | ❌ | not implemented |
+| Play button (left edge) | violet circle with ► ; unlocks browser audio, starts stream | 🔧 | shows `?` instead of icon |
+
+### 7.6 Control Panel (`PluginView.vue .kiwi-cpanel`)
+
+#### Row 1 — Frequency + Dropdowns
+
+| Element | Function | Impl | Note |
+|---------|----------|------|------|
+| Frequency input field | text entry in kHz, Enter/blur → `store.freqKhz` | ✅ | |
+| Band select dropdown | selects amateur/broadcast/utility band → sets freq+zoom | ❌ | Bug 6.5: placeholder only |
+| Extension select dropdown | opens extension decoder panel | ❌ | Bug 6.6: placeholder only |
+| Play/audio button | start/stop audio stream | ⚠️ | no icon, no function |
+
+#### Row 2 — Toolbar Icons
+
+| Element | Function | Impl | Note |
+|---------|----------|------|------|
+| ≡ Menu icon | opens settings/menu overlay | ❌ | no function |
+| A (cyan circle) | user count / ID indicator | ❌ | static, no function |
+| ✓ (green) | connection/GPS lock indicator | ❌ | static |
+| 9 (green number) | active receiver slot count | ❌ | static |
+| Zoom in (+🔍) | `wfZoom + 1` | ⚠️ | icon missing (`?`) |
+| Zoom out (−🔍) | `wfZoom - 1` | ⚠️ | icon missing (`?`) |
+| Max zoom in (↘↗) | `wfZoom = 14` | ⚠️ | wrong icon + order (Bug 6.2) |
+| Max zoom out (↖↙) | `wfZoom = 0` | ⚠️ | wrong icon + order (Bug 6.2) |
+| Zoom to band (↔) | set zoom/freq to show current band fully | ❌ | Bug 6.2 |
+| Pan left (◀) | shift visible range left | ❌ | Bug 6.2 |
+| Pan right (▶) | shift visible range right | ❌ | Bug 6.2 |
+| CIC comp toggle | toggle `store.wfComp` | ⚠️ | icon missing |
+| "Spectrum" label | WF/Spec/Both display mode selector | ❌ | static label, no toggle |
+| Reset (red 🔄) | reset WF params to defaults | ❌ | no function |
+| Audio (green 🔊) | audio on/off | ❌ | no function |
+
+#### Row 3 — Mode Buttons
+
+| Element | Function | Impl | Note |
+|---------|----------|------|------|
+| AM button | set mode=0, apply AM default passband | ✅ | |
+| SAM button | set mode=13 | ✅ | |
+| DRM button | set mode=12 | ✅ | |
+| LSB button | set mode=5 | ✅ | |
+| USB button | set mode=3 | ✅ | |
+| CW button | set mode=7 | ✅ | |
+| NBFM button | set mode=9 | ✅ | |
+| IQ button | set mode=11 | ✅ | |
+| AMN, AMW, USN, LSN, CWN, NNFM, SAU, SAL, SAS, QAM | remaining 10 modes | ❌ | not shown in panel |
+
+#### Row 4 — Navigation / Frequency Step Buttons
+
+| Element | Function | Impl | Note |
+|---------|----------|------|------|
+| −10 kHz button (large) | `freqKhz − 10` | ❌ | Bug 6.3 |
+| −1 kHz button (medium) | `freqKhz − 1` | ⚠️ | `stepFreq(-1)` exists |
+| −0.1 kHz button (small) | `freqKhz − 0.1` | ❌ | Bug 6.3 |
+| +0.1 kHz button (small) | `freqKhz + 0.1` | ❌ | Bug 6.3 |
+| +1 kHz button (medium) | `freqKhz + 1` | ⚠️ | `stepFreq(1)` exists |
+| +10 kHz button (large) | `freqKhz + 10` | ❌ | Bug 6.3 |
+
+#### Row 5 — Sub-Tabs (RF / WF0 / Audio / AGC / User / Stat / Off)
+
+| Element | Function | Impl | Note |
+|---------|----------|------|------|
+| Tab buttons (7) | switch active tab | ✅ | colours correct |
+| Tab label "WF9" | shows waterfall slot number | ❌ | shows "WF0" always |
+
+#### Row 6 — Colormap bar
+
+| Element | Function | Impl | Note |
+|---------|----------|------|------|
+| Colormap gradient bar | preview of active colormap | ⚠️ | empty div |
+| Click on bar | opens colormap selector? | ❌ | |
+
+#### Tab Content: RF / WF0
+
+| Element | Function | Impl | Note |
+|---------|----------|------|------|
+| WF ceil slider | `wfMaxDb` (−10..0 dB) | ✅ | |
+| WF floor slider | `wfMinDb` (−160..−60 dB) | ✅ | |
+| WF rate slider | `wfSpeed` (pause/slow/med/fast/max) | ✅ | |
+| Spec Δ slider | spectrum gain (0..2) | ⚠️ | not wired to store |
+| Auto Scale button | auto-fit WF ceil/floor to signal | ❌ | no function |
+| Spec Color button | toggle spectrum line colour | ❌ | no function |
+| P1 button | save WF preset 1 | ❌ | no function |
+| Colormap dropdown | select colormap (Kiwi/Rain/Grey/…) | ⚠️ | no effect on Waterfall |
+| Aperture dropdown | IIR/MMA/EMA/off → `wfComp` algorithm | ❌ | no function |
+| Timestamp dropdown | off/2s/5s/… | ❌ | no function |
+| FFT window dropdown | IIR/MMA/EMA | ❌ | no function |
+| P2 button | save WF preset 2 | ❌ | no function |
+
+#### Tab Content: Audio (not yet implemented)
+
+| Element | Function | Impl | Note |
+|---------|----------|------|------|
+| Volume slider | `volume` (0..100) | ❌ | Bug 6.4 |
+| Mute button | `volume = 0` | ❌ | |
+| Compression toggle | audio compression on/off | ❌ | |
+| De-emphasis toggle | de-emphasis filter | ❌ | |
+| NR (Noise Reduction) toggle | `nrOn` | ❌ | |
+
+#### Tab Content: AGC (not yet implemented)
+
+| Element | Function | Impl | Note |
+|---------|----------|------|------|
+| AGC On/Off toggle | `agcOn` | ❌ | Bug 6.4 |
+| Threshold slider | `agcThresh` (−140..0 dB) | ❌ | |
+| Decay slider | `agcDecay` (20..5000 ms) | ❌ | |
+| Hang toggle | `agcHang` | ❌ | |
+| Slope slider | `agcSlope` | ❌ | |
+| Manual Gain slider | `agcManGain` | ❌ | |
+
+#### Tab Content: User (not yet implemented)
+
+| Element | Function | Impl | Note |
+|---------|----------|------|------|
+| Squelch On/Off | `squelchOn` | ❌ | Bug 6.4 |
+| Squelch threshold | `squelchThreshold` | ❌ | |
+| NB (Noise Blanker) On/Off | `nbOn` | ❌ | |
+| NB threshold | `nbThreshold` | ❌ | |
+
+#### Tab Content: Stat (not yet implemented)
+
+| Element | Function | Impl | Note |
+|---------|----------|------|------|
+| GPS lock status | GPS satellite count + lock indicator | ❌ | Bug 6.4 |
+| User count | active listeners / max slots | ❌ | |
+| Audio buffer status | stream buffer health | ❌ | |
+| SNR readout | signal-to-noise ratio | ❌ | |
+
+#### S-Meter Footer
+
+| Element | Function | Impl | Note |
+|---------|----------|------|------|
+| S1–S9 scale labels | reference marks for signal strength | ✅ | |
+| +10/+20/+40/+60 labels | above-S9 extension | ✅ | |
+| dBm digital readout | exact signal level | ✅ | |
+| S-meter bar (fill) | animated bar proportional to signal level | ✅ | |
+
+---
+
+## 8. Known Bugs (M4b)
+
+See `doc/M4b-bugs.md` for the full bug list with root causes, fix estimates,
+and implementation order. Summary:
+
+| Bug | Short title | Priority |
+|-----|-------------|----------|
+| 1 | Scale-Transform must be removed (App.vue) | Critical |
+| 2 | Ctrl+Wheel zoom not connected to store | High |
+| 3 | BandScaleBar wrong layout + no click-to-tune | High |
+| 4 | TagArea no click-to-tune, no popup | Medium |
+| 5 | FrequencyRuler no cursor/dragger | High |
+| 6 | ControlPanel: icons missing, buttons wrong/unimplemented | Medium |
+| 7 | Visual deviations from original | Low |
+| 8 | Zoom/span architecture: no spanKhz in store/props | High |
+| 9 | All Playwright E2E tests outdated | High |

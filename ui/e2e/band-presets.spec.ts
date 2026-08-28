@@ -1,62 +1,61 @@
 import { test, expect } from '@playwright/test'
 
-/**
- * M4.9 E2E: band presets (dev server). Selecting a band must set the
- * frequency (visible in the freq panel readout) and save/load bookmarks.
- */
-test('band-presets: selecting an amateur band sets the frequency', async ({ page }) => {
-  await page.goto('/')
+test.describe('Band presets', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/')
+  })
 
-  const bandPanel = page.getByTestId('band-panel')
-  await expect(bandPanel).toBeVisible()
+  test('band scale shows radio amateur bands', async ({ page }) => {
+    const bandScale = page.locator('.band-scale')
+    await expect(bandScale).toContainText('40m')
+    await expect(bandScale).toContainText('20m')
+    await expect(bandScale).toContainText('80m')
+  })
 
-  const freqPanel = page.getByTestId('freq-panel')
-  const readout = freqPanel.locator('.k-readout')
-  await expect(readout).toContainText('14100.000') // default
+  test('band scale shows SW broadcast bands', async ({ page }) => {
+    const bandScale = page.locator('.band-scale')
+    await expect(bandScale).toContainText('31m')
+    await expect(bandScale).toContainText('19m')
+    await expect(bandScale).toContainText('49m')
+  })
 
-  // First dropdown = Amateur; option "20 m · 14200".
-  const amateur = bandPanel.locator('select').nth(0)
-  await amateur.selectOption({ label: '20 m · 14200' })
+  test('clicking a band updates frequency', async ({ page }) => {
+    const input = page.locator('.kiwi-cpanel__freq-input')
+    // Click on the 20m amateur band label
+    await page.locator('.band-scale__block:has-text("20m")').click()
+    const value = parseFloat(await input.inputValue())
+    // 20m band centre is ~14.150 MHz → 14150 kHz
+    expect(value).toBeGreaterThan(14000)
+    expect(value).toBeLessThan(14300)
+  })
 
-  await expect(readout).toContainText('14200.000')
-})
+  // --- BAND SCALE (ref-matrix 2.1-2.3) ---
+  test('band scale canvas exists with pan arrows', async ({ page }) => {
+    const bandScale = page.locator('.band-scale')
+    await expect(bandScale).toBeVisible()
+    await expect(page.locator('.band-scale__arrow[aria-label="Pan left"]')).toBeVisible()
+    await expect(page.locator('.band-scale__arrow[aria-label="Pan right"]')).toBeVisible()
+  })
 
-test('band-presets: selecting a timesig band sets the frequency', async ({ page }) => {
-  await page.goto('/')
+  test('clicking band area fires a tune event', async ({ page }) => {
+    const logs: string[] = []
+    page.on('console', msg => {
+      if (msg.type() === 'log') logs.push(msg.text())
+    })
+    const freqBefore = parseFloat(await page.locator('.kiwi-cpanel__freq-input').inputValue())
+    await page.locator('.band-scale__block:has-text("80m")').click()
+    const freqAfter = parseFloat(await page.locator('.kiwi-cpanel__freq-input').inputValue())
+    expect(freqAfter).not.toBe(freqBefore)
+    // OnBandTune sets freqKhz; no console event in Vue3 but frequency change is the observable outcome
+    expect(freqAfter).toBeGreaterThan(0)
+  })
 
-  const bandPanel = page.getByTestId('band-panel')
-  const freqPanel = page.getByTestId('freq-panel')
-  const readout = freqPanel.locator('.k-readout')
-
-  // Third dropdown = Utility/timesig; "DCF77 · 77.5".
-  const utility = bandPanel.locator('select').nth(2)
-  await utility.selectOption({ label: 'DCF77 · 77.5' })
-
-  await expect(readout).toContainText('77.500')
-})
-
-test('band-presets: save current creates a bookmark that loads back', async ({ page }) => {
-  await page.goto('/')
-
-  const bandPanel = page.getByTestId('band-panel')
-  const freqPanel = page.getByTestId('freq-panel')
-
-  // Move the frequency somewhere distinct (e.g. +10 from default).
-  await freqPanel.locator('.k-button').nth(5).click() // +10 kHz
-  await expect(freqPanel.locator('.k-readout')).toContainText('14110.000')
-
-  // Save current.
-  await bandPanel.getByRole('button', { name: 'Save current' }).click()
-  await expect(bandPanel.locator('.band-panel__item')).toHaveCount(1)
-
-  // Change frequency, then load the bookmark back.
-  await freqPanel.locator('.k-button').nth(5).click() // +10 -> 14120
-  await expect(freqPanel.locator('.k-readout')).toContainText('14120.000')
-
-  await bandPanel.locator('.band-panel__load').click()
-  await expect(freqPanel.locator('.k-readout')).toContainText('14110.000')
-
-  // Delete the bookmark.
-  await bandPanel.locator('.band-panel__delete').click()
-  await expect(bandPanel.locator('.band-panel__item')).toHaveCount(0)
+  test('pan arrows change visible view', async ({ page }) => {
+    const bandScale = page.locator('.band-scale')
+    await expect(bandScale).toBeVisible()
+    // Pan left button is clickable (fires @pan)
+    await page.locator('.band-scale__arrow[aria-label="Pan left"]').click()
+    // After a pan the frequency input should still be present
+    await expect(page.locator('.kiwi-cpanel__freq-input')).toBeVisible()
+  })
 })

@@ -1,0 +1,134 @@
+/* KiwiSDR 1:1 Colour Palette — M4.18 */
+:root {
+  /* Backgrounds */
+  --kiwi-bg: #111111;
+  --kiwi-panel: #222222;
+  --kiwi-panel-light: #333333;
+  --kiwi-panel-mid: #444444;
+  --kiwi-panel-border: #575757;
+
+  /* Borders */
+  --kiwi-border: #555555;
+  --kiwi-border-light: #666666;
+
+  /* Text */
+  --kiwi-text: #dddddd;
+  --kiwi-text-muted: #909090;
+  --kiwi-text-dim: #606060;
+
+  /* Accent colours */
+  --kiwi-accent: #4CAF50;          /* w3-selection-green */
+  --kiwi-accent-neon: #00FF00;     /* active mode button */
+  --kiwi-accent-hover: #66BB6A;
+  --kiwi-warn: #e53935;
+  --kiwi-yellow: #FFD700;
+
+  /* Header bar */
+  --kiwi-topbar-bg: #EAEAEA;
+  --kiwi-topbar-text: #404040;
+  --kiwi-topbar-sub: #606060;
+  --kiwi-topbar-link: #2196F3;
+
+  /* Inputs */
+  --kiwi-input-bg: #000000;
+  --kiwi-input-border: #4488ff;
+  --kiwi-select-bg: #444444;
+
+  /* Sub-tab colours */
+  --kiwi-tab-rf: #4CAF50;
+  --kiwi-tab-wf: #e53935;
+  --kiwi-tab-audio: #1565c0;
+  --kiwi-tab-agc: #6a1b9a;
+  --kiwi-tab-user: #00838f;
+  --kiwi-tab-stat: #e65100;
+
+  /* Band scale colours */
+  --kiwi-band-broadcast: #4fc3f7;  /* light blue */
+  --kiwi-band-amateur: #ef5350;    /* red */
+  --kiwi-band-utility: #FF9800;    /* orange */
+
+  /* Typography */
+  --kiwi-font-sm: 10px;
+  --kiwi-font-md: 11px;
+  --kiwi-font-lg: 13px;
+  --kiwi-font-xl: 14px;
+  --kiwi-font-mono: Consolas, 'Courier New', monospace;
+
+  /* Waterfall */
+  --kiwi-waterfall-bg: #000000;
+
+  /* Control panel */
+  --kiwi-panel-radius: 8px 0 0 8px;
+  --kiwi-panel-width: 360px;
+}
+
+/* Base reset for plugin full-screen layout */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html, body, #app {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  font-family: 'Segoe UI', Arial, sans-serif;
+  font-size: var(--kiwi-font-md);
+  color: var(--kiwi-text);
+  background: var(--kiwi-bg);
+}
+
+/* w3_ext slider pattern — applied globally for all range inputs in the plugin */
+input[type="range"].kiwi-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 3px;
+  background: var(--kiwi-panel-mid);
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+}
+
+input[type="range"].kiwi-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--kiwi-accent);
+  border: 2px solid var(--kiwi-border);
+  cursor: pointer;
+}
+
+input[type="range"].kiwi-slider::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--kiwi-accent);
+  border: 2px solid var(--kiwi-border);
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+/* Small slider variant */
+input[type="range"].kiwi-slider--sm {
+  height: 4px;
+}
+
+input[type="range"].kiwi-slider--sm::-webkit-slider-thumb {
+  width: 10px;
+  height: 10px;
+}
+
+input[type="range"].kiwi-slider--sm::-moz-range-thumb {
+  width: 10px;
+  height: 10px;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--kiwi-panel); }
+::-webkit-scrollbar-thumb { background: var(--kiwi-border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--kiwi-border-light); }

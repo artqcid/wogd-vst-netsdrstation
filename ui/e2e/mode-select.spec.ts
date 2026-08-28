@@ -1,57 +1,33 @@
 import { test, expect } from '@playwright/test'
 
-/**
- * M4.9 E2E: mode & passband panel (dev server).
- * Selecting a mode must apply the mode + its default passband.
- */
-test('mode-select: clicking USB applies the USB default passband', async ({ page }) => {
-  await page.goto('/')
+test.describe('Mode selection', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/')
+  })
 
-  const panel = page.getByTestId('mode-panel')
-  await expect(panel).toBeVisible()
+  test('mode buttons are present', async ({ page }) => {
+    await expect(page.locator('.kiwi-cpanel__mode-btn')).toHaveCount(8)
+  })
 
-  // 18 mode buttons; USB is the 4th (AM, AMN, AMW, USB, ...).
-  const usbButton = panel.getByRole('button', { name: 'USB', exact: true })
-  await usbButton.click()
+  test('clicking USB selects USB mode', async ({ page }) => {
+    const usbBtn = page.locator('.kiwi-cpanel__mode-btn', { hasText: 'USB' })
+    await usbBtn.click()
+    await expect(usbBtn).toHaveClass(/active/)
+  })
 
-  // USB defaults: lowCut=300, highCut=2700 -> number inputs reflect them.
-  const inputs = panel.locator('input[type="number"]')
-  await expect(inputs.nth(0)).toHaveValue('300') // Low
-  await expect(inputs.nth(1)).toHaveValue('2700') // High
+  test('clicking LSB deselects previous mode and selects LSB', async ({ page }) => {
+    // First select USB
+    await page.locator('.kiwi-cpanel__mode-btn', { hasText: 'USB' }).click()
+    // Then LSB
+    const lsbBtn = page.locator('.kiwi-cpanel__mode-btn', { hasText: 'LSB' })
+    await lsbBtn.click()
+    await expect(lsbBtn).toHaveClass(/active/)
+    // USB is no longer active
+    await expect(page.locator('.kiwi-cpanel__mode-btn', { hasText: 'USB' })).not.toHaveClass(/active/)
+  })
 
-  // The active button gets the active modifier class.
-  await expect(usbButton).toHaveClass(/k-button--active/)
-})
-
-test('mode-select: clicking CW applies its default passband', async ({ page }) => {
-  await page.goto('/')
-
-  const panel = page.getByTestId('mode-panel')
-  const cwButton = panel.getByRole('button', { name: 'CW', exact: true })
-  await cwButton.click()
-
-  // CW defaults: lowCut=300, highCut=800.
-  const inputs = panel.locator('input[type="number"]')
-  await expect(inputs.nth(0)).toHaveValue('300')
-  await expect(inputs.nth(1)).toHaveValue('800')
-
-  // Derived bandwidth readout: 800 - 300 = 500.
-  await expect(panel.locator('.k-readout')).toContainText('500')
-})
-
-test('mode-select: Reset restores the current mode defaults', async ({ page }) => {
-  await page.goto('/')
-
-  const panel = page.getByTestId('mode-panel')
-  const inputs = panel.locator('input[type="number"]')
-
-  // Change Low to -1000 (default AM low is -4900).
-  await inputs.nth(0).fill('-1000')
-  await expect(inputs.nth(0)).toHaveValue('-1000')
-
-  // Reset (last button in the panel is "Reset").
-  await panel.getByRole('button', { name: 'Reset', exact: true }).click()
-
-  await expect(inputs.nth(0)).toHaveValue('-4900')
-  await expect(inputs.nth(1)).toHaveValue('4900')
+  test('selecting CW mode shows CW in active state', async ({ page }) => {
+    await page.locator('.kiwi-cpanel__mode-btn', { hasText: 'CW' }).click()
+    await expect(page.locator('.kiwi-cpanel__mode-btn', { hasText: 'CW' })).toHaveClass(/active/)
+  })
 })

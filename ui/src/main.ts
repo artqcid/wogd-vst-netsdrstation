@@ -1,3 +1,4 @@
+import './assets/kiwi-theme.css'
 import './assets/master.css'
 
 import { createApp } from 'vue'

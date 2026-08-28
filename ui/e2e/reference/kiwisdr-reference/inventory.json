@@ -1,0 +1,13 @@
+{
+  "capturedAt": "2026-08-28T17:14:32.646Z",
+  "source": "http://kphsdr.com:8072",
+  "totalStates": 1,
+  "states": [
+    {
+      "name": "00-baseline",
+      "elements": 362,
+      "screenshot": "00-baseline.png",
+      "title": "KPH Kiwi72"
+    }
+  ]
+}

@@ -1,53 +1,44 @@
 import { test, expect } from '@playwright/test'
 
-/**
- * M4.9 E2E: frequency & tuning panel (dev server, no native bridge).
- * The Pinia store applies optimistic updates, so the UI state reacts to
- * clicks without the C++ backend.
- */
-test('freq-tuning: step buttons update the frequency readout', async ({ page }) => {
-  await page.goto('/')
+test.describe('Frequency tuning', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/')
+  })
 
-  const panel = page.getByTestId('freq-panel')
-  await expect(panel).toBeVisible()
+  test('step +10 kHz increases the displayed frequency', async ({ page }) => {
+    const input = page.locator('.kiwi-cpanel__freq-input')
+    const initialValue = await input.inputValue()
+    const initialNum = parseFloat(initialValue)
+    await page.locator('button[title="+10 kHz"]').click()
+    const newValue = parseFloat(await input.inputValue())
+    expect(newValue).toBeCloseTo(initialNum + 10, 1)
+  })
 
-  // Default freqKhz = 14100.000 kHz -> readout shows 14100.000
-  const readout = panel.locator('.k-readout')
-  await expect(readout).toContainText('14100.000')
+  test('step -10 kHz decreases the displayed frequency', async ({ page }) => {
+    const input = page.locator('.kiwi-cpanel__freq-input')
+    const initialValue = await input.inputValue()
+    const initialNum = parseFloat(initialValue)
+    await page.locator('button[title="−10 kHz"]').click()
+    const newValue = parseFloat(await input.inputValue())
+    expect(newValue).toBeCloseTo(initialNum - 10, 1)
+  })
 
-  // Click the "+10" step button (6 buttons: ←10 ←1 ←0.1 +0.1 +1 +10)
-  const buttons = panel.locator('.k-button')
-  await buttons.nth(5).click()
+  test('+0.1 kHz steps by 0.1', async ({ page }) => {
+    const input = page.locator('.kiwi-cpanel__freq-input')
+    const initialNum = parseFloat(await input.inputValue())
+    await page.locator('button[title="+0.1 kHz"]').click()
+    const newValue = parseFloat(await input.inputValue())
+    expect(newValue).toBeCloseTo(initialNum + 0.1, 1)
+  })
 
-  await expect(readout).toContainText('14110.000')
-})
+  test('manual text entry updates the display', async ({ page }) => {
+    const input = page.locator('.kiwi-cpanel__freq-input')
+    await input.fill('14200.00')
+    await input.dispatchEvent('change')
+    await expect(input).toHaveValue(/14200/)
+  })
 
-test('freq-tuning: step buttons clamp at 30000 kHz', async ({ page }) => {
-  await page.goto('/')
-
-  const panel = page.getByTestId('freq-panel')
-  const buttons = panel.locator('.k-button')
-  const readout = panel.locator('.k-readout')
-
-  // Jump high with repeated +10 clicks (25 clicks → +250 kHz).
-  for (let i = 0; i < 5; ++i) {
-    await buttons.nth(5).click() // +10
-    await buttons.nth(5).click() // +10
-    await buttons.nth(5).click() // +10
-    await buttons.nth(5).click() // +10
-    await buttons.nth(5).click() // +10
-  }
-  // 14100 + 250 = 14350, still below 30000 -> assert exact value.
-  await expect(readout).toContainText('14350.000')
-})
-
-test('freq-tuning: manual text entry updates the readout', async ({ page }) => {
-  await page.goto('/')
-
-  const panel = page.getByTestId('freq-panel')
-  const input = panel.locator('input[type="number"]')
-  const readout = panel.locator('.k-readout')
-
-  await input.fill('14250.5')
-  await expect(readout).toContainText('14250.500')
+  test('frequency step buttons are present in row 4', async ({ page }) => {
+    await expect(page.locator('.kiwi-cpanel__row--nav button')).toHaveCount(6)
+  })
 })

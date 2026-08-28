@@ -1,0 +1,208 @@
+{
+  "capturedAt": "2026-08-28T16:48:44.035Z",
+  "source": "http://kphsdr.com:8074",
+  "pageTitle": "",
+  "viewport": {
+    "w": 1280,
+    "h": 800
+  },
+  "baseline": {
+    "freqValue": "",
+    "freqId": "#id-freq-input",
+    "modeActive": null,
+    "elements": []
+  },
+  "vfo": {
+    "clicked": false,
+    "beforeFreq": "",
+    "afterFreq": "",
+    "screenshot": "freq-vfo.png",
+    "elementsAfter": []
+  },
+  "modes": [
+    {
+      "label": "AM",
+      "id": "0-id-mode-col",
+      "clicked": false,
+      "screenshot": "",
+      "elementsAfter": [],
+      "freqAfter": ""
+    },
+    {
+      "label": "SAM",
+      "id": "1-id-mode-col",
+      "clicked": false,
+      "screenshot": "",
+      "elementsAfter": [],
+      "freqAfter": ""
+    },
+    {
+      "label": "DRM",
+      "id": "2-id-mode-col",
+      "clicked": false,
+      "screenshot": "",
+      "elementsAfter": [],
+      "freqAfter": ""
+    },
+    {
+      "label": "LSB",
+      "id": "3-id-mode-col",
+      "clicked": false,
+      "screenshot": "",
+      "elementsAfter": [],
+      "freqAfter": ""
+    },
+    {
+      "label": "USB",
+      "id": "4-id-mode-col",
+      "clicked": false,
+      "screenshot": "",
+      "elementsAfter": [],
+      "freqAfter": ""
+    },
+    {
+      "label": "CW",
+      "id": "5-id-mode-col",
+      "clicked": false,
+      "screenshot": "",
+      "elementsAfter": [],
+      "freqAfter": ""
+    },
+    {
+      "label": "NBFM",
+      "id": "6-id-mode-col",
+      "clicked": false,
+      "screenshot": "",
+      "elementsAfter": [],
+      "freqAfter": ""
+    },
+    {
+      "label": "IQ",
+      "id": "7-id-mode-col",
+      "clicked": false,
+      "screenshot": "",
+      "elementsAfter": [],
+      "freqAfter": ""
+    }
+  ],
+  "steps": [
+    {
+      "label": "−10",
+      "clicked": false,
+      "screenshot": "",
+      "freqBefore": "",
+      "freqAfter": ""
+    },
+    {
+      "label": "−1",
+      "clicked": false,
+      "screenshot": "",
+      "freqBefore": "",
+      "freqAfter": ""
+    },
+    {
+      "label": "−0.1",
+      "clicked": false,
+      "screenshot": "",
+      "freqBefore": "",
+      "freqAfter": ""
+    },
+    {
+      "label": "+0.1",
+      "clicked": false,
+      "screenshot": "",
+      "freqBefore": "",
+      "freqAfter": ""
+    },
+    {
+      "label": "+1",
+      "clicked": false,
+      "screenshot": "",
+      "freqBefore": "",
+      "freqAfter": ""
+    },
+    {
+      "label": "+10",
+      "clicked": false,
+      "screenshot": "",
+      "freqBefore": "",
+      "freqAfter": ""
+    }
+  ],
+  "zooms": [
+    {
+      "label": "Zoom-in",
+      "clicked": false,
+      "screenshot": "",
+      "freqBefore": "",
+      "freqAfter": ""
+    },
+    {
+      "label": "Zoom-out",
+      "clicked": false,
+      "screenshot": "",
+      "freqBefore": "",
+      "freqAfter": ""
+    },
+    {
+      "label": "Zoom",
+      "clicked": false,
+      "screenshot": "",
+      "freqBefore": "",
+      "freqAfter": ""
+    }
+  ],
+  "play": {
+    "clicked": false,
+    "screenshot": "play-toggle.png"
+  },
+  "canvases": [
+    {
+      "id": "id-band-canvas",
+      "classes": [],
+      "rect": null,
+      "parentId": "id-band-container",
+      "parentClasses": []
+    },
+    {
+      "id": "id-dx-canvas",
+      "classes": [],
+      "rect": null,
+      "parentId": "id-band-container",
+      "parentClasses": []
+    },
+    {
+      "id": "id-scale-canvas",
+      "classes": [],
+      "rect": null,
+      "parentId": "id-scale-container",
+      "parentClasses": []
+    }
+  ],
+  "canvasScreenshot": "canvas-areas.png",
+  "issues": [
+    "VFO button not found",
+    "Mode button AM not visible",
+    "Mode button SAM not visible",
+    "Mode button DRM not visible",
+    "Mode button LSB not visible",
+    "Mode button USB not visible",
+    "Mode button CW not visible",
+    "Mode button NBFM not visible",
+    "Mode button IQ not visible",
+    "Step button \"−10\" not visible",
+    "Step button \"−1\" not visible",
+    "Step button \"−0.1\" not visible",
+    "Step button \"+0.1\" not visible",
+    "Step button \"+1\" not visible",
+    "Step button \"+10\" not visible",
+    "Zoom button \"Zoom-in\" not visible",
+    "Zoom button \"Zoom-out\" not visible",
+    "Zoom button \"Zoom\" not visible",
+    "Play button not found",
+    "Canvas #id-wf-canvas not found",
+    "Canvas #id-annotation-canvas not found",
+    "Canvas #id-smeter-scale not found",
+    "Canvas #id-aper-canvas not found"
+  ]
+}

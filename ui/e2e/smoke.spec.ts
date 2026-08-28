@@ -1,26 +1,30 @@
 import { test, expect } from '@playwright/test'
 
-test('smoke: page loads and all KiwiSDR regions are present', async ({ page }) => {
-  await page.goto('/')
+test.describe('Smoke tests', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/')
+  })
 
-  // Topbar: title + station input + status badge.
-  await expect(page.locator('.kiwi-topbar__title')).toContainText('NetSDRStation')
-  await expect(page.getByTestId('station-input')).toBeVisible()
+  test('page loads and shows the plugin title', async ({ page }) => {
+    await expect(page.locator('.kiwi-header__title')).toContainText('NetSDRStation')
+  })
 
-  // Tuning area (mode buttons + band tags stacked above the waterfall).
-  await expect(page.getByTestId('mode-panel')).toBeVisible()
-  await expect(page.getByTestId('band-panel')).toBeVisible()
+  test('renders the band scale and tag area', async ({ page }) => {
+    await expect(page.locator('.band-scale')).toBeVisible()
+    await expect(page.locator('.tag-area')).toBeVisible()
+  })
 
-  // Full-bleed waterfall + floating control panel on the right.
-  await expect(page.getByTestId('waterfall')).toBeVisible()
-  const control = page.locator('.kiwi-control-panel')
-  await expect(control).toBeVisible()
-  for (const id of ['freq-panel', 'audio-panel', 'waterfall-panel', 'extension-panel']) {
-    await expect(control.getByTestId(id)).toBeVisible()
-  }
+  test('renders the control panel', async ({ page }) => {
+    await expect(page.locator('.kiwi-cpanel')).toBeVisible()
+    await expect(page.locator('.kiwi-cpanel__smeter')).toBeVisible()
+  })
 
-  // Status bar with S-meter + readouts.
-  await expect(page.getByTestId('status-bar')).toBeVisible()
-  await expect(page.getByTestId('status-bar').locator('.s-meter')).toBeVisible()
-  await expect(page.getByTestId('status-freq')).toContainText('kHz')
+  test('renders the waterfall canvas', async ({ page }) => {
+    await expect(page.locator('.kiwi-main')).toBeVisible()
+    await expect(page.locator('canvas')).toBeVisible()
+  })
+
+  test('frequency ruler is present', async ({ page }) => {
+    await expect(page.locator('.freq-ruler')).toBeVisible()
+  })
 })
