@@ -62,6 +62,17 @@ tresult PLUGIN_API PluginProcessor::process(ProcessData& data) {
         }
     }
 
+    // (1c) Push the S-meter level to the UI at ~10 Hz. RMS is computed in
+    // renderPipeline() (audio thread) into signalLevelDbM_; the worker thread
+    // reads the atomic and forwards it UI-wards (eval is NOT audio-thread-safe).
+    {
+        const double nowSeconds = std::chrono::duration<double>(
+            std::chrono::steady_clock::now().time_since_epoch()).count();
+        if (levelSendLimiter_.shouldEmit(nowSeconds)) {
+            worker_.post([this]() { sendLevel(); });
+        }
+    }
+
     // (2) Handle pipeline reset request (posted after reconnect).
     if (resetPipelineFlag_.exchange(false)) {
         if (jitterBuffer_) jitterBuffer_->reset();
@@ -320,6 +331,17 @@ void PluginProcessor::renderPipeline(float* out, std::size_t numSamples) {
             out[i] *= vol;
         }
     }
+
+    // (f) S-meter: compute RMS over this rendered block (post volume) and store
+    // it as dBm. Full-scale (rms=1.0) maps to +10 dBm; floor at -140 dBm.
+    // The worker thread delivers this to the UI at ~10 Hz (sendLevel).
+    float sumSq = 0.0f;
+    for (std::size_t i = 0; i < numSamples; ++i) {
+        sumSq += out[i] * out[i];
+    }
+    const float rms = std::sqrt(sumSq / static_cast<float>(numSamples));
+    const float dbm = 20.0f * std::log10(rms + 1e-9f) + 10.0f;
+    signalLevelDbM_.store(std::max(-140.0f, dbm), std::memory_order_relaxed);
 }
 
 } // namespace netsdr

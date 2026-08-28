@@ -23,18 +23,7 @@
 
       <BandPanel />
 
-      <KPanel title="Audio" class="kiwi-panel">
-        <KToggle :model-value="store.agcOn" label="AGC" @update:model-value="onParamBool('agcOn', $event)" />
-        <KSlider
-          :model-value="store.volume"
-          :min="0"
-          :max="1"
-          :step="0.01"
-          label="Volume"
-          @update:model-value="onParam('volume', $event)"
-        />
-        <KToggle :model-value="store.mute" label="Mute" @update:model-value="onParamBool('mute', $event)" />
-      </KPanel>
+      <AudioPanel />
 
       <KPanel title="Display" class="kiwi-panel">
         <KToggle :model-value="store.wfOn" label="Waterfall" @update:model-value="onParamBool('wfOn', $event)" />
@@ -43,7 +32,7 @@
 
     <!-- Status bar row (M4.1 layout) -->
     <footer class="kiwi-statusbar">
-      <KReadout :value="store.signalLevel" unit="dBm" :digits="1" />
+      <SMeter :dbm="store.signalLevel" />
       <span class="kiwi-statusbar__users">users: {{ store.userCount }}</span>
     </footer>
   </div>
@@ -56,23 +45,18 @@ import StationInput from '@/components/StationInput.vue'
 import ModePanel from '@/components/ModePanel.vue'
 import FreqPanel from '@/components/FreqPanel.vue'
 import BandPanel from '@/components/BandPanel.vue'
+import AudioPanel from '@/components/AudioPanel.vue'
+import SMeter from '@/components/SMeter.vue'
 import KPanel from '@/components/KPanel.vue'
 import KToggle from '@/components/KToggle.vue'
-import KSlider from '@/components/KSlider.vue'
-import KReadout from '@/components/KReadout.vue'
 import KStatusBadge from '@/components/KStatusBadge.vue'
 import { useKiwiStore } from '@/store/kiwiStore'
 import { pluginService } from '@/services/pluginService'
-import type { ParamId } from '@/generated/bridge-validators'
 
 const store = useKiwiStore()
 const { statusText, statusState } = storeToRefs(store)
 
-function onParam(id: ParamId, value: number) {
-  store.setParam(id, value)
-}
-
-function onParamBool(id: ParamId, value: boolean) {
+function onParamBool(id: 'wfOn', value: boolean) {
   store.setParam(id, value ? 1 : 0)
 }
 
@@ -92,6 +76,9 @@ onMounted(() => {
     if (message.type === 'status') {
       store.setStatus(message.data)
     }
+  })
+  pluginService.onLevel(dbm => {
+    store.setSignalLevel(dbm)
   })
   pluginService.getParameters()
 })

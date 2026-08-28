@@ -20,6 +20,7 @@ import {
   GetParametersMessageSchema,
   StatusMessageSchema,
   ParamUpdateMessageSchema,
+  LevelMessageSchema,
 } from '@/generated/bridge-validators'
 
 function loadCanonicalSchema() {
@@ -53,6 +54,8 @@ describe('bridge-validators <-> bridge.schema.json consistency', () => {
       'GetParametersMessageSchema',
       'StatusMessageSchema',
       'ParamUpdateMessageSchema',
+      'LevelMessageSchema',
+      'BackendMessageSchema',
     ]
     const canonicalNames = Object.keys(canonical)
     for (const name of canonicalNames) {
@@ -118,5 +121,11 @@ describe('bridge-validators <-> bridge.schema.json consistency', () => {
     expect(
       ParamUpdateMessageSchema.safeParse({ type: 'param', data: { id: 'volume' } }).success
     ).toBe(false)
+  })
+
+  it('LevelMessage matches the canonical definition (1-tuple of number)', () => {
+    expect(LevelMessageSchema.safeParse({ type: 'level', data: [-90.0] }).success).toBe(true)
+    expect(LevelMessageSchema.safeParse({ type: 'level', data: [-90.0, 10.0] }).success).toBe(false)
+    expect(LevelMessageSchema.safeParse({ type: 'level', data: ['-90'] }).success).toBe(false)
   })
 })

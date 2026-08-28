@@ -1252,13 +1252,31 @@ implementation plans: `doc/M3-implementation-plan.md` (M3),
     save/load/delete + localStorage persistence; in-memory storage mock
     because Node 25 + jsdom collide on native localStorage).
 
-- [ ] **M4.6** Audio, AGC & signal processing panel
-  - Volume slider + mute, AGC (on/off, threshold, decay, hang, slope, manual
-    gain), squelch (on/off + threshold), noise blanker + noise reduction,
-    S-meter (bar + dBm readout, driven by the audio level from M3.1).
-  - Ref: `doc/ui-architecture.md` §3.5.
-  - Test: Vitest — AGC/squelch/NB/NR controls emit correct parameters;
-    S-meter updates from a mocked audio-level message.
+- [x] **M4.6** Audio, AGC & signal processing panel
+  - `AudioPanel.vue`: Volume slider + Mute, AGC (on/hang/thresh/decay/slope/
+    man-gain), Squelch (on + threshold), NB/NR toggles + thresholds; all via
+    `setParam` (correct ParamIds incl. squelchThr/nbThresh).
+  - **S-Meter (full backend chain, M4.6b):**
+    - Schema extended with `level` message (`{"type":"level","data":[-90.0]}`);
+      generated C++ `parseLevel` + TS types/Zod validator.
+    - `plugin_processor.cpp/h`: RMS over the rendered block (post volume) →
+      `std::atomic<float> signalLevelDbM_` (RT-safe, audio thread).
+    - `process()` rate-limits via `RateLimiter` (10 Hz) → `worker_.post(sendLevel)`
+      (worker thread reads atomic, forwards via IMessage "NetSDRStation:Level").
+    - `plugin_controller.cpp/h`: levelSink + notify handler (getFloat).
+    - `plugin_editor.cpp/h`: `pushLevel(dbm)` → `eval("window.setLevel(…)")`
+      (UI thread only — eval is NOT audio-thread-safe).
+    - `SMeter.vue`: canvas bar S1–S9 (green) / +10 (yellow) / red, dBm readout;
+      `pluginService.onLevel` exposes `window.setLevel`.
+  - Store keeps booleans (0/1 bridge values normalised); state keys now match
+    ParamIds (squelchThr/nbThresh).
+  - _Files: `ui/src/components/AudioPanel.vue`, `SMeter.vue`,
+    `source/vst/processor/plugin_processor.{h,cpp,_audio.cpp}`,
+    `source/vst/controller/plugin_controller.{h,cpp}`,
+    `source/editor/plugin_editor.{h,cpp}`, `schema/bridge.schema.json`_
+  - Test: C++ 93/93 (new RMS→dBm test: +7 dBm for full-scale sine, silence
+    → floor); Vitest 77/77 (AudioPanel 6, SMeter 4, onLevel, schema Level);
+    UI build 170.5 kB.
 
 - [ ] **M4.7** Waterfall & spectrum display
   - **Dependency:** requires a waterfall/spectrum data stream from the server

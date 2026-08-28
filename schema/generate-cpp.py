@@ -105,6 +105,18 @@ def gen_parse_get_parameters(defs: dict) -> str:
 }}'''
 
 
+def gen_parse_level(defs: dict) -> str:
+    return f'''inline bool parseLevel(const nlohmann::json& j, double& outDbM) {{
+    if (!j.is_object()) return false;
+    if (!j.contains("type") || !j["type"].is_string() || j["type"] != "level") return false;
+    if (!j.contains("data") || !j["data"].is_array()) return false;
+    const auto& d = j["data"];
+    if (d.size() != 1 || !d[0].is_number()) return false;
+    outDbM = d[0].get<double>();
+    return true;
+}}'''
+
+
 def build_header(schema: dict) -> str:
     defs = schema.get("definitions", {})
     ids = param_id_list(defs)
@@ -148,6 +160,8 @@ def build_header(schema: dict) -> str:
     parts.append(gen_parse_disconnect(defs))
     parts.append('')
     parts.append(gen_parse_get_parameters(defs))
+    parts.append('')
+    parts.append(gen_parse_level(defs))
     parts.append('')
     parts.append('} // namespace netsdr::schema')
     parts.append('')

@@ -85,8 +85,13 @@ export const ParamUpdateMessageSchema = envelope(
 )
 export type ParamUpdateMessage = z.infer<typeof ParamUpdateMessageSchema>
 
+/** Signal level in dBm (S-meter readout), sent C++ -> UI. */
+export const LevelMessageSchema = envelope('level', z.tuple([z.number()]))
+export type LevelMessage = z.infer<typeof LevelMessageSchema>
+
 export const BackendMessageSchema = z.discriminatedUnion('type', [
   StatusMessageSchema,
   ParamUpdateMessageSchema,
+  LevelMessageSchema,
 ])
 export type BackendMessage = z.infer<typeof BackendMessageSchema>

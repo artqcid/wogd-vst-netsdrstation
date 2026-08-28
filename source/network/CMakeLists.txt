@@ -22,4 +22,4 @@ target_include_directories(netsdr_network
         ${CMAKE_SOURCE_DIR}/source
 )
 
-target_link_libraries(netsdr_network PUBLIC ixwebsocket)
+target_link_libraries(netsdr_network PUBLIC ixwebsocket nlohmann_json::nlohmann_json)

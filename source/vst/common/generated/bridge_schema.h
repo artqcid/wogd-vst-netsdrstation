@@ -95,4 +95,14 @@ inline bool parseGetParameters(const nlohmann::json& j) {
     return !j.contains("data") || j["data"].is_null();
 }
 
+inline bool parseLevel(const nlohmann::json& j, double& outDbM) {
+    if (!j.is_object()) return false;
+    if (!j.contains("type") || !j["type"].is_string() || j["type"] != "level") return false;
+    if (!j.contains("data") || !j["data"].is_array()) return false;
+    const auto& d = j["data"];
+    if (d.size() != 1 || !d[0].is_number()) return false;
+    outDbM = d[0].get<double>();
+    return true;
+}
+
 } // namespace netsdr::schema

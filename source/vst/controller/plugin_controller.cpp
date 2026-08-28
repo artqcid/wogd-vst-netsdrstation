@@ -122,6 +122,15 @@ tresult PLUGIN_API PluginController::notify(IMessage* message) {
             }
             return kResultOk;
         }
+        if (FIDStringsEqual(message->getMessageID(), "NetSDRStation:Level")) {
+            Steinberg::Vst::ParamValue level = -140.0;
+            if (message->getAttributes()->getFloat("Level", level) == kResultOk) {
+                if (levelSink_) {
+                    levelSink_(static_cast<float>(level));
+                }
+            }
+            return kResultOk;
+        }
     }
     return ComponentBase::notify(message);
 }
@@ -155,6 +164,10 @@ void PluginController::disconnect() {
 
 void PluginController::setStatusSink(const std::function<void(const std::string&)>& sink) {
     statusSink_ = sink;
+}
+
+void PluginController::setLevelSink(const std::function<void(float)>& sink) {
+    levelSink_ = sink;
 }
 
 IPlugView* PLUGIN_API PluginController::createView(FIDString name) {

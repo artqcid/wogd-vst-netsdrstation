@@ -857,3 +857,77 @@ TEST_CASE("PluginProcessor: volume gain scales the output (BUG-07)",
 
     proc.terminate();
 }
+
+TEST_CASE("PluginProcessor: S-meter level (RMS->dBm) tracks a full-scale tone (M4.6)",
+          "[vst][processor][pipeline][smetert]") {
+    constexpr double kSourceRate = 12000.0;
+    constexpr double kDawRate = 48000.0;
+    constexpr int kBlock = 128;
+    // Full-scale 1000 Hz sine (amplitude 32767 in the mock server).
+    SineStreamServer server(1000.0, kSourceRate, 1200000);
+
+    netsdr::PluginProcessor proc;
+    proc.initialize(nullptr);
+
+    netsdr::ProcessorState state;
+    state.station = "127.0.0.1:" + std::to_string(server.port());
+    state.freqKhz = 14100.0;
+    state.volume = 1.0;
+    state.mute = 0.0;
+    proc.applyState(state);
+
+    {
+        bool streaming = false;
+        for (int attempt = 0; attempt < 100 && !streaming; ++attempt) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            streaming = server.framesSent() > 0;
+        }
+        REQUIRE(streaming);
+    }
+
+    Steinberg::Vst::ProcessSetup setup;
+    setup.sampleRate = kDawRate;
+    setup.maxSamplesPerBlock = kBlock;
+    setup.processMode = Steinberg::Vst::kRealtime;
+    setup.symbolicSampleSize = Steinberg::Vst::kSample32;
+    proc.setupProcessing(setup);
+
+    // Warm up and render until the jitter buffer actually delivers audio
+    // (deterministic regardless of connection latency; the full suite may be
+    // slower than the isolated run). Poll the output peak.
+    std::array<float, kBlock> scratch{};
+    bool heardAudio = false;
+    for (int attempt = 0; attempt < 40 && !heardAudio; ++attempt) {
+        for (int b = 0; b < 50; ++b) {
+            renderBlock(proc, kBlock, scratch.data());
+            for (float s : scratch) {
+                if (std::fabs(s) > 1e-3f) {
+                    heardAudio = true;
+                    break;
+                }
+            }
+            if (heardAudio) break;
+        }
+        if (!heardAudio) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(20));
+        }
+    }
+    REQUIRE(heardAudio); // the pipeline must deliver audible audio
+
+    // Full-scale sine -> rms = 32767/sqrt(2)/32768 ~= 0.707 -> +7 dBm
+    // (20*log10(0.707)+10). Tolerate resampler transients: assert well above
+    // the -140 dBm floor and in a plausible band around +7 dBm.
+    const float dbm = proc.signalLevelDbMForTest();
+    REQUIRE(dbm > -100.0f);
+    REQUIRE(dbm >= -10.0f);
+    REQUIRE(dbm <= 20.0f);
+
+    // Silence (mute) drops the level back toward the floor.
+    proc.applyParamValue(netsdr::kParamVolume, 0.0);
+    for (int i = 0; i < 20; ++i) {
+        renderBlock(proc, kBlock, scratch.data());
+    }
+    REQUIRE(proc.signalLevelDbMForTest() < -100.0f);
+
+    proc.terminate();
+}

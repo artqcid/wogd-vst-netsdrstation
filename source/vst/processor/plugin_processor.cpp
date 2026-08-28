@@ -341,6 +341,10 @@ void PluginProcessor::setOnStatus(StatusCallback cb) {
     onStatus_ = std::move(cb);
 }
 
+void PluginProcessor::setOnLevel(LevelCallback cb) {
+    onLevel_ = std::move(cb);
+}
+
 // ---------------------------------------------------------------------------
 // emitStatus — any thread
 // ---------------------------------------------------------------------------
@@ -361,6 +365,25 @@ void PluginProcessor::emitStatus(const std::string& status) {
         msg->setMessageID("NetSDRStation:Status");
         Steinberg::String tmp(status.c_str(), Steinberg::kCP_Utf8);
         msg->getAttributes()->setString("Status", tmp.text16());
+        sendMessage(msg);
+    }
+}
+
+// ---------------------------------------------------------------------------
+// sendLevel — worker thread only (posted from the audio thread at ~10 Hz)
+// Reads the S-meter atomic (written by the audio thread) and forwards it to
+// the local callback AND the controller peer (IMessage "NetSDRStation:Level").
+// Never calls eval() from here; the editor does that on the UI thread.
+// ---------------------------------------------------------------------------
+
+void PluginProcessor::sendLevel() {
+    const float dbm = signalLevelDbM_.load(std::memory_order_relaxed);
+    if (onLevel_) {
+        onLevel_(dbm);
+    }
+    if (auto msg = IPtr<IMessage>(allocateMessage())) {
+        msg->setMessageID("NetSDRStation:Level");
+        msg->getAttributes()->setFloat("Level", dbm);
         sendMessage(msg);
     }
 }

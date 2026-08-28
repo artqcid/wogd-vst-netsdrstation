@@ -11,6 +11,16 @@ import { defineStore } from 'pinia'
 import type { ParamId } from '@/generated/bridge-validators'
 import { pluginService } from '@/services/pluginService'
 
+/** Param IDs that are booleans in the store (bridge sends 0/1). */
+const BOOLEAN_PARAMS: ReadonlySet<ParamId> = new Set<ParamId>([
+  'agcOn',
+  'agcHang',
+  'mute',
+  'squelchOn',
+  'nbOn',
+  'nrOn',
+])
+
 export const useKiwiStore = defineStore('kiwi', {
   state: () => ({
     station: '',
@@ -29,9 +39,9 @@ export const useKiwiStore = defineStore('kiwi', {
     volume: 1.0,
     mute: false,
     squelchOn: false,
-    squelchThreshold: 0.0,
+    squelchThr: 0.0,
     nbOn: false,
-    nbThreshold: 0.5,
+    nbThresh: 0.5,
     nrOn: false,
     wfOn: true,
     wfSpeed: 2,
@@ -62,13 +72,19 @@ export const useKiwiStore = defineStore('kiwi', {
      */
     setParam(name: ParamId, value: number) {
       pluginService.setParameter(name, value)
-      // optimistic update (bools arrive as 0/1 numbers)
-      ;(this as unknown as Record<string, unknown>)[name] = value
+      // optimistic update (bools arrive as 0/1 numbers -> store keeps boolean)
+      this.setLocal(name, value)
     },
 
     /** Replaces a whole parameter group from a backend param message. */
     applyParam(id: ParamId, value: number) {
-      ;(this as unknown as Record<string, unknown>)[id] = value
+      this.setLocal(id, value)
+    },
+
+    /** Writes a param value into the state, normalising booleans. */
+    setLocal(name: ParamId, value: number) {
+      const target = this as unknown as Record<string, unknown>
+      target[name] = BOOLEAN_PARAMS.has(name) ? value > 0.5 : value
     },
 
     setStation(hostPort: string) {
@@ -89,6 +105,10 @@ export const useKiwiStore = defineStore('kiwi', {
     setStatus(status: string) {
       this.status = status
       this.connected = /connected/i.test(status)
+    },
+
+    setSignalLevel(dbm: number) {
+      this.signalLevel = dbm
     },
   },
 })

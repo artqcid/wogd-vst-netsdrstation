@@ -6,6 +6,7 @@
 #include "vst/controller/plugin_controller.h"
 
 #include <windows.h>
+#include <cstdio>
 #include <string>
 
 #include "base/source/fobject.h"
@@ -98,6 +99,7 @@ PluginEditor::PluginEditor(Vst::EditControllerEx1 *controller,
   pluginController_ = dynamic_cast<PluginController*>(controller_);
   if (pluginController_) {
       pluginController_->setStatusSink([this](const std::string& s) { pushStatus(s); });
+      pluginController_->setLevelSink([this](float dbm) { pushLevel(dbm); });
   }
   webView_.setMessageHandler(
       [](const char *message, void *userData) {
@@ -287,6 +289,14 @@ void PluginEditor::pushStatus(const std::string& status) {
     const std::string js =
         "window.updateVueState({\"type\":\"status\",\"data\":\"" + escaped + "\"})";
     webView_.eval(js);
+}
+
+void PluginEditor::pushLevel(float dbm) {
+    if (!attached_) { return; }
+    // S-meter level in dBm (UI thread only; eval is not RT-safe).
+    char buf[64] = {};
+    std::snprintf(buf, sizeof(buf), "window.setLevel(%.1f)", static_cast<double>(dbm));
+    webView_.eval(buf);
 }
 
 } // namespace netsdr

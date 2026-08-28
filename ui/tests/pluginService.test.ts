@@ -59,6 +59,15 @@ describe('pluginService', () => {
     warn.mockRestore()
   })
 
+  it('onLevel registers window.setLevel invoked by the backend', () => {
+    const handler = vi.fn()
+    pluginService.onLevel(handler)
+
+    window.setLevel!(-73.5)
+
+    expect(handler).toHaveBeenCalledWith(-73.5)
+  })
+
   it('setParameter logs in dev mode when window.vstHost is absent', () => {
     const log = vi.spyOn(console, 'log').mockImplementation(() => {})
     pluginService.setParameter('freqKhz', 440)

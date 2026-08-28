@@ -45,6 +45,10 @@ public:
     // "Error"/"Disconnected") from the controller and forwards them UI-wards.
     void setStatusSink(const std::function<void(const std::string&)>& sink);
 
+    // Level sink: receives the audio signal level in dBm (S-meter) from the
+    // processor and forwards it UI-wards.
+    void setLevelSink(const std::function<void(float)>& sink);
+
     // IConnectionPoint: receives "NetSDRStation:Status" messages from the processor.
     Steinberg::tresult PLUGIN_API notify(Steinberg::Vst::IMessage* message) SMTG_OVERRIDE;
 
@@ -60,6 +64,7 @@ public:
 private:
     ParameterRegistry registry_;
     std::function<void(const std::string&)> statusSink_;
+    std::function<void(float)> levelSink_;
 };
 
 } // namespace netsdr

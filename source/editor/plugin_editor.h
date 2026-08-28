@@ -49,6 +49,9 @@ public:
     // Push a status string to the UI (e.g. "Connecting", "Connected", "Error").
     void pushStatus(const std::string& status);
 
+    // Push the S-meter level (dBm) to the UI. UI-thread only.
+    void pushLevel(float dbm);
+
     // Returns the UI URL the editor should load (dev server in debug builds).
     static const char* uiUrl();
 

@@ -79,6 +79,12 @@ public:
     using StatusCallback = std::function<void(const std::string&)>;
     void setOnStatus(StatusCallback cb);
 
+    // Register a callback that receives the audio signal level in dBm
+    // (S-meter). Written by the audio thread into an atomic, delivered on the
+    // worker thread at ~10 Hz (never evaluated from the audio thread).
+    using LevelCallback = std::function<void(float)>;
+    void setOnLevel(LevelCallback cb);
+
     // Current station "host:port" (thread-safe snapshot; may be empty).
     std::string station() const;
 
@@ -90,10 +96,17 @@ public:
     int criticalDriftCountForTest() const { return criticalDriftCount_.load(); }
     void resetCriticalDriftCountForTest() { criticalDriftCount_.store(0); }
 
+    // For testing only: current S-meter level in dBm (written by the audio
+    // thread RMS computation in renderPipeline).
+    float signalLevelDbMForTest() const {
+        return signalLevelDbM_.load(std::memory_order_relaxed);
+    }
+
 private:
     void connectToStation(const std::string& hostPort);   // worker thread
     void disconnectStation();                             // worker thread
     void emitStatus(const std::string& status);           // network thread -> worker -> UI
+    void sendLevel();                                     // worker thread (reads atomic)
     void sendPendingParams();                             // worker thread
     void decodeAndQueue(const std::string& data);         // network thread
     void renderPipeline(float* out, std::size_t numSamples);
@@ -110,8 +123,15 @@ private:
     // dense automation (esp. frequency). Accessed only from the audio thread.
     netsdr::RateLimiter paramSendLimiter_{20.0};
 
+    // Rate-limits S-meter level pushes to the UI (~10 Hz max). Accessed only
+    // from the audio thread (see process()).
+    netsdr::RateLimiter levelSendLimiter_{10.0};
+
     // Status callback for UI binding.
     StatusCallback onStatus_;
+
+    // Level callback for UI binding (S-meter). Delivered on the worker thread.
+    LevelCallback onLevel_;
 
     // Audio-thread parameter snapshot (written from non-audio threads via atomics).
     std::atomic<double> freqKhz_{kDefaultFreqKhz};
@@ -133,6 +153,10 @@ private:
     std::atomic<bool> compOn_{false};
     std::atomic<double> volume_{1.0};
     std::atomic<bool> mute_{false};
+
+    // Signal level in dBm (S-meter). Written by the audio thread (RMS over the
+    // rendered output block), read by the worker thread for UI delivery.
+    std::atomic<float> signalLevelDbM_{-140.0f};
 
     // Shared state between host thread and worker thread.
     std::string station_;

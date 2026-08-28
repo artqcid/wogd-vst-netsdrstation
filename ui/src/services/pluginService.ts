@@ -33,13 +33,16 @@ declare global {
   interface Window {
     vstHost?: VstHost
     updateVueState?: (message: BackendMessage) => void
+    setLevel?: (dbm: number) => void
   }
 }
 
 type MessageHandler = (message: BackendMessage) => void
+type LevelHandler = (dbm: number) => void
 
 class PluginService {
   private messageHandler: MessageHandler | null = null
+  private levelHandler: LevelHandler | null = null
 
   /** True when running inside the native WebView (window.vstHost present). */
   isInNative(): boolean {
@@ -102,6 +105,17 @@ class PluginService {
         return
       }
       this.messageHandler?.(parsed.data)
+    }
+  }
+
+  /**
+   * Registers a callback for the C++ -> UI S-meter level (dBm). Exposes
+   * window.setLevel, which the editor invokes via eval() at ~10 Hz.
+   */
+  onLevel(handler: LevelHandler): void {
+    this.levelHandler = handler
+    window.setLevel = (dbm: number) => {
+      this.levelHandler?.(dbm)
     }
   }
 }

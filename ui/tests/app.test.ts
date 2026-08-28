@@ -42,10 +42,10 @@ describe('App', () => {
     expect(badge.exists()).toBe(true)
   })
 
-  it('shows readouts in the status bar', () => {
+  it('shows the S-meter in the status bar', () => {
     const wrapper = mountApp()
     const statusbar = wrapper.find('.kiwi-statusbar')
-    expect(statusbar.find('.k-readout').exists()).toBe(true)
+    expect(statusbar.find('.s-meter').exists()).toBe(true)
   })
 
   it('keeps all control groups visible at several viewport sizes', () => {
