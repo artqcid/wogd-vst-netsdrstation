@@ -1239,11 +1239,18 @@ implementation plans: `doc/M3-implementation-plan.md` (M3),
   - Test: Vitest 59/59 green (7 new: 18 buttons, active highlight, USB/CW
     default passbands, BW readout, reset, lowCut clamp).
 
-- [ ] **M4.5** Band presets & memory
-  - Band dropdowns (Amateur / Broadcast / Utility / time signals) and
-    bookmark list; selecting a band sets the frequency/passband.
-  - Ref: `doc/ui-architecture.md` §3.3.
-  - Test: Vitest — band selection emits the expected frequency.
+- [x] **M4.5** Band presets & memory
+  - `BandPanel.vue` (KPanel-based): three KSelect dropdowns — Amateur
+    (160 m/80 m/40 m/20 m), Broadcast (MW/SW 49 m/31 m/19 m),
+    Utility/timesig (DCF77/WWV/WWVH/CHU); selecting fires `freqKhz` via store.
+  - Bookmark list (`localStorage`, no C++ change): Save current appends
+    `{label, freqKhz, mode}`, click loads it (freq + mode), × deletes.
+  - Key band frequencies per plan (1850/3700/7100/14200, 720/6100/9700,
+    77.5/10000/15000/7850).
+  - _Files: `ui/src/components/BandPanel.vue`_
+  - Test: Vitest 65/65 green (6 new: band select freq, bookmark
+    save/load/delete + localStorage persistence; in-memory storage mock
+    because Node 25 + jsdom collide on native localStorage).
 
 - [ ] **M4.6** Audio, AGC & signal processing panel
   - Volume slider + mute, AGC (on/off, threshold, decay, hang, slope, manual

@@ -21,6 +21,8 @@
 
       <FreqPanel />
 
+      <BandPanel />
+
       <KPanel title="Audio" class="kiwi-panel">
         <KToggle :model-value="store.agcOn" label="AGC" @update:model-value="onParamBool('agcOn', $event)" />
         <KSlider
@@ -53,6 +55,7 @@ import { storeToRefs } from 'pinia'
 import StationInput from '@/components/StationInput.vue'
 import ModePanel from '@/components/ModePanel.vue'
 import FreqPanel from '@/components/FreqPanel.vue'
+import BandPanel from '@/components/BandPanel.vue'
 import KPanel from '@/components/KPanel.vue'
 import KToggle from '@/components/KToggle.vue'
 import KSlider from '@/components/KSlider.vue'
