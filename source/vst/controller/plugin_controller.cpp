@@ -131,6 +131,19 @@ tresult PLUGIN_API PluginController::notify(IMessage* message) {
             }
             return kResultOk;
         }
+        if (FIDStringsEqual(message->getMessageID(), "NetSDRStation:Waterfall")) {
+            const void* data = nullptr;
+            Steinberg::uint32 size = 0;
+            if (message->getAttributes()->getBinary("Bins", data, size) == kResultOk &&
+                data != nullptr && size > 0 && (size % sizeof(float)) == 0) {
+                const auto* floats = static_cast<const float*>(data);
+                std::vector<float> bins(floats, floats + size / sizeof(float));
+                if (waterfallSink_) {
+                    waterfallSink_(bins);
+                }
+            }
+            return kResultOk;
+        }
     }
     return ComponentBase::notify(message);
 }
@@ -168,6 +181,10 @@ void PluginController::setStatusSink(const std::function<void(const std::string&
 
 void PluginController::setLevelSink(const std::function<void(float)>& sink) {
     levelSink_ = sink;
+}
+
+void PluginController::setWaterfallSink(const std::function<void(const std::vector<float>&)>& sink) {
+    waterfallSink_ = sink;
 }
 
 IPlugView* PLUGIN_API PluginController::createView(FIDString name) {

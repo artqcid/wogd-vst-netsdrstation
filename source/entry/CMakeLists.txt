@@ -25,6 +25,8 @@ set(netsdrstation_sources
     ../dsp/jitter_buffer.cpp
     ../dsp/rate_limiter.h
     ../dsp/rate_limiter.cpp
+    ../dsp/spectrum_analyzer.h
+    ../dsp/spectrum_analyzer.cpp
     ../threading/audio_sample_queue.h
     ../threading/lock_free_spsc.h
     ../threading/worker_thread.h

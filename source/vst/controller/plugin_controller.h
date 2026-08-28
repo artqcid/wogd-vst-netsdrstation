@@ -14,6 +14,7 @@
 
 #include <functional>
 #include <string>
+#include <vector>
 
 namespace netsdr {
 
@@ -49,6 +50,10 @@ public:
     // processor and forwards it UI-wards.
     void setLevelSink(const std::function<void(float)>& sink);
 
+    // Waterfall sink: receives spectrum bins (dBFS) from the processor and
+    // forwards them UI-wards.
+    void setWaterfallSink(const std::function<void(const std::vector<float>&)>& sink);
+
     // IConnectionPoint: receives "NetSDRStation:Status" messages from the processor.
     Steinberg::tresult PLUGIN_API notify(Steinberg::Vst::IMessage* message) SMTG_OVERRIDE;
 
@@ -65,6 +70,7 @@ private:
     ParameterRegistry registry_;
     std::function<void(const std::string&)> statusSink_;
     std::function<void(float)> levelSink_;
+    std::function<void(const std::vector<float>&)> waterfallSink_;
 };
 
 } // namespace netsdr

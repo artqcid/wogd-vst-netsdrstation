@@ -116,6 +116,21 @@
         }
       }
     },
+    "WaterfallMessage": {
+      "type": "object",
+      "required": ["type", "data"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "const": "waterfall" },
+        "data": {
+          "type": "array",
+          "minItems": 2,
+          "items": [
+            { "type": "number", "description": "Spectrum bin magnitudes in dBFS (-160..0). Simulated spectrum (M4.7); replaced by STREAM_WATERFALL in M5+." }
+          ]
+        }
+      }
+    },
     "ParamUpdateMessage": {
       "type": "object",
       "required": ["type", "data"],
@@ -139,7 +154,8 @@
       "oneOf": [
         { "$ref": "#/definitions/StatusMessage" },
         { "$ref": "#/definitions/ParamUpdateMessage" },
-        { "$ref": "#/definitions/LevelMessage" }
+        { "$ref": "#/definitions/LevelMessage" },
+        { "$ref": "#/definitions/WaterfallMessage" }
       ]
     }
   },

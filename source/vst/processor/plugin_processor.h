@@ -8,6 +8,7 @@
 #include "dsp/jitter_buffer.h"
 #include "dsp/rate_limiter.h"
 #include "dsp/resampler.h"
+#include "dsp/spectrum_analyzer.h"
 #include "network/kiwi_client.h"
 #include "threading/audio_sample_queue.h"
 #include "threading/worker_thread.h"
@@ -85,6 +86,12 @@ public:
     using LevelCallback = std::function<void(float)>;
     void setOnLevel(LevelCallback cb);
 
+    // Register a callback that receives waterfall spectrum bins (dBFS).
+    // Computed on the worker thread from a DFT of recent audio samples
+    // (simulated spectrum per M4.7; replaced by STREAM_WATERFALL in M5+).
+    using WaterfallCallback = std::function<void(const std::vector<float>&)>;
+    void setOnWaterfall(WaterfallCallback cb);
+
     // Current station "host:port" (thread-safe snapshot; may be empty).
     std::string station() const;
 
@@ -107,6 +114,7 @@ private:
     void disconnectStation();                             // worker thread
     void emitStatus(const std::string& status);           // network thread -> worker -> UI
     void sendLevel();                                     // worker thread (reads atomic)
+    void sendWaterfall();                                 // worker thread (DFT of recent samples)
     void sendPendingParams();                             // worker thread
     void decodeAndQueue(const std::string& data);         // network thread
     void renderPipeline(float* out, std::size_t numSamples);
@@ -127,11 +135,17 @@ private:
     // from the audio thread (see process()).
     netsdr::RateLimiter levelSendLimiter_{10.0};
 
+    // Rate-limits waterfall spectrum pushes to the UI (~10 Hz max).
+    netsdr::RateLimiter waterfallLimiter_{10.0};
+
     // Status callback for UI binding.
     StatusCallback onStatus_;
 
     // Level callback for UI binding (S-meter). Delivered on the worker thread.
     LevelCallback onLevel_;
+
+    // Waterfall callback for UI binding. Delivered on the worker thread.
+    WaterfallCallback onWaterfall_;
 
     // Audio-thread parameter snapshot (written from non-audio threads via atomics).
     std::atomic<double> freqKhz_{kDefaultFreqKhz};
@@ -157,6 +171,12 @@ private:
     // Signal level in dBm (S-meter). Written by the audio thread (RMS over the
     // rendered output block), read by the worker thread for UI delivery.
     std::atomic<float> signalLevelDbM_{-140.0f};
+
+    // Waterfall spectrum: the audio thread pushes rendered output samples into
+    // a lock-free SPSC queue (producer); the worker thread (sendWaterfall)
+    // drains the queue, keeps the last windowSize samples and computes a DFT.
+    netsdr::LockFreeSPSC<float> spectrumSamples_{16384};
+    std::unique_ptr<netsdr::SpectrumAnalyzer> spectrumAnalyzer_;
 
     // Shared state between host thread and worker thread.
     std::string station_;

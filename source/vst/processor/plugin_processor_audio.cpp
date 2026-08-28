@@ -71,6 +71,11 @@ tresult PLUGIN_API PluginProcessor::process(ProcessData& data) {
         if (levelSendLimiter_.shouldEmit(nowSeconds)) {
             worker_.post([this]() { sendLevel(); });
         }
+        // Waterfall spectrum frames (~10 Hz), computed on the worker thread
+        // from the samples pushed into spectrumSamples_ by renderPipeline.
+        if (waterfallLimiter_.shouldEmit(nowSeconds)) {
+            worker_.post([this]() { sendWaterfall(); });
+        }
     }
 
     // (2) Handle pipeline reset request (posted after reconnect).
@@ -342,6 +347,15 @@ void PluginProcessor::renderPipeline(float* out, std::size_t numSamples) {
     const float rms = std::sqrt(sumSq / static_cast<float>(numSamples));
     const float dbm = 20.0f * std::log10(rms + 1e-9f) + 10.0f;
     signalLevelDbM_.store(std::max(-140.0f, dbm), std::memory_order_relaxed);
+
+    // (g) Waterfall: feed the rendered samples into the spectrum queue. The
+    // lock-free push is RT-safe; the worker thread computes DFT frames from
+    // the queue at ~10 Hz (sendWaterfall). Only when a stream is active.
+    if (kiwiClient_ && kiwiClient_->isConnected() && !mute_.load()) {
+        for (std::size_t i = 0; i < numSamples; ++i) {
+            spectrumSamples_.push(out[i]);
+        }
+    }
 }
 
 } // namespace netsdr

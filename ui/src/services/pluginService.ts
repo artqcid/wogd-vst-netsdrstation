@@ -34,15 +34,18 @@ declare global {
     vstHost?: VstHost
     updateVueState?: (message: BackendMessage) => void
     setLevel?: (dbm: number) => void
+    setWaterfall?: (bins: number[]) => void
   }
 }
 
 type MessageHandler = (message: BackendMessage) => void
 type LevelHandler = (dbm: number) => void
+type WaterfallHandler = (bins: number[]) => void
 
 class PluginService {
   private messageHandler: MessageHandler | null = null
   private levelHandler: LevelHandler | null = null
+  private waterfallHandler: WaterfallHandler | null = null
 
   /** True when running inside the native WebView (window.vstHost present). */
   isInNative(): boolean {
@@ -116,6 +119,17 @@ class PluginService {
     this.levelHandler = handler
     window.setLevel = (dbm: number) => {
       this.levelHandler?.(dbm)
+    }
+  }
+
+  /**
+   * Registers a callback for C++ -> UI waterfall spectrum bins (dBFS).
+   * Exposes window.setWaterfall, invoked by the editor at ~10 Hz.
+   */
+  onWaterfall(handler: WaterfallHandler): void {
+    this.waterfallHandler = handler
+    window.setWaterfall = (bins: number[]) => {
+      this.waterfallHandler?.(bins)
     }
   }
 }

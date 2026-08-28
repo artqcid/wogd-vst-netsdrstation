@@ -8,6 +8,7 @@ add_executable(netsdrstation_tests
     dsp/ima_adpcm_tests.cpp
     dsp/rate_limiter_tests.cpp
     dsp/resampler_tests.cpp
+    dsp/spectrum_analyzer_tests.cpp
 threading/lock_free_spsc_tests.cpp
     threading/worker_thread_tests.cpp
     threading/audio_sample_queue_tests.cpp
@@ -28,6 +29,7 @@ threading/lock_free_spsc_tests.cpp
     ${CMAKE_SOURCE_DIR}/source/dsp/rate_limiter.cpp
     ${CMAKE_SOURCE_DIR}/source/dsp/ima_adpcm.cpp
     ${CMAKE_SOURCE_DIR}/source/dsp/resampler.cpp
+    ${CMAKE_SOURCE_DIR}/source/dsp/spectrum_analyzer.cpp
     ${CMAKE_SOURCE_DIR}/source/threading/worker_thread.cpp
     ${CMAKE_SOURCE_DIR}/source/vst/common/parameter_registry.cpp
     ${CMAKE_SOURCE_DIR}/source/vst/common/bridge_protocol.cpp

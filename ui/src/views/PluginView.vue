@@ -27,9 +27,7 @@
 
       <ExtensionPanel />
 
-      <KPanel title="Display" class="kiwi-panel">
-        <KToggle :model-value="store.wfOn" label="Waterfall" @update:model-value="onParamBool('wfOn', $event)" />
-      </KPanel>
+      <WaterfallPanel />
     </main>
 
     <!-- Status bar row (M4.1/M4.8 layout) -->
@@ -48,19 +46,14 @@ import FreqPanel from '@/components/FreqPanel.vue'
 import BandPanel from '@/components/BandPanel.vue'
 import AudioPanel from '@/components/AudioPanel.vue'
 import ExtensionPanel from '@/components/ExtensionPanel.vue'
+import WaterfallPanel from '@/components/WaterfallPanel.vue'
 import StatusBar from '@/components/StatusBar.vue'
-import KPanel from '@/components/KPanel.vue'
-import KToggle from '@/components/KToggle.vue'
 import KStatusBadge from '@/components/KStatusBadge.vue'
 import { useKiwiStore } from '@/store/kiwiStore'
 import { pluginService } from '@/services/pluginService'
 
 const store = useKiwiStore()
 const { statusText, statusState } = storeToRefs(store)
-
-function onParamBool(id: 'wfOn', value: boolean) {
-  store.setParam(id, value ? 1 : 0)
-}
 
 function onStation(hostPort: string) {
   store.setStation(hostPort)
@@ -81,6 +74,9 @@ onMounted(() => {
   })
   pluginService.onLevel(dbm => {
     store.setSignalLevel(dbm)
+  })
+  pluginService.onWaterfall(bins => {
+    store.setWaterfallBins(bins)
   })
   pluginService.getParameters()
 })

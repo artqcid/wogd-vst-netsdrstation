@@ -100,6 +100,7 @@ PluginEditor::PluginEditor(Vst::EditControllerEx1 *controller,
   if (pluginController_) {
       pluginController_->setStatusSink([this](const std::string& s) { pushStatus(s); });
       pluginController_->setLevelSink([this](float dbm) { pushLevel(dbm); });
+      pluginController_->setWaterfallSink([this](const std::vector<float>& bins) { pushWaterfall(bins); });
   }
   webView_.setMessageHandler(
       [](const char *message, void *userData) {
@@ -297,6 +298,22 @@ void PluginEditor::pushLevel(float dbm) {
     char buf[64] = {};
     std::snprintf(buf, sizeof(buf), "window.setLevel(%.1f)", static_cast<double>(dbm));
     webView_.eval(buf);
+}
+
+void PluginEditor::pushWaterfall(const std::vector<float>& bins) {
+    if (!attached_ || bins.empty()) { return; }
+    // Encode the bins as a compact JSON number array: [<dBFS>,...]. 256 bins
+    // at 10 Hz is ~3 kB/s of eval'd JS — acceptable for the simulated
+    // spectrum; the real STREAM_WATERFALL (M5+) may use a binary channel.
+    std::string js = "window.setWaterfall([";
+    for (std::size_t i = 0; i < bins.size(); ++i) {
+        if (i > 0) js += ',';
+        char buf[16] = {};
+        std::snprintf(buf, sizeof(buf), "%.1f", static_cast<double>(bins[i]));
+        js += buf;
+    }
+    js += "])";
+    webView_.eval(js);
 }
 
 } // namespace netsdr

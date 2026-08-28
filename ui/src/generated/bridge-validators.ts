@@ -89,9 +89,14 @@ export type ParamUpdateMessage = z.infer<typeof ParamUpdateMessageSchema>
 export const LevelMessageSchema = envelope('level', z.tuple([z.number()]))
 export type LevelMessage = z.infer<typeof LevelMessageSchema>
 
+/** Spectrum bins in dBFS (-160..0), sent C++ -> UI (simulated spectrum, M4.7). */
+export const WaterfallMessageSchema = envelope('waterfall', z.array(z.number()).min(2))
+export type WaterfallMessage = z.infer<typeof WaterfallMessageSchema>
+
 export const BackendMessageSchema = z.discriminatedUnion('type', [
   StatusMessageSchema,
   ParamUpdateMessageSchema,
   LevelMessageSchema,
+  WaterfallMessageSchema,
 ])
 export type BackendMessage = z.infer<typeof BackendMessageSchema>

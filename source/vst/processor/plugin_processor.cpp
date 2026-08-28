@@ -225,6 +225,7 @@ tresult PLUGIN_API PluginProcessor::setupProcessing(ProcessSetup& newSetup) {
     smoothedRatio_ = resampler_->currentRatio();
     // Keep 500 ms / 2000 ms prefill/capacity at the new DAW rate.
     jitterBuffer_  = std::make_unique<JitterBuffer>(dawRate, 500.0, 2000.0);
+    spectrumAnalyzer_ = std::make_unique<SpectrumAnalyzer>(512);
     lastRatioAdjust_ = std::chrono::steady_clock::now();
 
     return AudioEffect::setupProcessing(newSetup);
@@ -345,6 +346,10 @@ void PluginProcessor::setOnLevel(LevelCallback cb) {
     onLevel_ = std::move(cb);
 }
 
+void PluginProcessor::setOnWaterfall(WaterfallCallback cb) {
+    onWaterfall_ = std::move(cb);
+}
+
 // ---------------------------------------------------------------------------
 // emitStatus — any thread
 // ---------------------------------------------------------------------------
@@ -384,6 +389,52 @@ void PluginProcessor::sendLevel() {
     if (auto msg = IPtr<IMessage>(allocateMessage())) {
         msg->setMessageID("NetSDRStation:Level");
         msg->getAttributes()->setFloat("Level", dbm);
+        sendMessage(msg);
+    }
+}
+
+// ---------------------------------------------------------------------------
+// sendWaterfall — worker thread only (posted from the audio thread at ~10 Hz)
+// Drains the spectrum sample queue (fed by the audio thread), keeps the last
+// windowSize samples and computes a DFT spectrum (dBFS bins). Forwards the
+// bins to the local callback and the controller peer as binary IMessage
+// payload ("NetSDRStation:Waterfall"). M4.7 simulated spectrum; the real
+// KiwiSDR STREAM_WATERFALL replaces the sample source in M5+ behind the same
+// interface.
+// ---------------------------------------------------------------------------
+
+void PluginProcessor::sendWaterfall() {
+    if (!spectrumAnalyzer_) {
+        return;
+    }
+    const std::size_t windowSize = spectrumAnalyzer_->windowSize();
+    std::vector<float> recent;
+    recent.reserve(windowSize);
+
+    // Drain the queue; keep only the most recent windowSize samples.
+    float sample = 0.0f;
+    std::vector<float> drained;
+    drained.reserve(8192);
+    while (spectrumSamples_.pop(sample)) {
+        drained.push_back(sample);
+    }
+    if (drained.empty()) {
+        return; // nothing new to analyse (no stream / muted)
+    }
+    const std::size_t take = (std::min)(drained.size(), windowSize);
+    recent.assign(drained.end() - static_cast<std::ptrdiff_t>(take), drained.end());
+
+    const float sampleRate = static_cast<float>(resampler_ ? resampler_->outputRate() : 48000.0);
+    const std::vector<float> bins =
+        spectrumAnalyzer_->computeDbF(static_cast<std::size_t>(sampleRate), recent.data());
+
+    if (onWaterfall_) {
+        onWaterfall_(bins);
+    }
+    if (auto msg = IPtr<IMessage>(allocateMessage())) {
+        msg->setMessageID("NetSDRStation:Waterfall");
+        msg->getAttributes()->setBinary("Bins", bins.data(),
+                                        static_cast<TSize>(bins.size() * sizeof(float)));
         sendMessage(msg);
     }
 }

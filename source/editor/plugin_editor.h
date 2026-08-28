@@ -10,6 +10,8 @@
 #include "vst/common/parameter_registry.h"
 #include "webview/webview_editor.h"
 
+#include <vector>
+
 namespace Steinberg {
 namespace Vst {
 class EditControllerEx1;
@@ -51,6 +53,9 @@ public:
 
     // Push the S-meter level (dBm) to the UI. UI-thread only.
     void pushLevel(float dbm);
+
+    // Push waterfall spectrum bins (dBFS) to the UI. UI-thread only.
+    void pushWaterfall(const std::vector<float>& bins);
 
     // Returns the UI URL the editor should load (dev server in debug builds).
     static const char* uiUrl();

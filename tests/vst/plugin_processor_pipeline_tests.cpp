@@ -931,3 +931,79 @@ TEST_CASE("PluginProcessor: S-meter level (RMS->dBm) tracks a full-scale tone (M
 
     proc.terminate();
 }
+
+TEST_CASE("PluginProcessor: waterfall spectrum frames flow to the UI callback (M4.7)",
+          "[vst][processor][pipeline][waterfall]") {
+    constexpr double kSourceRate = 12000.0;
+    constexpr double kDawRate = 48000.0;
+    constexpr int kBlock = 128;
+    // A strong 1000 Hz tone from the mock server.
+    SineStreamServer server(1000.0, kSourceRate, 1200000);
+
+    netsdr::PluginProcessor proc;
+    proc.initialize(nullptr);
+
+    netsdr::ProcessorState state;
+    state.station = "127.0.0.1:" + std::to_string(server.port());
+    state.freqKhz = 14100.0;
+    state.volume = 1.0;
+    state.mute = 0.0;
+    proc.applyState(state);
+
+    // Collect waterfall frames via the UI callback (what the editor binds).
+    std::vector<std::vector<float>> received;
+    proc.setOnWaterfall([&received](const std::vector<float>& bins) {
+        received.push_back(bins);
+    });
+
+    {
+        bool streaming = false;
+        for (int attempt = 0; attempt < 100 && !streaming; ++attempt) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            streaming = server.framesSent() > 0;
+        }
+        REQUIRE(streaming);
+    }
+
+    Steinberg::Vst::ProcessSetup setup;
+    setup.sampleRate = kDawRate;
+    setup.maxSamplesPerBlock = kBlock;
+    setup.processMode = Steinberg::Vst::kRealtime;
+    setup.symbolicSampleSize = Steinberg::Vst::kSample32;
+    proc.setupProcessing(setup);
+
+    // Render for a while so the 10 Hz waterfall limiter fires frames.
+    std::array<float, kBlock> scratch{};
+    for (int i = 0; i < 60; ++i) {
+        for (int b = 0; b < 30; ++b) {
+            renderBlock(proc, kBlock, scratch.data());
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(50));
+    }
+
+    REQUIRE(!received.empty());
+    const auto& first = received.front();
+    REQUIRE(first.size() == 256); // binCount for a 512-sample window
+    for (float b : first) {
+        REQUIRE(b >= -160.0f);
+        REQUIRE(b <= 0.0f);
+    }
+    // A 1000 Hz tone at 48 kHz is bin 1000*512/48000 ~= 10.7 -> peak near bin
+    // 10-11. Find the peak and allow the first captured frame a tolerance
+    // window (spectrum stabilises over frames).
+    float maxPeak = -160.0f;
+    std::size_t peakBin = 0;
+    for (const auto& frame : received) {
+        for (std::size_t i = 0; i < frame.size(); ++i) {
+            if (frame[i] > maxPeak) {
+                maxPeak = frame[i];
+                peakBin = i;
+            }
+        }
+    }
+    REQUIRE(maxPeak > -40.0f); // a strong tone must be clearly visible
+    REQUIRE(peakBin >= 5);
+    REQUIRE(peakBin <= 20);
+
+    proc.terminate();
+}

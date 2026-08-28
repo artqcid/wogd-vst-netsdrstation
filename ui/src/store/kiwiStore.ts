@@ -49,6 +49,10 @@ export const useKiwiStore = defineStore('kiwi', {
     wfMaxDb: -30,
     wfMinDb: -130,
     wfComp: false,
+    // Waterfall display state (M4.7, UI-local, not bridged parameters).
+    colorMap: 'default' as 'default' | 'rain' | 'grayscale',
+    displayMode: 'waterfall' as 'waterfall' | 'spectrum' | 'both',
+    waterfallBins: [] as number[],
     signalLevel: -140, // dBm, display only
     userCount: '?', // display only
     gpsSync: false, // display only
@@ -109,6 +113,10 @@ export const useKiwiStore = defineStore('kiwi', {
 
     setSignalLevel(dbm: number) {
       this.signalLevel = dbm
+    },
+
+    setWaterfallBins(bins: number[]) {
+      this.waterfallBins = bins
     },
   },
 })

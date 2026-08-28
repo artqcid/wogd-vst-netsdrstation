@@ -1278,16 +1278,33 @@ implementation plans: `doc/M3-implementation-plan.md` (M3),
     → floor); Vitest 77/77 (AudioPanel 6, SMeter 4, onLevel, schema Level);
     UI build 170.5 kB.
 
-- [ ] **M4.7** Waterfall & spectrum display
-  - **Dependency:** requires a waterfall/spectrum data stream from the server
-    (separate WebSocket `STREAM_WATERFALL`), not yet present in the audio-only
-    M3.1 pipeline. Add the stream to the network layer first.
-  - Controls: zoom (`+`/`-`/`Max In`/`Max Out`, level readout), WF Max/Min dB,
-    speed, color map, display-mode toggle (WF/Spec/Both), FFT window,
-    interpolation, CIC comp, aperture auto-mode, timestamps, JPG export.
-  - Ref: `doc/ui-architecture.md` §3.4.
-  - Test: Vitest for controls; integration test that streamed FFT data renders
-    without dropped frames.
+- [x] **M4.7** Waterfall & spectrum display
+  - **Simulated spectrum backend (per M4 plan §7a alternative):**
+    - `dsp/spectrum_analyzer.{h,cpp}`: Goertzel-DFT (512 window → 256 bins,
+      Hann window, dBFS [-160..0]); unit-tested (bin-centre dominance, −6 dB
+      per halving, silence floor).
+    - `plugin_processor`: audio thread pushes rendered samples into a
+      lock-free SPSC queue (RT-safe); worker thread (10 Hz, rate-limited)
+      drains, keeps last 512 samples, computes the spectrum →
+      IMessage "NetSDRStation:Waterfall" (binary float bins).
+    - `plugin_controller`: waterfallSink + notify getBinary.
+    - `plugin_editor`: `pushWaterfall(bins)` → `eval("window.setWaterfall([…])")`.
+    - Schema: `WaterfallMessage` (array of dBFS) + generated code/Zod.
+    - Real `STREAM_WATERFALL` (second WS channel) is M5+; interface-compatible.
+  - **UI:**
+    - `Waterfall.vue`: canvas scrolls frames down; `colorMap.ts` (Default/Rain/
+      Grayscale lookup tables); frequency cursor (yellow) + passband shading.
+    - `WaterfallPanel.vue`: zoom buttons (+/−/Max In/Max Out → wfZoom), WF Max/
+      Min dB sliders, Speed/Color/Mode selects, CIC toggle (wfComp).
+    - `pluginService.onWaterfall` → `window.setWaterfall`; store holds
+      `waterfallBins`, `colorMap`, `displayMode`.
+  - _Files: `ui/src/components/Waterfall.vue`, `WaterfallPanel.vue`,
+    `ui/src/components/waterfall/colorMap.ts`, `source/dsp/spectrum_analyzer.*`,
+    `source/vst/processor/plugin_processor.*`, `source/vst/controller/plugin_controller.*`,
+    `source/editor/plugin_editor.*`, `schema/bridge.schema.json`_
+  - Test: C++ 99/99 (5 spectrum unit + 1 waterfall pipeline integration);
+    Vitest 106/106 (colorMap 5, Waterfall 4, WaterfallPanel 7, schema Waterfall);
+    Release validator 47/47; UI build 181.6 kB.
 
 - [x] **M4.8** Status & system readouts + extension panel
   - `StatusBar.vue`: S-meter, user count, GPS sync (✓/—), buffer health

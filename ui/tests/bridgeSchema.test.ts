@@ -21,6 +21,7 @@ import {
   StatusMessageSchema,
   ParamUpdateMessageSchema,
   LevelMessageSchema,
+  WaterfallMessageSchema,
 } from '@/generated/bridge-validators'
 
 function loadCanonicalSchema() {
@@ -55,6 +56,7 @@ describe('bridge-validators <-> bridge.schema.json consistency', () => {
       'StatusMessageSchema',
       'ParamUpdateMessageSchema',
       'LevelMessageSchema',
+      'WaterfallMessageSchema',
       'BackendMessageSchema',
     ]
     const canonicalNames = Object.keys(canonical)
@@ -127,5 +129,11 @@ describe('bridge-validators <-> bridge.schema.json consistency', () => {
     expect(LevelMessageSchema.safeParse({ type: 'level', data: [-90.0] }).success).toBe(true)
     expect(LevelMessageSchema.safeParse({ type: 'level', data: [-90.0, 10.0] }).success).toBe(false)
     expect(LevelMessageSchema.safeParse({ type: 'level', data: ['-90'] }).success).toBe(false)
+  })
+
+  it('WaterfallMessage accepts an array of dBFS bins', () => {
+    expect(WaterfallMessageSchema.safeParse({ type: 'waterfall', data: [-120, -80, -20, 0] }).success).toBe(true)
+    expect(WaterfallMessageSchema.safeParse({ type: 'waterfall', data: [-90] }).success).toBe(false) // min 2
+    expect(WaterfallMessageSchema.safeParse({ type: 'waterfall', data: ['-90', '-80'] }).success).toBe(false)
   })
 })
