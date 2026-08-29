@@ -89,7 +89,10 @@ const ticks = computed<Tick[]>(() => {
   else if (span >= 5000)  stepKhz = 1000   // 1 MHz
   else if (span >= 1000)  stepKhz = 200    // 200 kHz
   else if (span >= 200)   stepKhz = 50     // 50 kHz
-  else                    stepKhz = 10     // 10 kHz
+  else if (span >= 50)    stepKhz = 10     // 10 kHz
+  else if (span >= 10)    stepKhz = 2      // 2 kHz
+  else if (span >= 2)     stepKhz = 0.5    // 500 Hz
+  else                    stepKhz = 0.1    // 100 Hz
 
   const result: Tick[] = []
   const start = Math.ceil(low / stepKhz) * stepKhz
@@ -106,10 +109,10 @@ const ticks = computed<Tick[]>(() => {
 })
 
 function formatFreq(khz: number): string {
-  if (khz === 0) return '0 kHz'
-  if (khz % 1000 === 0) return `${khz / 1000} MHz`
-  if (khz >= 1000) return `${(khz / 1000).toFixed(1)} MHz`
-  return `${khz} kHz`
+  if (khz === 0) return '0'
+  if (khz >= 1000) return `${(khz / 1000).toFixed(khz % 1000 === 0 ? 0 : 1)} MHz`
+  if (khz >= 1)    return `${khz % 1 === 0 ? khz : khz.toFixed(1)} kHz`
+  return `${Math.round(khz * 1000)} Hz`
 }
 
 // ---- Cursor overlay computed positions ----

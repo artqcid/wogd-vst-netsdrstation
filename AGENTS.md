@@ -31,7 +31,7 @@ runs through this notebook.
 All primary agents run in full autopilot mode at all times:
 
 - **No permission prompts.** All tools are allowed (edit, bash, read, glob,
-  grep, task, todowrite, question, webfetch, websearch, external_directory).
+  grep, list, task, todowrite, question, webfetch, websearch, skill, external_directory).
 - **Work outside the workspace is always allowed** without asking.
 - **Todo-first workflow (mandatory):** Before starting ANY work on a task,
   the agent MUST:

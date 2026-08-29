@@ -40,6 +40,8 @@ export const ParamIdSchema = z.enum([
   'wfComp',
   'arOn',
   'ovOn',
+  'rfAttn',
+  'cwPeaks',
 ])
 export type ParamId = z.infer<typeof ParamIdSchema>
 

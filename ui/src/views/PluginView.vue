@@ -101,34 +101,46 @@
                 @change="onFreqInput"
                 aria-label="Frequency kHz"
               />
-              <select class="kiwi-cpanel__select" aria-label="Band">
-                <option>select band ∨</option>
+              <select class="kiwi-cpanel__select" aria-label="Band" @change="onBandSelect">
+                <option value="">select band</option>
+                <optgroup v-for="g in BAND_SELECT_GROUPS" :key="g.group" :label="g.group">
+                  <option v-for="b in g.bands" :key="b.label" :value="b.freqKhz">{{ b.label }}</option>
+                </optgroup>
               </select>
-              <select class="kiwi-cpanel__select" aria-label="Extension">
-                <option>extension ∨</option>
+              <select class="kiwi-cpanel__select" aria-label="Extension" @change="onExtSelect">
+                <option value="">extension</option>
+                <option v-for="ext in EXTENSIONS" :key="ext" :value="ext">{{ ext }}</option>
               </select>
-              <button class="kiwi-cpanel__play-btn" aria-label="Play">▶</button>
             </div>
 
             <!-- Row 2: Mini icons -->
             <div class="kiwi-cpanel__row kiwi-cpanel__row--icons">
+              <button class="kiwi-cpanel__vfo-btn" title="VFO A/B">A</button>
+              <span class="kiwi-cpanel__icon kiwi-cpanel__icon--cyan" title="Users">9</span>
               <span class="kiwi-cpanel__icon" title="Menu">☰</span>
-              <span class="kiwi-cpanel__icon kiwi-cpanel__icon--cyan" title="Users">A</span>
               <span class="kiwi-cpanel__icon kiwi-cpanel__icon--green" title="Status">✓</span>
-              <span class="kiwi-cpanel__icon kiwi-cpanel__icon--green" title="Active receivers">9</span>
               <span class="kiwi-cpanel__icon-sep"></span>
-              <button class="kiwi-cpanel__icon-btn" @click="onZoom(1)" title="Zoom in">🔍+</button>
-              <button class="kiwi-cpanel__icon-btn" @click="onZoom(-1)" title="Zoom out">🔍−</button>
+              <button class="kiwi-cpanel__icon-btn kiwi-cpanel__icon-btn--zoom" @click="onZoom(1)" title="Zoom in">+🔍</button>
+              <button class="kiwi-cpanel__icon-btn kiwi-cpanel__icon-btn--zoom" @click="onZoom(-1)" title="Zoom out">−🔍</button>
               <button class="kiwi-cpanel__icon-btn" @click="onZoomTo(0)" title="Max zoom out">↖↙</button>
               <button class="kiwi-cpanel__icon-btn" @click="onZoomTo(14)" title="Max zoom in">↗↘</button>
               <button class="kiwi-cpanel__icon-btn" @click="onZoomToBand()" title="Zoom to band">↔</button>
-              <button class="kiwi-cpanel__icon-btn" @click="onPan(-1)" title="Pan left">◀</button>
-              <button class="kiwi-cpanel__icon-btn" @click="onPan(1)" title="Pan right">▶</button>
+              <button class="kiwi-cpanel__icon-btn" @click="onPan(-1)" title="Shift left">«</button>
+              <button class="kiwi-cpanel__icon-btn" @click="onPan(1)" title="Shift right">»</button>
               <span class="kiwi-cpanel__icon-sep"></span>
               <button class="kiwi-cpanel__icon-btn" @click="onToggleCic()" title="CIC compensation">↺</button>
-              <span class="kiwi-cpanel__text-label">Spectrum</span>
+              <button
+                class="kiwi-cpanel__btn kiwi-cpanel__spectrum-btn"
+                @click="cycleSpectrumMode"
+                :title="spectrumModeLabel"
+              >{{ spectrumModeLabel }}</button>
               <button class="kiwi-cpanel__icon-btn kiwi-cpanel__icon-btn--red" @click="onResetWf()" title="Reset">↻</button>
-              <button class="kiwi-cpanel__icon-btn kiwi-cpanel__icon-btn--green" @click="onToggleAudio()" title="Audio">♪</button>
+              <button
+                class="kiwi-cpanel__icon-btn"
+                :class="store.mute ? 'kiwi-cpanel__icon-btn--red' : 'kiwi-cpanel__icon-btn--green'"
+                @click="onToggleAudio()"
+                title="Audio mute/unmute"
+              >{{ store.mute ? '🔇' : '🔊' }}</button>
             </div>
 
             <!-- Row 3: Mode buttons -->
@@ -200,7 +212,38 @@
                 <input type="range" class="kiwi-slider kiwi-cpanel__slider" :min="0" :max="2" :step="0.1"
                   :value="0.2" readonly />
                 <span class="kiwi-cpanel__ctrl-val">0.2 gain</span>
-                <button class="kiwi-cpanel__btn kiwi-cpanel__btn--violet">P1</button>
+                <button
+                  class="kiwi-cpanel__btn kiwi-cpanel__btn--violet"
+                  :class="{ 'kiwi-cpanel__btn--violet-active': store.specPeak1 }"
+                  @click="store.specPeak1 = !store.specPeak1"
+                  title="Spectrum Peak Hold 1"
+                >P1</button>
+              </div>
+            </template>
+
+            <template v-if="activeTab === 'RF'">
+              <div class="kiwi-cpanel__ctrl-row">
+                <span class="kiwi-cpanel__ctrl-label">Attn</span>
+                <button
+                  v-for="db in [0, -10, -20, -30, -40]"
+                  :key="db"
+                  class="kiwi-cpanel__btn"
+                  :class="store.rfAttn === db ? 'kiwi-cpanel__btn--green' : 'kiwi-cpanel__btn--gray'"
+                  @click="store.setParam('rfAttn', db)"
+                >{{ db === 0 ? '0 dB' : db + ' dB' }}</button>
+              </div>
+              <div class="kiwi-cpanel__ctrl-row">
+                <span class="kiwi-cpanel__ctrl-label">NB level</span>
+                <input type="range" class="kiwi-slider kiwi-cpanel__slider" :min="0" :max="100" :step="1"
+                  :value="store.nbThresh" @input="onSlider('nbThresh', $event)" />
+                <span class="kiwi-cpanel__ctrl-val">{{ store.nbThresh }}%</span>
+              </div>
+              <div class="kiwi-cpanel__ctrl-row">
+                <span class="kiwi-cpanel__ctrl-label">CW peaks</span>
+                <button class="kiwi-cpanel__btn"
+                  :class="store.cwPeaks ? 'kiwi-cpanel__btn--green' : 'kiwi-cpanel__btn--gray'"
+                  @click="store.setParam('cwPeaks', store.cwPeaks ? 0 : 1)"
+                >{{ store.cwPeaks ? 'ON' : 'OFF' }}</button>
               </div>
             </template>
 
@@ -326,7 +369,12 @@
                 <option>IIR</option><option>MMA</option><option>EMA</option>
               </select>
               <span class="kiwi-cpanel__arrow">▼</span>
-              <button class="kiwi-cpanel__btn kiwi-cpanel__btn--violet">P2</button>
+              <button
+                class="kiwi-cpanel__btn kiwi-cpanel__btn--violet"
+                :class="{ 'kiwi-cpanel__btn--violet-active': store.specPeak2 }"
+                @click="store.specPeak2 = !store.specPeak2"
+                title="Spectrum Peak Hold 2"
+              >P2</button>
             </div>
 
             <!-- Footer: S-Meter -->
@@ -364,6 +412,7 @@ import Waterfall from '@/components/Waterfall.vue'
 import { useKiwiStore } from '@/store/kiwiStore'
 import { pluginService } from '@/services/pluginService'
 import type { ParamId } from '@/generated/bridge-validators'
+import { BAND_SELECT_GROUPS } from '@/data/bands'
 
 const store = useKiwiStore()
 const { statusText, statusState } = storeToRefs(store)
@@ -408,6 +457,25 @@ const subTabs = [
   { id: 'Off',   label: 'Off',   bg: '#111',    fg: '#666' },
 ] as const
 
+// M4c.7: Extension options (Bug 6.3)
+const EXTENSIONS = [
+  'ALE_2G','ant_switch','colormap','CW_decoder','CW_skimmer','DRM',
+  'DX spots','FAX','FFT','FSK','FT8/FT4','HFDL','IBP_scan','iframe',
+  'IQ_display','Loran_C','NAVTEX/DSC','noise_blank','noise_filter',
+  'S_meter','sig_gen','SSTV','TDoA','timecode','waterfall','WSPR'
+] as const
+
+// M4c.7: Spectrum mode cycling (Bug 6.6)
+const SPECTRUM_MODES = ['waterfall', 'specRF', 'specAF'] as const
+const SPECTRUM_LABELS: Record<string, string> = {
+  waterfall: 'Spectrum', specRF: 'Spec RF', specAF: 'Spec AF'
+}
+const spectrumModeLabel = computed(() => SPECTRUM_LABELS[store.spectrumMode] ?? 'Spectrum')
+function cycleSpectrumMode() {
+  const idx = SPECTRUM_MODES.indexOf(store.spectrumMode as typeof SPECTRUM_MODES[number])
+  store.spectrumMode = SPECTRUM_MODES[(idx + 1) % SPECTRUM_MODES.length]!
+}
+
 // Mode buttons (8 main modes shown in panel)
 const panelModes = [
   { idx: 0,  label: 'AM' },
@@ -436,6 +504,15 @@ function onStation(hostPort: string) {
 function onFreqInput(e: Event) {
   const val = parseFloat((e.target as HTMLInputElement).value)
   if (!isNaN(val)) store.setParam('freqKhz', Math.max(0.001, Math.min(30000, val)))
+}
+
+function onBandSelect(e: Event) {
+  const val = parseFloat((e.target as HTMLSelectElement).value)
+  if (!isNaN(val)) store.setParam('freqKhz', val)
+}
+
+function onExtSelect(e: Event) {
+  store.activeExtension = (e.target as HTMLSelectElement).value
 }
 
 function onZoom(delta: number) {
@@ -1092,6 +1169,44 @@ onBeforeUnmount(() => {
 .kiwi-cpanel__btn--green { background: var(--kiwi-accent); color: black; }
 .kiwi-cpanel__btn--gray  { background: #555; color: #ddd; border: 1px solid #777; }
 .kiwi-cpanel__btn--violet { background: #7c4dff; color: white; }
+.kiwi-cpanel__btn--violet-active { background: #b39ddb; color: white; }
+
+/* M4c.7 Bug 6.4: Zoom-Buttons grösser */
+.kiwi-cpanel__icon-btn--zoom {
+  width: 28px;
+  font-size: 11px;
+  overflow: hidden;
+  letter-spacing: -1px;
+}
+
+/* M4c.7 Bug 6.5: VFO-Button */
+.kiwi-cpanel__vfo-btn {
+  background: #3a3a3a;
+  color: #00bcd4;
+  border: 1px solid #555;
+  border-radius: 2px;
+  width: 20px;
+  height: 18px;
+  font-size: 11px;
+  font-weight: bold;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* M4c.7 Bug 6.6: Spectrum-Mode-Button */
+.kiwi-cpanel__spectrum-btn {
+  background: #3a3a3a;
+  color: #ccc;
+  border: 1px solid #555;
+  border-radius: 2px;
+  padding: 1px 5px;
+  font-size: 9px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
 
 /* Row 11: dropdowns */
 .kiwi-cpanel__row--dropdowns { flex-wrap: wrap; gap: 2px; }

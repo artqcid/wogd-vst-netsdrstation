@@ -7,11 +7,14 @@
       :height="canvasH"
       aria-label="Waterfall spectrum display"
     ></canvas>
+    <div v-if="!hasBins" class="waterfall__no-signal">
+      No signal — connect to a KiwiSDR station
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted, onBeforeUnmount } from 'vue'
+import { ref, watch, onMounted, onBeforeUnmount, computed } from 'vue'
 import { colorFor, type ColorMapName } from '@/components/waterfall/colorMap'
 
 const props = withDefaults(
@@ -38,6 +41,8 @@ const props = withDefaults(
     height: 160,
   }
 )
+
+const hasBins = computed(() => props.bins.length > 0)
 
 const emit = defineEmits<{
   (e: 'zoom', delta: number, anchorFrac: number): void
@@ -146,10 +151,23 @@ onBeforeUnmount(() => {
 <style scoped>
 .waterfall {
   width: 100%;
+  position: relative;
   height: 100%;
   background: var(--kiwi-waterfall-bg, #1e5f7f);
   cursor: crosshair;
   overflow: hidden;
 }
 .waterfall__canvas { display: block; }
+.waterfall__no-signal {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 14px;
+  font-weight: bold;
+  text-align: center;
+  pointer-events: none;
+  z-index: 5;
+}
 </style>

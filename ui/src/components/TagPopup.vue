@@ -48,6 +48,7 @@ export interface PopupTag {
   freqKhz: number
   bg: string
   fg?: string
+  hasExt?: boolean
   country?: string
   language?: string
   schedule?: string

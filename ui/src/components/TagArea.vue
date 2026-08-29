@@ -4,8 +4,10 @@
       v-for="tag in visibleTags"
       :key="tag.label + tag.freqKhz"
       class="tag-area__tag"
+      :class="{ 'tag-area__tag--ext': tag.hasExt }"
       :style="{
         left: freqToPercent(tag.freqKhz) + '%',
+        top: tag.row === 0 ? '2px' : '24px',
         background: tag.bg,
         color: tag.fg ?? 'black',
       }"
@@ -45,47 +47,103 @@ defineEmits<{ (e: 'tune', freqKhz: number): void }>()
 
 /** Built-in KiwiSDR-style DX demo labels with EiBi-style station info */
 const DEMO_TAGS: PopupTag[] = [
-  // --- Technical / Utility signals ---
-  { label: 'NAVTEX', freqKhz: 518,    bg: '#4CAF50', description: 'Navigational telex 518 kHz' },
-  { label: 'FT8',    freqKhz: 3573,   bg: '#4CAF50', description: 'FT8 QRP, 80m band' },
-  { label: 'FT8',    freqKhz: 7074,   bg: '#4CAF50', description: 'FT8 QRP, 40m band' },
-  { label: 'FT8',    freqKhz: 10136,  bg: '#4CAF50', description: 'FT8 QRP, 30m band' },
-  { label: 'FT8',    freqKhz: 14074,  bg: '#4CAF50', description: 'FT8 QRP, 20m band' },
-  { label: 'FT8',    freqKhz: 21074,  bg: '#4CAF50', description: 'FT8 QRP, 15m band' },
-  { label: 'FT8',    freqKhz: 28074,  bg: '#4CAF50', description: 'FT8 QRP, 10m band' },
-  { label: 'FAX',    freqKhz: 7880,   bg: 'yellow',  description: 'Weather fax, 40m' },
-  { label: 'FAX',    freqKhz: 13882,  bg: 'yellow',  description: 'Weather fax, 22m' },
-  { label: 'SSTV',   freqKhz: 14230,  bg: '#f06292', description: 'Slow-scan TV, 20m band' },
-  { label: 'WWV',    freqKhz: 10000,  bg: 'orange',  description: 'NIST time signal 10 MHz' },
-  { label: 'WWV',    freqKhz: 15000,  bg: 'orange',  description: 'NIST time signal 15 MHz' },
-  { label: 'CHU',    freqKhz: 7850,   bg: 'orange',  description: 'CHU time signal, 40m' },
-  { label: 'RTTY',   freqKhz: 14090,  bg: '#f06292', description: 'RTTY, 20m band' },
-  { label: 'CW',     freqKhz: 7025,   bg: '#ef5350', fg: 'white', description: 'CW beacon, 40m' },
-  { label: 'WSPR',   freqKhz: 14095,  bg: '#4CAF50', description: 'WSPR beacon, 20m' },
-  { label: 'JS8',    freqKhz: 14078,  bg: '#4CAF50', description: 'JS8Call, 20m band' },
-  { label: 'MOR',    freqKhz: 25670,  bg: 'orange',  description: 'Station marker' },
-  // --- Real SWBC stations (EiBi-style) ---
-  { label: 'RRI',    freqKhz: 3325,   bg: '#4fc3f7', country: 'Romania', language: 'Romanian',  schedule: '0600-2200', description: 'Radio Romania International, 90m' },
-  { label: 'R.Cuba', freqKhz: 5040,   bg: '#4fc3f7', country: 'Cuba',    language: 'Spanish',   schedule: '1100-0500', description: 'Radio Habana Cuba, 60m' },
-  { label: 'DW',     freqKhz: 6075,   bg: '#4fc3f7', country: 'Germany', language: 'German',    schedule: '0400-0800', description: 'Deutsche Welle, 49m' },
-  { label: 'VOA',    freqKhz: 7485,   bg: '#4fc3f7', country: 'USA',     language: 'English',   schedule: '1300-1600', description: 'Voice of America, 41m' },
-  { label: 'R.Rus',  freqKhz: 5905,   bg: '#4fc3f7', country: 'Russia',  language: 'Russian',   schedule: '0500-2100', description: 'Radio Rossii, 49m' },
-  { label: 'BBC',    freqKhz: 9410,   bg: '#4fc3f7', country: 'UK',      language: 'English',   schedule: '0400-0800', description: 'BBC World Service, 31m' },
-  { label: 'R.Japan',freqKhz: 11895,  bg: '#4fc3f7', country: 'Japan',   language: 'Japanese',  schedule: '0800-1200', description: 'NHK World Radio Japan, 25m' },
-  { label: 'R.CAT',  freqKhz: 9440,   bg: '#4fc3f7', country: 'Spain',   language: 'Catalan',   schedule: '1800-2000', description: 'Ràdio Exterior de Catalunya, 31m' },
-  { label: 'CRI',    freqKhz: 13755,  bg: '#4fc3f7', country: 'China',   language: 'English',   schedule: '1200-1400', description: 'China Radio International, 22m' },
-  { label: 'R.Aust', freqKhz: 13730,  bg: '#4fc3f7', country: 'Austria', language: 'German',    schedule: '0700-0900', description: 'Radio Austria International, 22m' },
-  { label: 'Vatican',freqKhz: 11855,  bg: '#4fc3f7', country: 'Vatican', language: 'Italian',   schedule: '0600-2200', description: 'Vatican Radio, 25m' },
-  { label: 'R.Korea',freqKhz: 9770,   bg: '#4fc3f7', country: 'South Korea', language: 'Korean', schedule: '0900-1200', description: 'KBS World Radio, 31m' },
+  { label: 'LW 243', freqKhz: 243, bg: '#4CAF50' },
+  { label: 'NAVTEX', freqKhz: 518, bg: '#4CAF50', hasExt: true },
+  { label: 'WSPR', freqKhz: 630, bg: '#4CAF50', hasExt: true },
+  { label: 'DSC', freqKhz: 2187.5, bg: '#4CAF50', hasExt: true },
+  { label: 'STANAG DHO26', freqKhz: 1131, bg: '#f06292' },
+  { label: 'STANAG OUA4', freqKhz: 1268, bg: '#f06292' },
+  { label: 'MWARA CAR', freqKhz: 1377, bg: '#f06292' },
+  { label: 'STANAG IDN', freqKhz: 1519, bg: '#f06292' },
+  { label: 'MWARA SAT-1,2', freqKhz: 1638, bg: '#f06292' },
+  { label: 'SSTV EU', freqKhz: 1890, bg: '#f06292', hasExt: true },
+  { label: 'FAX ZAF', freqKhz: 2070, bg: 'yellow', hasExt: true },
+  { label: 'STANAG DHJ58', freqKhz: 2138, bg: '#f06292' },
+  { label: 'FAX GRC', freqKhz: 2248, bg: 'yellow', hasExt: true },
+  { label: 'The Air Horn', freqKhz: 2612, bg: '#f06292' },
+  { label: 'L marker', freqKhz: 2718, bg: '#f06292' },
+  { label: 'The Pip', freqKhz: 3003, bg: '#f06292' },
+  { label: 'VOLMET', freqKhz: 3485, bg: '#f06292' },
+  { label: 'R. Mi Amigo Intl', freqKhz: 3315, bg: '#f06292' },
+  { label: 'DSC (distress)', freqKhz: 2187.5, bg: '#f06292', hasExt: true },
+  { label: 'MWARA SEA-1', freqKhz: 4125, bg: '#f06292' },
+  { label: 'WSPR ISM', freqKhz: 3570, bg: '#4CAF50', hasExt: true },
+  { label: 'V marker', freqKhz: 4625, bg: '#f06292' },
+  { label: 'FAX THA', freqKhz: 4298, bg: 'yellow', hasExt: true },
+  { label: 'DDH7 GER', freqKhz: 4583, bg: 'yellow', hasExt: true },
+  { label: 'FAX GER', freqKhz: 4882, bg: 'yellow', hasExt: true },
+  { label: 'VMW AUS', freqKhz: 4426, bg: '#f06292' },
+  { label: 'STANAG PBC', freqKhz: 5680, bg: '#f06292' },
+  { label: 'STANAG FUM', freqKhz: 6215, bg: '#f06292' },
+  { label: 'MWARA SAT-1', freqKhz: 5505, bg: '#f06292' },
+  { label: 'STANAG FUG', freqKhz: 6215, bg: '#f06292' },
+  { label: 'HM01 CUB', freqKhz: 5820, bg: '#f06292' },
+  { label: 'SuperDARN radar', freqKhz: 8000, bg: '#f06292' },
+  { label: 'FAX RUS', freqKhz: 7781, bg: 'yellow', hasExt: true },
+  { label: 'FAX AUS', freqKhz: 7535, bg: 'yellow', hasExt: true },
+  { label: 'D marker', freqKhz: 8000, bg: '#f06292' },
+  { label: 'FAX UK', freqKhz: 7880, bg: 'yellow', hasExt: true },
+  { label: 'HFDL ZAF', freqKhz: 8825, bg: '#f06292', hasExt: true },
+  { label: 'HM01 CUB', freqKhz: 9330, bg: '#f06292' },
+  { label: 'STANAG FUJ', freqKhz: 9007, bg: '#f06292' },
+  { label: 'VMW AUS', freqKhz: 9355, bg: '#f06292' },
+  { label: 'FAX CHN', freqKhz: 10010, bg: 'yellow', hasExt: true },
+  { label: 'PBB NLD', freqKhz: 11527, bg: 'yellow', hasExt: true },
+  { label: 'FAX JPN', freqKhz: 13988, bg: 'yellow', hasExt: true },
+  { label: 'MWARA NAT-B/D/F', freqKhz: 11384, bg: '#f06292' },
+  { label: 'D marker', freqKhz: 14670, bg: '#f06292' },
+  { label: 'FAX GER', freqKhz: 14467.3, bg: 'yellow', hasExt: true },
+  { label: 'SSTV', freqKhz: 14230, bg: '#f06292', hasExt: true },
+  { label: 'DDH8 GER', freqKhz: 14863, bg: 'yellow', hasExt: true },
+  { label: 'STANAG FUG', freqKhz: 15867, bg: '#f06292' },
+  { label: 'RWM RUS', freqKhz: 14996, bg: '#f06292' },
+  { label: 'FAX AUS', freqKhz: 16135, bg: 'yellow', hasExt: true },
+  { label: 'FAX GER', freqKhz: 17800, bg: 'yellow', hasExt: true },
+  { label: 'D marker', freqKhz: 20048, bg: '#f06292' },
+  { label: 'FAX CHN', freqKhz: 18010, bg: 'yellow', hasExt: true },
+  { label: 'DSC (distress)', freqKhz: 16804.5, bg: '#f06292', hasExt: true },
+  { label: 'FAX JPN', freqKhz: 17445, bg: 'yellow', hasExt: true },
+  { label: 'FAX SGP', freqKhz: 16035, bg: 'yellow', hasExt: true },
+  { label: 'HFDL PAN', freqKhz: 17919, bg: '#f06292', hasExt: true },
+  { label: 'FAX ZAF', freqKhz: 18910, bg: 'yellow', hasExt: true },
+  { label: 'STANAG FUV', freqKhz: 19680, bg: '#f06292' },
+  { label: 'DSC', freqKhz: 19680.5, bg: '#f06292', hasExt: true },
+  { label: 'NAVTEX', freqKhz: 24084, bg: '#4CAF50', hasExt: true },
+  { label: 'WWV', freqKhz: 10000, bg: 'orange' },
+  { label: 'FAX AUS', freqKhz: 20469, bg: 'yellow', hasExt: true },
+  { label: 'FT8', freqKhz: 14074, bg: '#4CAF50', hasExt: true },
+  { label: 'SSTV', freqKhz: 14230, bg: '#f06292', hasExt: true },
+  { label: 'MWARA NP', freqKhz: 23210, bg: '#f06292' },
+  { label: 'DSC', freqKhz: 22374, bg: '#f06292', hasExt: true },
+  { label: 'FT8', freqKhz: 21074, bg: '#4CAF50', hasExt: true },
+  { label: 'DSC', freqKhz: 23100, bg: '#f06292', hasExt: true },
+  { label: 'NAVTEX', freqKhz: 25170, bg: '#4CAF50', hasExt: true },
+  { label: 'FT8', freqKhz: 28074, bg: '#4CAF50', hasExt: true },
+  { label: 'SSTV', freqKhz: 28680, bg: '#f06292', hasExt: true },
 ]
 
 const activeTags = computed<PopupTag[]>(() => props.tags.length > 0 ? props.tags as PopupTag[] : DEMO_TAGS)
 
-const visibleTags = computed<PopupTag[]>(() =>
-  activeTags.value.filter(t =>
-    t.freqKhz >= props.viewLowKhz && t.freqKhz <= props.viewHighKhz
-  )
-)
+interface TagItem extends PopupTag { row: number }
+
+const visibleTags = computed<TagItem[]>(() => {
+  const sorted = activeTags.value
+    .filter(t => t.freqKhz >= props.viewLowKhz && t.freqKhz <= props.viewHighKhz)
+    .map(t => ({ ...t, row: 0 }))
+    .sort((a, b) => a.freqKhz - b.freqKhz)
+
+  // Kollisions-Detektion: wenn zwei Tags zu nahe, zweite Reihe
+  const MIN_GAP_PCT = 3
+  for (let i = 1; i < sorted.length; i++) {
+    const prev = sorted[i - 1]
+    const curr = sorted[i]
+    if (prev && curr) {
+      const pctDiff = freqToPercent(curr.freqKhz) - freqToPercent(prev.freqKhz)
+      if (pctDiff < MIN_GAP_PCT) curr.row = prev.row === 0 ? 1 : 0
+    }
+  }
+  return sorted
+})
 
 // --- Popup state ---
 const popupVisible = ref(false)
@@ -108,7 +166,7 @@ function freqToPercent(freqKhz: number): number {
 <style scoped>
 .tag-area {
   position: relative;
-  height: 22px;
+  height: 44px;        /* 2 Reihen à 22px */
   background: #aaaaaa;
   flex-shrink: 0;
   overflow: hidden;
@@ -117,7 +175,6 @@ function freqToPercent(freqKhz: number): number {
 
 .tag-area__tag {
   position: absolute;
-  top: 2px;
   height: 18px;
   font-size: 9px;
   padding: 1px 3px;
@@ -130,6 +187,8 @@ function freqToPercent(freqKhz: number): number {
   user-select: none;
   font-weight: bold;
 }
+
+.tag-area__tag--ext { border-color: #FFD700; border-style: dashed; }
 
 .tag-area__tag:hover { filter: brightness(1.1); z-index: 1; }
 </style>

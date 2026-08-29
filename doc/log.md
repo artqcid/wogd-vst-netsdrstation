@@ -3,6 +3,35 @@
 _Append-only, newest first. Parseable with `grep "^## "`. Entries use
 `**Creation**`, `**Update**` or `**Deprecation**` prefix + linked concept file._
 
+## 2026-08-29 — M4c.7 Bugs implementiert (6 Bugs, 13 Dateien)
+
+**Update:** [`M4c.7-bugs.md`](./M4c.7-bugs.md) — Alle 6 Bugs implementiert.
+
+| Bug | Komponente | Änderung |
+|-----|-----------|----------|
+| Bug 1 | PluginView.vue + kiwiStore.ts | P1/P2-Buttons mit `@click` + `specPeak1/2`-Store-State; CSS `.kiwi-cpanel__btn--violet-active` |
+| Bug 2 | Waterfall.vue | "No signal — connect to a KiwiSDR station" Overlay bei leeren Bins |
+| Bug 3 | BandScaleBar.vue | `BandDef` Interface: `freq` → `startFreq/endFreq`; 26 Bänder mit Breite; `freqWidthPercent()`; `visibleBands`-Filter |
+| Bug 4 | TagArea.vue + TagPopup.vue | 73 DX-Tags (statt 30); zweireihiges Layout (44px); Kollisions-Detektion; `hasExt`-Marker |
+| Bug 5 | FrequencyRuler.vue | 4 sub-kHz-Stufen in `if/else`-Kette (0.1 kHz bei zoom 14); `formatFreq` gibt "Hz" für < 1 kHz |
+| Bug 6 | PluginView.vue + kiwiStore.ts + bands.ts + bridge-validators.ts | 8 Sub-Bugs: Pan-Symbole, Band-Select (87 Optionen), Extension-Select (27), Zoom-Buttons, Layout (VFO/Users), Spectrum-Button (3 Modi), Audio-Symbol, RF-Tab (Attn/NB/CW) |
+
+**Neue Datei:** `ui/src/data/bands.ts` — 87 Band-Optionen in 6 `<optgroup>`-Gruppen.
+
+**Geänderte Dateien (13):**
+- `ui/src/views/PluginView.vue` — Template + Script + CSS
+- `ui/src/store/kiwiStore.ts` — 5 neue State-Felder
+- `ui/src/components/FrequencyRuler.vue` — Step-Kette + formatFreq
+- `ui/src/components/BandScaleBar.vue` — Interface + Daten + Funktion
+- `ui/src/components/TagArea.vue` — 73 Tags + 2-Reihen-Layout
+- `ui/src/components/TagPopup.vue` — `hasExt`-Feld im Interface
+- `ui/src/components/Waterfall.vue` — No-Signal-Overlay
+- `ui/src/generated/bridge-validators.ts` — `rfAttn` + `cwPeaks` ParamIds
+- `ui/src/data/bands.ts` — NEU
+
+**Build:** `vue-tsc --build` ✅, `vite build` ✅ (208.68 kB)
+**Tests:** 15 Test-Files, 112 Tests ✅
+
 ## 2026-08-29 — Agent-Infrastruktur überarbeitet (opencode.json + AGENTS.md)
 
 **Update:** [`AGENTS.md`](./AGENTS.md) — Project Overview, Role & Delegation

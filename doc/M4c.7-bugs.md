@@ -2,7 +2,7 @@
 type: Bug Manifest + Implementation Plan
 title: M4c.7 — Bug-Manifest + Implementation Plan
 description: 6 Bugs aus manueller Prüfung (2026-08-29) mit vollständiger Analyse und konkretem Fix-Plan pro Bug. Analysiert 2026-08-29 (agent:plan).
-status: in-progress
+status: bugs-fixed-e2e-pending
 generated:
   by: agent:plan
   at: 2026-08-29
@@ -40,12 +40,12 @@ Nach jedem Fix: `reference-matrix.md` aktualisieren (❌ → ✅), E2E-Test schr
 
 | Bug | Komponente | Priorität | Komplexität | Status |
 |-----|-----------|-----------|-------------|--------|
-| [Bug 1](#bug-1--p1-button-funktion-falsch) | PluginView.vue | Mittel | Klein | offen |
-| [Bug 2](#bug-2--wasserfall--spektrum-zeigt-keine-echten-daten) | Waterfall.vue / C++ | Hoch | Mittel | offen |
-| [Bug 3](#bug-3--frequenzband-leiste-inkorrekt) | BandScaleBar.vue | Mittel | Mittel | offen |
-| [Bug 4](#bug-4--dx-tags-fehlen--layout-falsch) | TagArea.vue | Niedrig | Klein | offen |
-| [Bug 5](#bug-5--khz-lineal-skaliert-nicht-bei-hohem-zoom) | FrequencyRuler.vue | Mittel | Klein | offen |
-| [Bug 6](#bug-6--bedienpanel-61-68) | PluginView.vue | Hoch | Gross | offen |
+| [Bug 1](#bug-1--p1-button-funktion-falsch) | PluginView.vue | Mittel | Klein | ✅ |
+| [Bug 2](#bug-2--wasserfall--spektrum-zeigt-keine-echten-daten) | Waterfall.vue / C++ | Hoch | Mittel | ✅ |
+| [Bug 3](#bug-3--frequenzband-leiste-inkorrekt) | BandScaleBar.vue | Mittel | Mittel | ✅ |
+| [Bug 4](#bug-4--dx-tags-fehlen--layout-falsch) | TagArea.vue | Niedrig | Klein | ✅ |
+| [Bug 5](#bug-5--khz-lineal-skaliert-nicht-bei-hohem-zoom) | FrequencyRuler.vue | Mittel | Klein | ✅ |
+| [Bug 6](#bug-6--bedienpanel-61-68) | PluginView.vue | Hoch | Gross | ✅ |
 
 ---
 
@@ -997,6 +997,86 @@ KiwiSDR-Extensions werden über `id-select-ext` (27 Optionen) ausgewählt.
 
 ---
 
+## M4c.7 Offene Tasks (Stand 2026-08-29)
+
+### Task 1: C++ Build (VST3_SDK_ROOT)
+
+**Fehler:**
+```
+cmake --preset win-msvc
+CMake Error at CMakeLists.txt:57 (message):
+  VST3 SDK not found. Set -DVST3_SDK_ROOT=<path> to the VST3 SDK
+  (e.g. C:/Users/<you>/vst3sdk), or enable NS_VENDOR_VST3_SDK.
+```
+
+**Root cause:** Weder `VST3_SDK_ROOT` Environment-Variable gesetzt noch `NS_VENDOR_VST3_SDK=ON`. Der VST3 SDK ist nicht installiert/geklont.
+
+**Fix:** VST3 SDK als Git-Submodul (`git submodule add` mit NS_VENDOR_VST3_SDK=ON) ODER Umgebungsvariable setzen. Dazu WEBVIEW2_SDK_ROOT prüfen.
+
+**Status:** Offen
+
+---
+
+### Task 2: 8 E2E-Tests failen
+
+22 Tests ausgeführt, 13 passed, 1 skipped, **8 failed**.
+
+#### 2.1 `tag-area.spec.ts:9` — `toHaveCount` Syntax-Fehler
+
+**Fehler:** `toHaveCount(async () => {...})` — Playwright's `toHaveCount` akzeptiert keinen Callback, sondern eine Zahl.
+
+**Fix:** `expect(await tags.count()).toBeGreaterThanOrEqual(20)`
+
+#### 2.2 `panel-controls.spec.ts:55` — `toHaveCount({ min: 3 })` Syntax-Fehler
+
+**Fehler:** `toHaveCount` akzeptiert nur `number`, kein Objekt.
+
+**Fix:** `expect(await optgroups.count()).toBeGreaterThanOrEqual(3)`
+
+#### 2.3 `panel-controls.spec.ts:72` — `toHaveCount({ min: 20 })` Syntax-Fehler
+
+Identisch zu 2.2. **Fix:** `expect(await options.count()).toBeGreaterThanOrEqual(20)`
+
+#### 2.4 `panel-controls.spec.ts:109` — Audio Button: Grüne Klasse nach Klick nicht gefunden
+
+**Fehler:** Es wird `.kiwi-cpanel__icon-btn--green` gesucht, aber nach dem Klick ist der Button `--red`. Der Locator findet das Element nicht mehr.
+
+**Fix:** Button vor dem Klick sichern (`const audioBtn = page.locator(...).first()`), dann klicken und prüfen ob er `--red` hat.
+
+#### 2.5 `panel-controls.spec.ts:142` — RF Tab: `.kiwi-cpanel__btn--attn` existiert nicht
+
+**Fehler:** Die Attn-Buttons im RF-Tab haben keine spezielle CSS-Klasse — sie verwenden `kiwi-cpanel__btn` mit `kiwi-cpanel__btn--green`/`--gray`. Der Test sucht nach nicht-existentem Selector.
+
+**Fix:** Statt `.kiwi-cpanel__btn--attn` direkt über Text-Inhalt finden: `page.locator('.kiwi-cpanel__btn', { hasText: '0 dB' })` oder über die Ctrl-Row: `.kiwi-cpanel__ctrl-row` mit Text 'Attn'.
+
+#### 2.6 `band-scale.spec.ts:49` — Regex passt nicht auf Dezimal-Format
+
+**Fehler:** Frequenz-Input zeigt `"7100.00"` (2 Dezimalstellen), Regex erwartet `^7[012]\d{2}$` (exakt 4 Ziffern, keine Dezimalen).
+
+**Fix:** Regex anpassen: `expect(freqText).toMatch(/^71[0-9]{2}/)` (präfixt)
+
+#### 2.7 `frequency-ruler.spec.ts:16` — `'0'`-Label-Count falsch
+
+**Fehler:** `labels.filter({ hasText: '0' })` findet 3 Elemente („30 MHz" enthält „0"). `filter({ hasText })` ist ein Substring-Match.
+
+**Fix:** Exakten Match: `labels.filter({ hasText: /^0$/ })` oder `page.locator('.freq-ruler__label').filter({ hasText: '0 kHz' })`
+
+#### 2.8 `frequency-ruler.spec.ts:39` — Keine kHz-Labels nach Zoom
+
+**Fehler:** Nach 4 Zoom-Klicks (wfZoom=4, span≈1875 kHz, step=200 kHz) werden Labels erwartet die „kHz" enthalten. Aber `formatFreq` gibt für 200 kHz → „200 kHz", für 1000 kHz → „1.0 MHz". Bei span 1875 kHz ist der erste Tick bei 0, step 200 → Labels: 0, 200 kHz, 400 kHz, 600 kHz, 800 kHz, 1.0 MHz, 1.2 MHz... Es SOLLTEN kHz-Labels vorhanden sein. Möglicherweise reichen 4 Zoom-Klicks nicht — prüfen ob der Store-Zoom korrekt gesetzt wird.
+
+**Fix:** Mehr Zoom-Klicks (6–8) oder `page.evaluate` um `wfZoom` direkt auf 8 zu setzen, dann Labels prüfen.
+
+---
+
+### Task 3: Veraltete E2E-Selektoren (M4b Bug 9)
+
+Die E2E-Tests aus M4b-Zeiten (`.kiwi-control-panel`, `[data-testid="..."]`) wurden noch nicht geprüft ob sie wirklich alle aktualisiert wurden. Der `smoke.spec.ts` läuft — andere könnten noch veraltete Selektoren haben.
+
+**Fix:** Alle E2E-Tests in `ui/e2e/` gegen das aktuelle DOM prüfen.
+
+---
+
 ## Chronologie
 
 | Zeit | Ereignis |
@@ -1004,4 +1084,6 @@ KiwiSDR-Extensions werden über `id-select-ext` (27 Optionen) ausgewählt.
 | 2026-08-28 | M4b-Bugs erfasst (M4b-bugs.md) |
 | 2026-08-29 | M4c abgeschlossen (E2E-Tests, Bugfixes) — M4b-Bugs gefixt |
 | 2026-08-29 | M4c.7 Bug-Manifest erstellt — 6 neue Bugs aus manueller Prüfung |
-| 2026-08-29 | Vollständige Analyse aller 6 Bugs (Referenz-DOM-Abgleich + Quellcode-Inspektion) |
+| 2026-08-29 | M4c.7 Bugs implementiert (6 Bugs + 12 Sub-Bugs gefixt, Build ✅, 112 Unit-Tests ✅) |
+| 2026-08-29 | M4c.7 E2E-Tests geschrieben (5 neue Files, 22 Tests) — 8 failen, 2 haben Syntax-Fehler |
+| 2026-08-29 | C++ Build blockiert (VST3_SDK_ROOT fehlt) — als Task dokumentiert |

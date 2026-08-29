@@ -19,6 +19,7 @@ const BOOLEAN_PARAMS: ReadonlySet<ParamId> = new Set<ParamId>([
   'squelchOn',
   'nbOn',
   'nrOn',
+  'cwPeaks',
 ])
 
 /** Default station preloaded in the UI (until the M5 station tab lands). */
@@ -66,6 +67,13 @@ export const useKiwiStore = defineStore('kiwi', {
     signalLevel: -140, // dBm, display only
     userCount: '?', // display only
     gpsSync: false, // display only
+    // M4c.7 — UI-local state (Bug 1: Peak Hold, Bug 6.6: Spectrum Mode, Bug 6.8: RF)
+    specPeak1: false,
+    specPeak2: false,
+    spectrumMode: 'waterfall' as 'waterfall' | 'specRF' | 'specAF',
+    rfAttn: 0 as 0 | -10 | -20 | -30 | -40,
+    cwPeaks: false,
+    activeExtension: '',
   }),
 
   getters: {
