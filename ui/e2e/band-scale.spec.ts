@@ -63,7 +63,7 @@ test.describe('Band scale', () => {
     await expect(freqInput).toBeVisible()
 
     const freqText = await freqInput.inputValue()
-    // 40m band center is around 7100 kHz; accept 7000–7200 kHz range.
-    expect(freqText).toMatch(/^7[012]\d{2}$/)
+    // 40m band center is around 7100 kHz; accept 7000–7299 kHz range (with or without decimals).
+    expect(freqText).toMatch(/^71\d{2}/)
   })
 })

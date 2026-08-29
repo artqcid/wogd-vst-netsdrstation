@@ -16,7 +16,8 @@ test.describe('Frequency ruler', () => {
   test('Frequency ruler shows labels at default zoom', async ({ page }) => {
     const labels = page.locator('.freq-ruler__label')
     await expect(labels.filter({ hasText: 'MHz' })).toHaveCount(5)
-    await expect(labels.filter({ hasText: '0' })).toHaveCount(1)
+    // Exact match for "0 kHz" or just "0" - avoid matching "30" in "30 MHz"
+    await expect(labels.filter({ hasText: '0 kHz' })).toHaveCount(1)
   })
 
   test('Ticks increase when zooming in (Bug 5)', async ({ page }) => {
@@ -40,7 +41,8 @@ test.describe('Frequency ruler', () => {
     const zoomBtn = page.locator('.kiwi-cpanel__icon-btn--zoom').first()
     await expect(zoomBtn).toBeVisible()
 
-    for (let i = 0; i < 4; i++) {
+    // Zoom in 6 times to reach span ~1875 kHz (wfZoom=6), where step=200 kHz produces kHz labels
+    for (let i = 0; i < 6; i++) {
       await zoomBtn.click()
     }
 

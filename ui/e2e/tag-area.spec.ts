@@ -11,11 +11,8 @@ test.describe('Tag area', () => {
     await expect(tagArea).toBeVisible()
 
     const tags = tagArea.locator('.tag-area__tag')
-    await expect(tags).toHaveCount(async () => {
-      const count = await tags.count()
-      expect(count).toBeGreaterThanOrEqual(20)
-      return count
-    })
+    const count = await tags.count()
+    expect(count).toBeGreaterThanOrEqual(20)
   })
 
   test('Bug 4: Some tags have hasExt class', async ({ page }) => {

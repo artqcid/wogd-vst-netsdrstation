@@ -62,11 +62,13 @@ test.describe('Panel controls', () => {
 
     // Expect at least 3 optgroup elements
     const optgroups = bandSelect.locator('optgroup')
-    await expect(optgroups).toHaveCount({ min: 3 })
+    const optgroupCount = await optgroups.count()
+    expect(optgroupCount).toBeGreaterThanOrEqual(3)
 
     // Expect at least 30 option elements
     const options = bandSelect.locator('option')
-    await expect(options).toHaveCount({ min: 30 })
+    const optionCount = await options.count()
+    expect(optionCount).toBeGreaterThanOrEqual(30)
   })
 
   test('Bug 6.3: Extension-Select dropdown has expected options', async ({ page }) => {
@@ -79,7 +81,8 @@ test.describe('Panel controls', () => {
 
     // Expect at least 20 option elements
     const options = extensionSelect.locator('option')
-    await expect(options).toHaveCount({ min: 20 })
+    const optionCount = await options.count()
+    expect(optionCount).toBeGreaterThanOrEqual(20)
   })
 
   test('Bug 6.6: Spectrum button cycles through states', async ({ page }) => {
@@ -111,8 +114,8 @@ test.describe('Panel controls', () => {
     const wf0Tab = page.locator('.kiwi-cpanel__tab-btn', { hasText: 'WF0' })
     await wf0Tab.click()
 
-    // Find audio button in icons row
-    const audioBtn = page.locator('.kiwi-cpanel__icon-btn--green')
+    // Find audio button in icons row - locate by emoji since class changes on click
+    const audioBtn = page.locator('.kiwi-cpanel__icon-btn', { hasText: '🔊' })
 
     // Expect it shows 🔊 emoji
     await expect(audioBtn).toContainText('🔊')
@@ -144,12 +147,12 @@ test.describe('Panel controls', () => {
     const rfTab = page.locator('.kiwi-cpanel__tab-btn', { hasText: 'RF' })
     await rfTab.click()
 
-    // Expect to see Attn buttons
-    await expect(page.locator('.kiwi-cpanel__btn--attn', { hasText: '0 dB' })).toBeVisible()
-    await expect(page.locator('.kiwi-cpanel__btn--attn', { hasText: '-10 dB' })).toBeVisible()
-    await expect(page.locator('.kiwi-cpanel__btn--attn', { hasText: '-20 dB' })).toBeVisible()
-    await expect(page.locator('.kiwi-cpanel__btn--attn', { hasText: '-30 dB' })).toBeVisible()
-    await expect(page.locator('.kiwi-cpanel__btn--attn', { hasText: '-40 dB' })).toBeVisible()
+    // Expect to see Attn buttons - use text-based locator since no special class exists
+    await expect(page.locator('.kiwi-cpanel__btn', { hasText: '0 dB' })).toBeVisible()
+    await expect(page.locator('.kiwi-cpanel__btn', { hasText: '-10 dB' })).toBeVisible()
+    await expect(page.locator('.kiwi-cpanel__btn', { hasText: '-20 dB' })).toBeVisible()
+    await expect(page.locator('.kiwi-cpanel__btn', { hasText: '-30 dB' })).toBeVisible()
+    await expect(page.locator('.kiwi-cpanel__btn', { hasText: '-40 dB' })).toBeVisible()
 
     // Expect to see "NB level" label
     await expect(page.locator('text=NB level')).toBeVisible()
