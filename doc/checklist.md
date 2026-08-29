@@ -1654,7 +1654,7 @@ implementation plans: `doc/M3-implementation-plan.md` (M3),
 ## Milestone M4b — Bug-Fixes & UI-Vollständigkeit
 
 > Implementierungsreihenfolge: M4b.1 → M4b.2 → M4b.3 → M4b.4 → M4b.5 → M4b.6 → M4b.7 → M4b.8 → M4b.9 → M4b.10
-> Vollständige Analyse + Begründungen: `doc/M4b-bugs.md`
+> Vollständige Analyse + Begründungen: `doc/archive/M4b-bugs.md`
 > GUI-Inventar: `doc/ui-architecture.md` §7
 
 ### M4b.1 — Scale-Transform entfernen (App.vue/master.css)
@@ -1860,12 +1860,80 @@ implementation plans: `doc/M3-implementation-plan.md` (M3),
 - [x] **M4c.6d** Verifiziert: vue-tsc clean, vitest 112 passed, playwright 65 passed.
 - [x] **M4c.6e** RAG re-indiziert (96 files, 944 symbols).
 - [x] **M4c.6f** Commit + Push auf `netsdrstation`.
-  - Alter Tab `.kiwi-cpanel__tab` (links, `►`/`◄`) entfernt — war ein fälschlicher Close-Button
-  - Neuer `.kiwi-cpanel__toggle` (oben-rechts, `▼`/`▲`) — kleiner Pfeil-Button, positioniert über der oberen rechten Ecke des Panels
-  - Klick toggled `isPanelOpen`; ▼ wenn offen, ▲ wenn geschlossen
-  - CSS: `position: absolute; top: -22px; right: 0; border-radius: 6px 6px 0 0;`
-  - _File: `ui/src/views/PluginView.vue` (Template Zeilen 94-98, CSS Zeilen 834-858)_
-  - Test: vue-tsc clean, vitest 112 passed, playwright 65 passed
+  _File: `ui/src/views/PluginView.vue` (`.kiwi-cpanel__vis` + `.kiwi-cpanel__vis--hidden`)
+
+### M4c.7 — Bug-Manifest + 1:1-Paritäts-Gap (Analyse-Phase, noch keine Fixes)
+
+> **Status: Analyse.** 6 Bugs aus manueller Prüfung identifiziert.
+> Jeder Bug erhält zuerst einen **Analyse-Task** (Referenz-DOM-Abgleich gegen `explore-8074.json` / `panel.json`)
+> und erst dann einen **Fix-Task**.
+> Siehe auch: `doc/M4c.7-bugs.md` (ausführliches Manifest).
+
+#### Bug 1 — Violetter Button → Tip-Panell Colapse
+
+- [ ] **M4c.7.1a ANALYSE:** Violetter Button identifizieren (`.kiwi-cpanel__btn--violet` "P1"?).
+  Referenz `panel.json`: `id-readme` (x:10, y:495, w:605, h:295) + `id-readme-vis` — das ist das Tip/Welcome-Panel.
+  Soll: Button togglt das Tip-Panel (open/colapse), nicht Audio aus.
+- [ ] **M4c.7.1b FIX:** Button-Funktion ändern → `isReadmeOpen` togglen + Tip-Panel-Komponente einfügen.
+
+#### Bug 2 — Spektrometer funktioniert nich
+
+- [ ] **M4c.7.2a ANALYSE:** Prüfen `Waterfall.vue` / `SpectrumRenderer.vue` — läuft Canvas-Rendering?
+  Ist `WF data` von KiwiSDR vorhanden? Oder nur simulierte Daten?
+  Referenz `explore-8074.json`: `id-wf-canvas` (1280x200), `id-spectrum-canvas` — echte Specrum-Daten.
+- [ ] **M4c.7.2b FIX:** Echten WF-Data-Strom vom Server dekodieren + Canvas rendern.
+
+#### Bug 3 — Frequenzband-Leiste inkorrekt
+
+- [ ] **M4c.7.3a ANALYSE:** `BandScaleBar.vue` gegen Referenz prüfen.
+  Soll: Farbige Felder (keine Buttons!) mit Captions ("Broadcast", "Maritime" etc.) + Zoom-Mitlauf.
+  Referenz: 87 Band-Optionen in `id-select-band`.
+- [ ] **M4c.7.3b FIX:** `<BandScaleBar>` umbauen: `div`-Felder mit `background` + `osition:absolute`.
+  Band-Breiten aus `doc/kiwisdr-protcol-reference.md` Band-Tabelle.
+  Zoom-Transformation: Bänder skalieren mit `zoomAnchhor` / `zoomLevel`.
+
+#### Bug 4 — DX-Tags fehlen / inkorrekt
+
+- [ ] **M4c.7.4a ANALYSE:** `TagArea.vue` / `DXTags.vue` gegen `explore-8074.json`.
+  73 DX-Tag-Buttons mit `dx-has-ext` / `cl-dx-label-ext` Klassen.
+  Zweireihig bei Überlappung. Vertikale Linien von Buttons zum Specrogramm-Rand.
+  Farbe korrekt? Referenz: `dx-selects-smetr.json`.
+- [ ] **M4c.7.4b FIX:** DX-Tags vollständig rendern (73 statt 30 DEMO_TAGS).
+  Zweireihiges Layout + Linien zum kHz-Lineal.
+
+#### Bug 5 — kHz-Lineal skaliert nicht beim Zoom
+
+- [ ] **M4c.7.5a ANALYSE:** `FrequencyRuler.vue` Rendering-Logik prüfen.
+  Soll: Adaptives Lineal — Skalensriche passen sich Zoom-Level an.
+  Referenz `id-scale-canvas` (1280x47).
+- [ ] **Mc4c.7.5b FIX:** `FrequencyRuler` neu: `zoomLevel`-basiertes Tick-Intervall.
+  `zoomLevel` 0 (volle Breite): grobe kHz-Striche. `zoomLevel` 14 (max Zoom): feine Hz-Striche.
+
+#### Bug 6 — Bedienpanel (6.1–6.8)
+
+- [ ] **M4c.7.6a ANALYSE:** Vollständiger DOM-Abgleich `PluginView.vue` Cpanel vs `panel.json`.
+  Prüfe: Button-Anordnung, -Größe, -Farben, Collapse-Duplikat (Bug 6.1),
+  Dropdown-Werte (Bug 6.2, 6.3), Zoom-Button-Layout (Bug 6.5),
+  Spectrum-Button-Funktion (Bug 6.6), Audio-Button (Bug 6.7), Tab-Inhalte (Bug 6.8).
+- [ ] **M4c.7.6b FIX:**
+  - 6.1: Doppelten Collapse-Button entfernen (nur EIN Button rechts vom Extension-Dropdown).
+  - 6.2: Band-Select mit 87 Optionen befüllen (aus `id-select-band`).
+  - 6.3: Extension-Select mit 27 Optionen befüllen (aus `id-select-ext`; Funktion → M4x).
+  - 6.5: Zoom-Buttons: Lupen-Symbol IM Button (+/− mit Lupe). Layout 1:1 prüfen.
+  - 6.6: Spectrum-Button: 3 Modi (Spectrum/Spec RF/Spec AF) → toggle.
+  - 6.7: Audio-Button: Lautsprecher-Symbol, grün/ot toggle.
+  - 6.8: Tab-Inhalte: scrollbare Panele mit ALLEN Parametern (WF8 etc.).
+    E2E-Tests müssen visuel ALLE Elemente erassen.
+
+#### E2E-Lückenanalyse (vor Bug-Fixes)
+
+- [ ] **M4c.7.7a ANALYSE:** Warum wurden viele Elemente nicht von E2E-Tests entdeckt?
+  Hypothese: Playwrght `locator()` sieht nur sichtbare Elemente im Viewport.
+  Scrollbare Inahlte in Tabs wurden nicht gescrollt → nicht erfasst.
+  Lösung: `page.evaluate()` für DOM-Snapshot ODER `scrollIntoView()` vor `locator()`.
+- [ ] **M4c.7.7b ANALYSE:** `dx-selcts-smetr.json` hat leere Arrays (alle `allOtions: []`) —
+  Live-Captre hat Band/Extension/Dropdowns nicht erfasst.
+  Lösung: Capture-Script fixt oder manuel DOP-Export vervollständigen.
 
 ### E2E-Test-Dateien (finaler Stand)
 
@@ -1891,20 +1959,36 @@ ui/e2e/
 └── wf0-tab.spec.ts                  # WF0 Tab Controls (8 Tests)
 ```
 
-**Gesamt: 65 Playwright-Tests, 112 Vitest-Tests — alle grün.**
+**Gesamt: 65 Playwright-Tests, 112 Vitest-Tests — alle grün (vor M4c.7-Fixes).**
 
 - [x] **T1** clangd-based C++ semantic MCP - done (M3.6, `lsp-mcp-server` MIT as `clangd_mcp`)
 - [x] **T2** Playwright MCP - done (M3.6, `@playwright/test` + `ui/e2e/smoke.spec.ts` green)
 
+## LLM-Wiki Refactoring (completed 2026-08-29)
+
+- [x] **W1** `doc/index.md` — Karpathy-style knowledge catalog (1-line summaries, categories)
+- [x] **W2** `doc/log.md` — Append-only chronological changelog (newest first, parseable)
+- [x] **W3** OKF YAML frontmatter (`type/description/status/sources/generated/stale_after`) on all 21 `doc/*.md` concept files
+- [x] **W4** Entflechtung: historical status blocks from `plan.md` → `archive/plan-history.md` (Single Source of Truth)
+- [x] **W5** `netsdr_mcp_server.py` v6 — YAML frontmatter awareness (parsing, wiki metadata, schema upgrade)
+- [x] **W6** Agent rules update: `AGENTS.md` + `WORKSPACE_AGENT_PROMPT.md` → primary navigation via `doc/index.md`
+- [x] **W7** RAG index rebuilt: 100 files (1525 chunks, 1005 symbols, 19 frontmatter chunks)
+- [x] **W8** Phase 4 (Lint workflow) — Lint rules in AGENTS.md + `doc/lint.ps1`; runs **automatically** on every Post-Task Sync
+- [x] **W9** Phase 5 (NotebookLM sync) — Roles defined in AGENTS.md Knowledge-Sync; sync via weekly log digest
+
+> _Design doc: `doc/archive/LLM-WIKI-Refactoring.md` (status: done, all phases implemented, archived)
+> _Lint script: `doc/lint.ps1` (implements checks 1–5, run via `pwsh doc/lint.ps1`)_
+
 ## Workflow (mandatory for coding agents)
 
-1. `doc/checklist.md` -> take the next open task
+1. **`doc/index.md`** -> find the relevant concept file (LLM-Wiki catalog)
 2. `doc/architecture.md` -> detailed architecture knowledge
 3. **`query_code_wiki("<symbol>")`** -> signature, file, line number (MCP)
 4. **Only if knowledge is missing:** `query_code_rag(..., format="compact")`
 5. **Only load the needed chunk:** `get_rag_chunk("<id>")`
 6. Verify in the real code (path + line)
 7. **After a change:** `index_project_code` -> wiki stays current
+8. **Post-Task Sync:** run `pwsh doc/lint.ps1` -> check orphans, stale claims, duplicates, contradictions
 
 **MCP-FIRST (no exceptions):**
 - `doc/code_wiki.md` must NEVER be loaded via `read()` - query via MCP.

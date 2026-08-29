@@ -1,3 +1,22 @@
+---
+type: Protocol Reference
+title: KiwiSDR Protocol Reference
+description: Full KiwiSDR protocol: auth, handshake, SET commands, SND frame format, keepalive rules, server kick mechanisms
+status: stable
+generated:
+  by: human:marku
+  at: 2026-08-27
+verified:
+  by: human:marku
+  at: 2026-08-29
+tags: [protocol, kiwisdr, websocket, handshake, adpcm, keepalive]
+sources:
+  - title: KiwiSDR Server rx_cmd.cpp
+    url: https://github.com/jks-prv/KiwiSDR/blob/master/rx/rx_cmd.cpp
+  - title: kiwiclient
+    url: https://github.com/jks-prv/kiwiclient
+---
+
 # KiwiSDR Protocol Reference (aus Referenz-Clients abgeleitet)
 
 _Stand 2026-08-27. Erstellt aus der Analyse von:_

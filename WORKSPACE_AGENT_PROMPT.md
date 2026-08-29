@@ -15,7 +15,7 @@ changes: restart opencode, then the `netsdr_rag_*` tools appear.
 **Tools:** `index_project_code`, `query_code_rag`, `query_code_wiki`, `get_rag_chunk`.
 
 **MCP-First Workflow (mandatory, no exceptions):**
-1. `doc/checklist.md` -> next open task
+1. **`doc/index.md`** -> Karpathy-style knowledge catalog (find the right concept file)
 2. `doc/architecture.md` -> detailed architecture knowledge (manually maintained)
 3. `query_code_wiki("<symbol>")` -> signature, file, line number
 4. **Only if knowledge is missing:** `query_code_rag(..., format="compact")`
@@ -41,8 +41,9 @@ NEVER read directly - use `query_code_wiki` via MCP.
 
 All project knowledge is ALWAYS synced across three stores:
 
-1. **Docs:** `doc/architecture.md` (detailed), `doc/plan.md` (draft plan),
-   `doc/checklist.md` (short tasks).
+1. **Docs:** `doc/index.md` (LLM-Wiki catalog), `doc/architecture.md` (detailed),
+   `doc/plan.md` (current plan), `doc/checklist.md` (short tasks),
+   `doc/log.md` (chronological changelog).
 2. **RAG/Wiki MCP (`netsdr_rag`):** `index_project_code` keeps the wiki current.
 3. **NotebookLM (`notebooklm_devblogs`):** push relevant knowledge to the
    **NetSDRStation-VST** notebook.
@@ -67,5 +68,7 @@ Full detail in `doc/architecture.md`; phased plan in `doc/plan.md`.
 - `netsdr_mcp_server.py` (RAG + Code-Wiki MCP)
 - `AGENTS.md` (project agent pointer)
 - `doc/checklist.md` (open tasks, short descriptions)
+- `doc/index.md` (LLM-Wiki knowledge catalog)
+- `doc/log.md` (chronological changelog)
 - `doc/plan.md` (draft plan)
 - `doc/architecture.md` (manual detailed architecture knowledge)

@@ -1,3 +1,22 @@
+---
+type: Analysis
+title: M4 UI Replication Analysis — KiwiSDR 1:1 Vue Replica
+description: Full analysis of KiwiSDR browser UI for 1:1 Vue 3 replication; authoritative source for UI design replica
+status: stable
+generated:
+  by: human:marku
+  at: 2026-08-28
+verified:
+  by: human:marku
+  at: 2026-08-29
+tags: [m4, ui, analysis, kiwisdr, vue, replication]
+sources:
+  - title: KiwiSDR Web Source
+    url: https://github.com/jks-prv/KiwiSDR
+  - title: KiwiSDR Public
+    url: https://kiwisdr.com/public/
+---
+
 # M4 UI Replication Analysis — KiwiSDR 1:1 Vue Replica
 
 _Stand: 2026-08-28. Vollständige Analyse der KiwiSDR-Browseroberfläche für die 1:1-

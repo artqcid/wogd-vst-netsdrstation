@@ -1,3 +1,17 @@
+---
+type: Logging Strategy
+title: Logging Strategy — Two-Level File Logger
+description: Two-level file logger (INFO/DEBUG) with real-time safety, SPSC ring buffer, TEMP output
+status: stable
+generated:
+  by: human:marku
+  at: 2026-08
+verified:
+  by: human:marku
+  at: 2026-08-29
+tags: [logging, debugging, real-time, spsc, file-logger]
+---
+
 # Logging Strategy
 
 ## Overview

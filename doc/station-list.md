@@ -1,3 +1,18 @@
+---
+type: Station List
+title: Station List — API-Ready KiwiSDR Receivers
+description: List of KiwiSDR receivers with ext_api > 0; filterable, with host:port and capabilities
+status: stable
+generated:
+  by: human:marku
+  at: 2026-08-27
+verified:
+  by: human:marku
+  at: 2026-08-29
+tags: [stations, kiwisdr, api, directory, connectivity]
+stale_after: 2026-10-01
+---
+
 # NetSDRStation-VST — KiwiSDR Station List
 
 _Source: live probe 2026-08-27 (probe_duration.py, 45 s per station) +

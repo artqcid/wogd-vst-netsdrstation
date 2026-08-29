@@ -1,3 +1,17 @@
+---
+type: Test Strategy
+title: Test Strategy — NetSDRStation-VST
+description: Automated-first test strategy, CCD yellow/green, coverage targets, test pyramid
+status: stable
+generated:
+  by: human:marku
+  at: 2026-07
+verified:
+  by: human:marku
+  at: 2026-08-29
+tags: [testing, ccd, coverage, ci, ctest, vitest, playwright]
+---
+
 # Test Strategy — NetSDRStation-VST
 
 _Complete test strategy. Automated first (CCD yellow/green), manual only where

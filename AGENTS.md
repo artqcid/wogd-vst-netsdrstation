@@ -67,8 +67,15 @@ see `netsdr_mcp_server.py`). Tools: `index_project_code`, `query_code_rag`,
 `query_code_wiki`, `get_rag_chunk` (called with server prefix, e.g.
 `netsdr_rag_query_code_wiki`).
 
+**Primary navigation (LLM-Wiki, OKF v0.2):**
+- **`doc/index.md`** — Karpathy-style knowledge catalog (1-line summaries,
+  categories, links to all concept files). The FIRST place any agent looks
+  to find the right document.
+- **`doc/log.md`** — Append-only chronological changelog (newest first,
+  parseable with `grep "^## "`).
+
 **Mandatory workflow (no exceptions):**
-1. `doc/checklist.md` -> take the next open task
+1. **`doc/index.md`** -> find the relevant concept file (architecture, plan, checklist, etc.)
 2. `doc/architecture.md` -> detailed architecture knowledge (manually maintained)
 3. **`query_code_wiki("<symbol>")`** -> signature, file, line number
 4. **Only if knowledge is missing:** `query_code_rag(..., format="compact")`
@@ -84,22 +91,56 @@ see `netsdr_mcp_server.py`). Tools: `index_project_code`, `query_code_rag`,
 
 **Post-Task Sync (after each completed task):**
 - Run `index_project_code` so the wiki stays current.
+- Run `pwsh doc/lint.ps1` to check for orphan pages, stale claims,
+  duplicate entries and contradictions.
 - If not possible (no MCP access): explicitly report that sync is pending.
+
+## Wiki Lint Workflow (Phase 4 — automatic, runs on every Post-Task Sync)
+
+The lint script `pwsh doc/lint.ps1` runs automatically as part of every
+Post-Task Sync. It can also be run manually at any time. It checks:
+
+1. **Orphan pages**: every file in `doc/` (excluding `archive/`) and
+   `doc/archive/` should be listed in `doc/index.md`. Find unlisted files
+   with: `Get-ChildItem doc/*.md, doc/archive/*.md | where { $_ -notmatch
+   '(index|log|code_wiki) ' }` and cross-check against `index.md`.
+2. **Duplicate index entries**: grep `index.md` for duplicate links
+   (same `./file.md` appearing more than once).
+3. **Stale claims**: for each file with `stale_after:` in frontmatter,
+   check if `today >= stale_after`. If stale, add a `! STALE` warning to
+   the entry in `index.md` and flag for human review.
+4. **Contradictions**: identify claims about the SAME feature that differ
+   across files (e.g. "TagPopup ✅" vs "❌"). When found, determine the
+   actual truth from the code and update the outdated file.
+5. **Cross-reference health**: files marked `status: deprecated` should
+   have a redirect note or be moved to `archive/`.
+6. **Gleanings**: after any significant analysis or debugging session,
+   file the findings back into the wiki (new concept file or update to
+   an existing one) — Karpathy's "good answers go back into the wiki".
+
+**First lint pass (2026-08-29):** All orphan/duplicate/contradiction issues
+resolved. The lint script `doc/lint.ps1` implements checks 1–5 above.
 
 ## Knowledge-Sync (Docs <-> RAG/Wiki MCP <-> NotebookLM)
 
-All project knowledge is ALWAYS kept in sync across three stores:
+All project knowledge is ALWAYS kept in sync across three stores with clear roles:
 
-1. **Docs:** `doc/architecture.md` (detailed), `doc/plan.md` (draft plan),
-   `doc/checklist.md` (short tasks), `doc/workspace-workflow.md` (build/debug
-   workflow).
-2. **RAG/Wiki MCP (`netsdr_rag`):** run `index_project_code` so the code
-   wiki reflects the current code.
-3. **NotebookLM (`notebooklm_devblogs`):** push relevant knowledge to the
-   **NetSDRStation-VST** notebook.
+1. **Docs (`doc/`)** — OKF-Wiki (primary storage). `doc/index.md` (catalog),
+   `doc/log.md` (changelog), individual concept files with YAML frontmatter.
+   This is the **compiled knowledge artifact** — agents navigate here first.
+2. **RAG/Wiki MCP (`netsdr_rag`)** — Search/symbol layer over `doc/` + source code.
+   Run `index_project_code` after every change so the wiki stays current.
+3. **NotebookLM (`notebooklm_devblogs`, NetSDRStation-VST notebook)** — Consuming
+   / disseminating layer for long-form reports, briefings, and external reference.
+   NOT a duplicate of the wiki. Update via `notebooklm_add_text` with a weekly
+   `log.md` digest, or push specific analysis/findings as they are completed.
 
-This workflow applies to **all agents** and runs **either automatically after
-a task completes, or on explicit user command**.
+**Deterministic Sync Workflow:**
+- After every completed task: update `doc/log.md` + `doc/index.md` + run `index_project_code`.
+- Weekly (or on explicit `sync-notebooklm`): push the week's `log.md` entries
+  as an aggregated note to the NetSDRStation-VST notebook.
+- If drift is detected between stores, resolve by treating `doc/` as the
+  authoritative source and updating RAG + NotebookLM from it.
 
 ## Ad-hoc / scratch compilation (no artifacts in the repo root)
 
@@ -157,7 +198,9 @@ NETSDR_LOG_DEBUG("Frame %d details", frame);      // Debug builds only
 
 - RAG MCP server: `netsdr_mcp_server.py`; registered in `opencode.json` under
   `mcp.netsdr_rag` (venv python: `.venv\Scripts\python.exe`).
+- **Primary navigation:** `doc/index.md` (LLM-Wiki catalog, first place to look).
 - Checklist: `doc/checklist.md` (open tasks, short descriptions).
+- Chronological log: `doc/log.md` (append-only, newest first).
 - Draft plan: `doc/plan.md`.
 - Detailed knowledge: `doc/architecture.md` (read directly).
 - Workflow (build/debug/hot-reload): `doc/workspace-workflow.md`.

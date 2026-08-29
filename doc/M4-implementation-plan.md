@@ -1,3 +1,18 @@
+---
+type: Implementation Plan
+title: M4 Implementation Plan — KiwiSDR UI Parity
+description: Step-by-step plan for M4: 1:1 Vue replica of KiwiSDR browser interface, resizable editor
+status: in-progress
+generated:
+  by: human:marku
+  at: 2026-08-27
+verified:
+  by: human:marku
+  at: 2026-08-28
+tags: [m4, ui, vue, kiwisdr, parity, resizable]
+resource: doc/ui-architecture.md doc/M4-ui-replication-analysis.md
+---
+
 # M4 Implementation Plan — KiwiSDR UI Parity (Vue)
 
 _Cross-reference: `doc/checklist.md` M4 · `doc/ui-architecture.md` §3–§6 ·

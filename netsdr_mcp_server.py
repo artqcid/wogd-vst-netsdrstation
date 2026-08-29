@@ -76,7 +76,8 @@ WIKI_PATH = os.path.join(
 # v4 = Stable chunk IDs (hash-based instead of AUTOINCREMENT).
 # v5 = Recreate FTS5 when upgrading databases created with the incomplete
 #      symbol-index schema.
-RAG_SCHEMA_VERSION = 5
+# v6 = YAML frontmatter column for Markdown concept files (LLM-Wiki/OKF).
+RAG_SCHEMA_VERSION = 6
 
 # Languages to index and their file extensions.
 # `.md` is included so that the central guide
@@ -544,16 +545,89 @@ def _chunk_cpp(source: str, file_path: str = "") -> list:
     return chunks
 
 
+def _parse_frontmatter(lines: list[str]) -> tuple[dict | None, int]:
+    """Extract OKF YAML frontmatter from the top of a Markdown file.
+
+    Returns (frontmatter_dict, body_start_index).
+    frontmatter_dict is None when no ``---``-delimited block is found.
+    Parsing is simple line-based: supports unquoted scalars, nested
+    mappings (indented), and inline lists. No external YAML dependency.
+    """
+    if not lines or not lines[0].strip().startswith("---"):
+        return None, 0
+    end = -1
+    for i in range(1, len(lines)):
+        if lines[i].strip() == "---":
+            end = i
+            break
+    if end < 0:
+        return None, 0
+    fm: dict = {}
+    current_key: str | None = None
+    current_map: dict | None = None
+    for raw in lines[1:end]:
+        stripped = raw.strip()
+        if not stripped or stripped.startswith("#"):
+            continue
+        if ":" in stripped:
+            key_part = stripped.split(":", 1)[0].rstrip()
+            val_part = stripped.split(":", 1)[1].strip()
+            # Top-level key:value
+            if not raw.startswith(" ") and not raw.startswith("\t"):
+                current_key = key_part
+                current_map = fm
+                if val_part:
+                    # Inline list? [a, b, c]
+                    if val_part.startswith("[") and val_part.endswith("]"):
+                        fm[current_key] = [
+                            v.strip().strip("'\"")
+                            for v in val_part[1:-1].split(",") if v.strip()
+                        ]
+                    elif val_part.startswith('"') and val_part.endswith('"'):
+                        fm[current_key] = val_part[1:-1]
+                    else:
+                        fm[current_key] = val_part
+                else:
+                    # Nested mapping starts
+                    fm[current_key] = {}
+                    current_map = fm[current_key]
+            else:
+                # Nested key under current mapping
+                if current_map is not None and isinstance(current_map, dict):
+                    if val_part:
+                        if val_part.startswith('"') and val_part.endswith('"'):
+                            current_map[key_part] = val_part[1:-1]
+                        else:
+                            current_map[key_part] = val_part
+        # Empty nested value (e.g. `verified:` with no inline value)
+        elif raw.startswith(" ") and current_map is not None and isinstance(current_map, dict) and ":" in stripped.rstrip(":"):
+            pass  # mapping key will get its sub-keys later
+    return fm if fm else None, end + 1
+
+
 def _chunk_markdown(source: str, file_path: str = "") -> list:
-    """Split Markdown by headings (sections = chunks)."""
+    """Split Markdown by headings (sections = chunks).
+
+    YAML frontmatter (``---`` ... ``---`` at the top of the file) is extracted
+    and stored as a dedicated ``frontmatter`` chunk so the code wiki can carry
+    concept metadata (OKF type, status, description, stale_after, etc.).
+    """
     source = source.replace("\r\n", "\n").replace("\r", "\n")
     lines = source.split("\n")
-    headings = [i for i, ln in enumerate(lines) if re.match(r"^#{1,6}\s", ln)]
+    fm, body_start = _parse_frontmatter(lines)
     chunks = []
+    # Frontmatter as a named chunk for wiki metadata
+    if fm:
+        chunks.append(_emit_chunk(
+            lines, 0, body_start - 1, "frontmatter",
+            fm.get("title") or os.path.basename(file_path),
+            None, fm.get("description") or "", file_path))
+    headings = [i for i, ln in enumerate(lines) if re.match(r"^#{1,6}\s", ln) and i >= body_start]
     if not headings:
-        return _module_chunks(lines, 0, len(lines) - 1, file_path)
-    if headings[0] > 0:
-        chunks.extend(_module_chunks(lines, 0, headings[0] - 1, file_path))
+        chunks.extend(_module_chunks(lines, body_start, len(lines) - 1, file_path))
+        return chunks
+    if headings[0] > body_start:
+        chunks.extend(_module_chunks(lines, body_start, headings[0] - 1, file_path))
     for k, hi in enumerate(headings):
         e = headings[k + 1] - 1 if k + 1 < len(headings) else len(lines) - 1
         title = re.sub(r"^#+\s*", "", lines[hi]).strip() or lines[hi].strip()
@@ -602,6 +676,7 @@ class ProjectRAG:
                         symbol_name TEXT,
                         signature   TEXT,
                         docstring   TEXT,
+                        frontmatter TEXT,
                         file_sha    TEXT    NOT NULL,
                         UNIQUE(file_path, chunk_index)
                     )
@@ -739,17 +814,23 @@ class ProjectRAG:
                     conn.execute("DELETE FROM code_chunks WHERE file_path = ?", (f["path"],))
 
                     # Structurally chunk the file and insert
+                    # Extract frontmatter for Markdown concept files (LLM-Wiki/OKF)
+                    fm_json: str | None = None
+                    if f["language"] == "markdown":
+                        fm, _fb = _parse_frontmatter(f["content"].split("\n"))
+                        if fm:
+                            fm_json = json.dumps(fm, ensure_ascii=False)
                     for idx, chunk in enumerate(self._chunk_file(f["language"], f["content"], f["path"])):
                         cur = conn.execute(
                             "INSERT INTO code_chunks "
                             "(chunk_id, file_path, language, chunk_index, line_start, "
                             " line_end, content, symbol_type, symbol_name, "
-                            " signature, docstring, file_sha) "
-                            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                            " signature, docstring, frontmatter, file_sha) "
+                            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                             (chunk.get("chunk_id"), f["path"], f["language"], idx, chunk["line_start"],
                              chunk["line_end"], chunk["content"],
                              chunk.get("symbol_type"), chunk.get("symbol_name"),
-                             chunk.get("signature"), chunk.get("docstring"), f["sha"]),
+                             chunk.get("signature"), chunk.get("docstring"), fm_json, f["sha"]),
                         )
                         conn.execute(
                             "INSERT INTO code_fts "
@@ -1104,7 +1185,9 @@ class ProjectRAG:
                 "_Automatically generated symbol index. Complements "
                 "[`doc/architecture.md`](./architecture.md) - manually "
                 "maintained architecture knowledge (struct layouts, constants, "
-                "threading model)._",
+                "threading model). See also [`doc/index.md`](./index.md) for the "
+                "LLM-Wiki knowledge catalog and [`doc/log.md`](./log.md) for the "
+                "chronological changelog._",
                 "",
                 "<!-- AUTOGENERATED_WIKI_START -->",
                 "",
@@ -1126,6 +1209,27 @@ class ProjectRAG:
                 out.append(f"## {f['file_path']}")
                 out.append("")
                 out.append(f"- Language: `{f['language']}`")
+                # Frontmatter metadata for Markdown concept files (LLM-Wiki/OKF)
+                if f["language"] == "markdown":
+                    fm_row = conn.execute(
+                        "SELECT frontmatter FROM code_chunks "
+                        "WHERE file_path = ? AND symbol_type = 'frontmatter' "
+                        "LIMIT 1",
+                        (f["file_path"],),
+                    ).fetchone()
+                    if fm_row and fm_row["frontmatter"]:
+                        try:
+                            fm = json.loads(fm_row["frontmatter"])
+                            out.append(f"- Type: `{fm.get('type', '?')}`")
+                            out.append(f"- Status: `{fm.get('status', '?')}`")
+                            if fm.get("stale_after"):
+                                out.append(f"- Stale after: `{fm['stale_after']}`")
+                            if fm.get("description"):
+                                out.append(f"- Description: {fm['description'][:160]}")
+                            if fm.get("generated") and isinstance(fm["generated"], dict):
+                                out.append(f"- Generated: {fm['generated'].get('by', '?')} @ {fm['generated'].get('at', '?')}")
+                        except (json.JSONDecodeError, KeyError):
+                            pass
                 deps = self._file_dependencies(conn, f["file_path"], f["language"])
                 if deps:
                     out.append("- Dependencies: " + ", ".join(deps))

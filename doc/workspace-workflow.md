@@ -1,3 +1,17 @@
+---
+type: Workflow
+title: Workspace Workflow — Build, Debug, Hot-Reload
+description: Build/debug/hot-reload workflow for all platforms: CMake presets, VST3PluginTestHost, WebView2, test execution
+status: stable
+generated:
+  by: human:marku
+  at: 2026-07
+verified:
+  by: human:marku
+  at: 2026-08-29
+tags: [workflow, build, debug, cmake, vst3, webview2, testing]
+---
+
 # Workspace Workflow — wogd-vst-netsdrstation
 
 _Cross-platform build, VST host debugging, and Vue UI debugging workflow.

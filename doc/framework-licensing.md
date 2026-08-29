@@ -1,3 +1,17 @@
+---
+type: Licensing Analysis
+title: Framework Licensing — NetSDRStation-VST
+description: License analysis confirming all libraries are permissive (MIT/BSD); JUCE/KFR/HISE excluded
+status: stable
+generated:
+  by: human:marku
+  at: 2026-07
+verified:
+  by: human:marku
+  at: 2026-08-29
+tags: [licensing, mit, bsd, legal, third-party]
+---
+
 # Framework & DSP Licensing Analysis
 
 _Web research result. Constraint: a VST/DSP framework may be used ONLY if it is

@@ -1,3 +1,18 @@
+---
+type: Implementation Plan
+title: M5 Implementation Plan — Station Selection Tab
+description: Step-by-step plan for M5: tab-based UI, SDR Stations directory, click-to-connect
+status: in-progress
+generated:
+  by: human:marku
+  at: 2026-08-27
+verified:
+  by: human:marku
+  at: 2026-08-29
+tags: [m5, ui, station-list, tab-ui, connectivity]
+resource: doc/station-list.md doc/architecture.md
+---
+
 # M5 Implementation Plan — Station Selection Tab
 
 _Cross-reference: `doc/checklist.md` M5 · `doc/ui-architecture.md` §6 ·

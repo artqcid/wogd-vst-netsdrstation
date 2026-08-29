@@ -1,3 +1,17 @@
+---
+type: Audit
+title: WebView2 Bundle Audit
+description: Audit of WebView2 Fixed Version Runtime deployment: bundle structure, runtime discovery, release UI URL
+status: stable
+generated:
+  by: human:marku
+  at: 2026-08
+verified:
+  by: human:marku
+  at: 2026-08-29
+tags: [webview2, deployment, bundle, runtime, audit]
+---
+
 # WebView2-Bundle-Audit – Fehleranalyse M1.18–M1.22
 
 _Erstellt: 2026-08-21 | Grund: Release-Build zeigt kein GUI_

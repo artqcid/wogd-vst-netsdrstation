@@ -1,3 +1,18 @@
+---
+type: Implementation Plan
+title: M3 Implementation Plan — Integration & Ship
+description: Step-by-step plan for M3: pipeline wiring, full parameter set, RT safety, manual acceptance
+status: done
+generated:
+  by: human:marku
+  at: 2026-08-22
+verified:
+  by: human:marku
+  at: 2026-08-27
+tags: [m3, integration, pipeline, rt-safety, deployment]
+resource: doc/architecture.md doc/checklist.md
+---
+
 # M3 Implementation Plan — Integration & Ship
 
 _Cross-reference: `doc/checklist.md` M3 · `doc/architecture.md` §5–§8 ·

@@ -1,3 +1,26 @@
+---
+type: Bug List
+title: M4b — Bug List & Analysis (ARCHIV — Bugs in M4c gefixt)
+description: Captured bugs after user review of M4 UI state; analysis, root causes, severity
+status: deprecated
+generated:
+  by: human:marku
+  at: 2026-08-28
+verified:
+  by: human:marku
+  at: 2026-08-29
+tags: [m4, bugs, analysis, ui, playwright, severity]
+stale_after: 2026-09-30
+sources:
+  - title: M4 UI Replication Analysis
+    path: doc/M4-ui-replication-analysis.md
+---
+
+> **[DEPRECATED]** Diese Datei ist archiviert. Alle Bugs aus M4b wurden in M4c (2026-08-29) gefixt.
+> Aktuelles Bug-Manifest: [`M4c.7-bugs.md`](./M4c.7-bugs.md)
+
+# M4b — Bug-Liste & Analyse (Stand: 2026-08-28)
+
 # M4b — Bug-Liste & Analyse (Stand: 2026-08-28)
 
 Erfasste Bugs nach User-Review des M4-Stands. Referenz: `doc/M4-ui-replication-analysis.md`

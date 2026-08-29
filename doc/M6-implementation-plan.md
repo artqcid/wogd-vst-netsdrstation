@@ -1,3 +1,18 @@
+---
+type: Implementation Plan
+title: M6 Implementation Plan — Multi-Provider Support
+description: Step-by-step plan for M6: OpenWebRX, SpyServer, Web-888 support beyond KiwiSDR
+status: draft
+generated:
+  by: human:marku
+  at: 2026-08-27
+verified:
+  by: human:marku
+  at: 2026-08-29
+tags: [m6, multi-provider, openwebrx, spyserver, web-888]
+resource: doc/station-list.md doc/architecture.md
+---
+
 # M6 Implementation Plan — Multi-Provider Support
 
 _Cross-reference: `doc/checklist.md` · `doc/architecture.md` · `doc/station-list.md` ·

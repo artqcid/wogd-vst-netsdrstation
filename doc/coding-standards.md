@@ -1,3 +1,17 @@
+---
+type: Coding Standards
+title: Coding Standards — Clean Code Developer
+description: CCD coding rules and conventions for the NetSDRStation-VST project
+status: stable
+generated:
+  by: human:marku
+  at: 2026-07
+verified:
+  by: human:marku
+  at: 2026-08-29
+tags: [coding-standards, ccd, conventions, c++]
+---
+
 # Coding Standards — Clean Code Developer (CCD)
 
 _All coding follows the Clean Code Developer (CCD) value system

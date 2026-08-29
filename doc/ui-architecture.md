@@ -1,3 +1,17 @@
+---
+type: UI Inventory
+title: NetSDRStation-VST — UI Architecture
+description: UI architecture: KiwiSDR mirror inventory, component tree, parameter mapping, resizable layout
+status: stable
+generated:
+  by: human:marku
+  at: 2026-08
+verified:
+  by: human:marku
+  at: 2026-08-29
+tags: [ui, vue, webview2, kiwisdr, layout, components]
+---
+
 # NetSDRStation-VST - UI Architecture
 
 _Architecture and inventory of the plugin UI. The UI is a Vue 3 + Vite single
@@ -225,8 +239,8 @@ _✅ done · ⚠️ partial · ❌ missing · 🔧 needs fix_
 |---------|----------|------|------|
 | DX tags (coloured pills) | shows broadcast stations/DX spots at their frequencies | ⚠️ | demo data only |
 | Tag position (proportional) | x-position derived from `freqKhz` relative to visible span | ❌ | Bug 8 |
-| Click on tag → jump to frequency | sets `store.freqKhz` to `tag.freqKhz` | ❌ | Bug 4 |
-| Tag popup on click | modal with station name, frequency, language, time info | ❌ | Bug 4 |
+| Click on tag → jump to frequency | sets `store.freqKhz` to `tag.freqKhz` | ✅ | basic impl done; see Bug 4 for data/layout issues |
+| Tag popup on click | modal with station name, frequency, language, time info | ✅ | `TagPopup.vue` exists; see Bug 4 for remaining issues |
 | EiBi/SWBC dataset | real broadcast schedule data | ❌ | only 7 hard-coded demo tags |
 | Multi-row layout (staggered) | tags that overlap stack into multiple rows | ⚠️ | partial |
 
@@ -396,7 +410,7 @@ _✅ done · ⚠️ partial · ❌ missing · 🔧 needs fix_
 
 ## 8. Known Bugs (M4b)
 
-See `doc/M4b-bugs.md` for the full bug list with root causes, fix estimates,
+See `doc/archive/M4b-bugs.md` for the full bug list with root causes, fix estimates,
 and implementation order. Summary:
 
 | Bug | Short title | Priority |

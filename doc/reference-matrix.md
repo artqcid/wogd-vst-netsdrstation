@@ -1,3 +1,18 @@
+---
+type: Reference Matrix
+title: Reference Matrix M4 — KiwiSDR Live ↔ PluginView 1:1
+description: Mapping of every live KiwiSDR UI element to its PluginView equivalent; check-off status column
+status: stable
+generated:
+  by: human:marku
+  at: 2026-08-28
+verified:
+  by: human:marku
+  at: 2026-08-29
+tags: [m4, reference, ui-mapping, kiwisdr, check-off]
+stale_after: 2026-09-30
+---
+
 # Reference Matrix M4 — KiwiSDR Live (8074) ↔ PluginView 1:1
 
 ## Quelle

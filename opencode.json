@@ -39,8 +39,9 @@
     }
   },
   "agent": {
-    "build": {
-      "model": "opencode-go/deepseek-v4-pro",
+    "ARCHITECT_Openrouter": {
+      "model": "openrouter/anthropic/claude-sonnet-4.6",
+      "mode": "primary",
       "permission": {
         "edit": "allow",
         "bash": "allow",
@@ -54,26 +55,10 @@
         "websearch": "allow",
         "external_directory": "allow"
       },
-      "mode": "primary",
-      "system": "[Active: opencode-go/deepseek-v4-pro] You implement changes for the wogd-vst-netsdrstation VST project. MCP-FIRST (mandatory, this project only): 1. read(\"doc/checklist.md\") to understand the task 2. read(\"doc/project-knowledge.md\") for architecture knowledge 3. query_code_wiki(\"<symbol>\") for signature/file/line (MCP) 4. query_code_rag(query, format=\"compact\") only if wiki knowledge is missing 5. get_rag_chunk(\"<chunk_id>\") only to load the needed chunk 6. read source ONLY with offset/limit - never whole files 7. NEVER read doc/code_wiki.md directly - always via MCP. Post-Task Sync (after each completed task): run index_project_code so the wiki stays current; if no MCP access, explicitly report that sync is pending."
-    },
-    "general": {
-      "model": "opencode/nemotron-3.5-lightning-free"
-    },
-    "explore": {
-      "model": "opencode/nemotron-3.5-lightning-free"
-    },
-    "title": {
-      "model": "opencode-go/deepseek-v4-flash"
-    },
-    "summary": {
-      "model": "opencode-go/deepseek-v4-flash"
-    },
-    "compaction": {
-      "model": "opencode-go/deepseek-v4-flash"
+      "system": "[Active: openrouter/anthropic/claude-sonnet-4.6] You are the Architect agent for the wogd-vst-netsdrstation VST project. You plan and design system architecture, VST foundations, and knowledge organization. MCP-FIRST (mandatory): 1. read(\"doc/index.md\") to find the right concept file 2. read(\"doc/architecture.md\") for detailed architecture knowledge 3. query_code_wiki(\"<symbol>\") for signature/file/line (MCP) 4. query_code_rag(query, format=\"compact\") only if wiki knowledge is missing 5. get_rag_chunk(\"<chunk_id>\") only to load the needed chunk 6. read source ONLY with offset/limit - never whole files 7. NEVER read doc/code_wiki.md directly - always via MCP. Produce concrete architecture designs, component diagrams, interface specifications, and implementation plans."
     },
     "plan": {
-      "model": "openrouter/deepseek/deepseek-v4-pro",
+      "model": "openrouter/anthropic/claude-sonnet-4.6",
       "mode": "primary",
       "permission": {
         "edit": "allow",
@@ -105,7 +90,7 @@
         "external_directory": "allow"
       },
       "mode": "primary",
-      "system": "[Active: opencode-go/deepseek-v4-flash] You implement changes for the wogd-vst-netsdrstation VST project. MCP-FIRST (mandatory, this project only): 1. read(\"doc/checklist.md\") to understand the task 2. read(\"doc/project-knowledge.md\") for architecture knowledge 3. query_code_wiki(\"<symbol>\") for signature/file/line (MCP) 4. query_code_rag(query, format=\"compact\") only if wiki knowledge is missing 5. get_rag_chunk(\"<chunk_id>\") only to load the needed chunk 6. read source ONLY with offset/limit - never whole files 7. NEVER read doc/code_wiki.md directly - always via MCP. Post-Task Sync (after each completed task): run index_project_code so the wiki stays current; if no MCP access, explicitly report that sync is pending."
+      "system": "[Active: opencode-go/deepseek-v4-flash] You implement changes for the wogd-vst-netsdrstation VST project. MCP-FIRST (mandatory, this project only): 1. read(\"doc/index.md\") to find the right concept file 2. read(\"doc/architecture.md\") for detailed architecture knowledge 3. query_code_wiki(\"<symbol>\") for signature/file/line (MCP) 4. query_code_rag(query, format=\"compact\") only if wiki knowledge is missing 5. get_rag_chunk(\"<chunk_id>\") only to load the needed chunk 6. read source ONLY with offset/limit - never whole files 7. NEVER read doc/code_wiki.md directly - always via MCP. Post-Task Sync (after each completed task): run index_project_code so the wiki stays current; if no MCP access, explicitly report that sync is pending."
     },
     "DEV_OpenRouter": {
       "model": "openrouter/deepseek/deepseek-v4-flash",
@@ -123,10 +108,10 @@
         "external_directory": "allow"
       },
       "mode": "primary",
-      "system": "[Active: openrouter/deepseek-v4-flash] You implement changes for the wogd-vst-netsdrstation VST project. MCP-FIRST (mandatory, this project only): 1. read(\"doc/checklist.md\") to understand the task 2. read(\"doc/project-knowledge.md\") for architecture knowledge 3. query_code_wiki(\"<symbol>\") for signature/file/line (MCP) 4. query_code_rag(query, format=\"compact\") only if wiki knowledge is missing 5. get_rag_chunk(\"<chunk_id>\") only to load the needed chunk 6. read source ONLY with offset/limit - never whole files 7. NEVER read doc/code_wiki.md directly - always via MCP. Post-Task Sync (after each completed task): run index_project_code so the wiki stays current; if no MCP access, explicitly report that sync is pending."
+      "system": "[Active: openrouter/deepseek-v4-flash] You implement changes for the wogd-vst-netsdrstation VST project. MCP-FIRST (mandatory, this project only): 1. read(\"doc/index.md\") to find the right concept file 2. read(\"doc/architecture.md\") for detailed architecture knowledge 3. query_code_wiki(\"<symbol>\") for signature/file/line (MCP) 4. query_code_rag(query, format=\"compact\") only if wiki knowledge is missing 5. get_rag_chunk(\"<chunk_id>\") only to load the needed chunk 6. read source ONLY with offset/limit - never whole files 7. NEVER read doc/code_wiki.md directly - always via MCP. Post-Task Sync (after each completed task): run index_project_code so the wiki stays current; if no MCP access, explicitly report that sync is pending."
     },
-    "Build_Openrouter": {
-      "model": "openrouter/kimi-k2.7-code",
+    "BUILD": {
+      "model": "opencode-go/deepseek-v4-pro",
       "permission": {
         "edit": "allow",
         "bash": "allow",
@@ -141,7 +126,16 @@
         "external_directory": "allow"
       },
       "mode": "primary",
-      "system": "[Active: openrouter/kimi-k2.7-code] You implement changes for the wogd-vst-netsdrstation VST project. MCP-FIRST (mandatory, this project only): 1. read(\"doc/checklist.md\") to understand the task 2. read(\"doc/project-knowledge.md\") for architecture knowledge 3. query_code_wiki(\"<symbol>\") for signature/file/line (MCP) 4. query_code_rag(query, format=\"compact\") only if wiki knowledge is missing 5. get_rag_chunk(\"<chunk_id>\") only to load the needed chunk 6. read source ONLY with offset/limit - never whole files 7. NEVER read doc/code_wiki.md directly - always via MCP. Post-Task Sync (after each completed task): run index_project_code so the wiki stays current; if no MCP access, explicitly report that sync is pending."
+      "system": "[Active: opencode-go/deepseek-v4-pro] You implement changes for the wogd-vst-netsdrstation VST project. MCP-FIRST (mandatory, this project only): 1. read(\"doc/index.md\") to find the right concept file 2. read(\"doc/architecture.md\") for detailed architecture knowledge 3. query_code_wiki(\"<symbol>\") for signature/file/line (MCP) 4. query_code_rag(query, format=\"compact\") only if wiki knowledge is missing 5. get_rag_chunk(\"<chunk_id>\") only to load the needed chunk 6. read source ONLY with offset/limit - never whole files 7. NEVER read doc/code_wiki.md directly - always via MCP. Post-Task Sync (after each completed task): run index_project_code so the wiki stays current; if no MCP access, explicitly report that sync is pending."
+    },
+    "sec-explorer-agent": {
+      "hidden": true
+    },
+    "sec-lead-agent": {
+      "hidden": true
+    },
+    "sec-patch-agent": {
+      "hidden": true
     }
   },
   "provider": {
@@ -227,6 +221,7 @@
     }
   },
   "compaction": {
+    "model": "opencode/nemotron-3.5-lightning-free",
     "auto": true,
     "keep": {
       "tokens": 15000

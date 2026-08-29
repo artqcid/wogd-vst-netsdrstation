@@ -1,8 +1,24 @@
+---
+type: Architecture
+title: NetSDRStation-VST — Architecture
+description: Complete system architecture: problem statement, tech stack, threading model, protocol handshake, audio pipeline, conventions
+status: stable
+generated:
+  by: human:marku
+  at: 2026-07
+verified:
+  by: human:marku
+  at: 2026-08-29
+tags: [architecture, vst3, kiwisdr, threading, webview2, audio-pipeline]
+---
+
 # NetSDRStation-VST - Architecture
 
 _Detailed architecture knowledge. Source: NotebookLM "NetSDRStation-VST"
 (project concept V3). Manually maintained; complements the auto-generated
-`doc/code_wiki.md` (symbol index, MCP-only) and `doc/plan.md` (draft plan)._
+[`doc/code_wiki.md`](./code_wiki.md) (symbol index, MCP-only),
+[`doc/index.md`](./index.md) (LLM-Wiki catalog) and
+[`doc/plan.md`](./plan.md) (draft plan)._
 
 ## 1. Problem Statement
 
@@ -196,7 +212,7 @@ into three threads:
 - All agent rules / documentation in English.
 - Knowledge is synced across: `doc/` <-> RAG/Wiki MCP (`netsdr_rag`) <->
   NotebookLM (NetSDRStation-VST).
-- Work MCP-first (see `AGENTS.md` / `doc/checklist.md`).
+- Work MCP-first (see `AGENTS.md` / `doc/index.md`).
 - Cross-platform build, VST host debugging, and Vue hot-reload workflow:
   see `doc/workspace-workflow.md`.
 - Coding rules: Clean Code Developer (CCD), see `doc/coding-standards.md`.
