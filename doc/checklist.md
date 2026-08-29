@@ -1942,7 +1942,11 @@ implementation plans: `doc/M3-implementation-plan.md` (M3),
   Edge-Resize) vs. grüne Filter-Repräsentation (zoomed-in, Center-Drag + Edge-Resize).
   Drei Interaktions-Zonen: (1) auf Cursor → low/high-Band ändern, (2) unterhalb des
   Cursors (Frequenzband) → Cursor bewegen, (3) Spektrometer-Feld → Pan. ✅ 2026-08-29
-- [ ] **M4c.7.8b FIX:** Cursor als interaktives SVG-Overlay neu bauen:
+- [ ] **M4c.7.8b RESEARCH (Pflicht vor Fix):** Kiwi SDK (`jks-prv/KiwiSDR_server` →
+  `web/kiwi/`, Schlagworte `cursor`/`passband`/`pb_`/`bracket`) + Live-WebUI
+  (**Port 8073/8074 validieren**): exakte Cursor-Geometrie, Pixel-Breiten-Threshold,
+  `MIN/MAX_BANDWIDTH`-Werte verifizieren. → Subagent.
+- [ ] **M4c.7.8c FIX:** Cursor als interaktives SVG-Overlay neu bauen:
   - Zustand über Pixel-Breite (`< 30px` → gelb/kollabiert, `>= 30px` → grün/expandiert).
   - Gelb: T-/Trapez-Form, Flanken deaktiviert, nur Cursor-Move (Trägerfrequenz).
   - Grün: Leiste + Mittellinie + schräge Flanken; Cursor-Move verschiebt,
@@ -1964,7 +1968,11 @@ implementation plans: `doc/M3-implementation-plan.md` (M3),
   SOLL (KiwiSDR, `jks-prv/KiwiSDR_server` — `kiwi_draw_scale()`/`scale_draw()`):
   `STEP_BUCKETS`-Tabelle, Pixel-basierte Schritt-Auswahl (`TARGET_LABEL_SPACING_PX`),
   Major-Ticks (Label) + Minor-Ticks (5×/10× feiner, ohne Label), Canvas-2D-Rendering. ✅ 2026-08-29
-- [ ] **M4c.7.9b FIX:** Skala als adaptive Canvas-/SVG-Engine neu bauen:
+- [ ] **M4c.7.9b RESEARCH (Pflicht vor Fix):** Kiwi SDK (`jks-prv/KiwiSDR_server` →
+  `web/kiwi/waterfall.js`/`kiwi.js`, `kiwi_draw_scale()`/`scale_draw()`/`zoom_step`)
+  + Live-WebUI (**Port 8073/8074 validieren**): exakte Bucket-Werte, Major/Minor-
+  Verhältnis, Label-Format verifizieren. → Subagent.
+- [ ] **M4c.7.9c FIX:** Skala als adaptive Canvas-/SVG-Engine neu bauen:
   - Pixel-basierte Schritt-Auswahl aus `STEP_BUCKETS` (kleinster Bucket `>= targetHz`).
   - Major-/Minor-Tick-Hierarchie (`minorStepHz = majorStepHz / 5`).
   - `formatFreqLabel`: `< 1 MHz` → kHz, `>= 1 MHz` → MHz, einheitliche Dezimalstellen.
@@ -1982,7 +1990,11 @@ implementation plans: `doc/M3-implementation-plan.md` (M3),
   SOLL (KiwiSDR, `jks-prv/KiwiSDR` — `web/kiwi/`): durchgehende farbige Balken mit
   zentriertem Label, synchron zum Zoom/Pan; DX-Labels mit vertikaler Verbindungslinie
   zur Frequenzachse + Kollisions-Layout auf N Ebenen (Rauszoomen → Labels rücken zusammen). ✅ 2026-08-29
-- [ ] **M4c.7.10b FIX:** Beide Leisten als dynamische Overlays bauen:
+- [ ] **M4c.7.10b RESEARCH (Pflicht vor Fix):** Kiwi SDK (`jks-prv/KiwiSDR_server` →
+  `web/kiwi/`, Schlagworte `dx`/`labels`/`band`/`dx_label`/`band_scale`) + Live-WebUI
+  (**Port 8073/8074 validieren**): Kollisions-Layout, Verbindungslinien-Geometrie,
+  Band-Label-Zentrierung verifizieren. → Subagent.
+- [ ] **M4c.7.10c FIX:** Beide Leisten als dynamische Overlays bauen:
   - BandScaleBar: durchgehende Balken + zentriertes Label, kontinuierlich synchron zum Viewport.
   - TagArea: vertikale Verbindungslinie pro Tag + Kollisions-Algorithmus auf N Ebenen
     (statt fester 2 Reihen); Re-Layout bei Zoom-out.
@@ -2002,7 +2014,7 @@ implementation plans: `doc/M3-implementation-plan.md` (M3),
 - [ ] **M4c.7.11b RESEARCH (Pflicht vor Fix):** Exakte Parameter verifizieren:
   `jks-prv/KiwiSDR_server` → `web/kiwi/` (Schlagworte `audio`, `squelch`,
   `noise_blank`, `noise_filter`, `pb_`, `test_pulse`) + `subtabs.json` / Live-DOM-Capture
-  gegen `kphsdr.com:8072`. Ergebnis: verbindliche Parameterliste (ParamId + Range + Default).
+  (**WebUI-Port 8073/8074 validieren**). Ergebnis: verbindliche Parameterliste (ParamId + Range + Default). → Subagent.
 - [ ] **M4c.7.11c FIX:** Scrollbare Audio-Tab-Komponente + Sub-Komponenten (SliderRow/
   DropdownRow/ActionRow); alle Parameter in fester Reihenfolge, Labels farbcodiert.
 
@@ -2020,8 +2032,8 @@ implementation plans: `doc/M3-implementation-plan.md` (M3),
   Threshold/Thresh CW/Slope/Decay mit Einheiten; Scrollbar + S-Meter-Skala. ✅ 2026-08-29
 - [ ] **M4c.7.12b RESEARCH (Pflicht vor Fix):** Exakte Parameter verifizieren:
   `jks-prv/KiwiSDR_server` → `web/kiwi/` (Schlagworte `agc`, `hang`, `slope`, `decay`,
-  `threshold`, `thresh_cw`, `manual_gain`) + `subtabs.json` / Live-DOM-Capture gegen
-  `kphsdr.com:8072`. Ergebnis: verbindliche Parameterliste (ParamId + Range + Default + Einheit).
+  `threshold`, `thresh_cw`, `manual_gain`) + `subtabs.json` / Live-DOM-Capture
+  (**WebUI-Port 8073/8074 validieren**). Ergebnis: verbindliche Parameterliste (ParamId + Range + Default + Einheit). → Subagent.
 - [ ] **M4c.7.12c FIX:** Scrollbare AGC-Tab-Komponente + Aktionsleiste + Slider-Reihen
   (inkl. Thresh CW) + S-Meter-Skala integrieren; Labels weiß/orange abwechselnd.
 
@@ -2038,7 +2050,11 @@ implementation plans: `doc/M3-implementation-plan.md` (M3),
   SOLL: dreiteilige hellgraue Top Bar (Branding/Titel/Untertitel + Credits "Provided
   by" + Callsign-Input + Zeit/Logo-Slot), Collapse/Expand-Reiter + expandierbarer
   Bild-Bereich mit Overlays. Connect-Funktionalität bleibt erhalten. ✅ 2026-08-29
-- [ ] **M4c.7.13b FIX:** Header-Redesign:
+- [ ] **M4c.7.13b RESEARCH (Pflicht vor Fix):** Kiwi SDK (`jks-prv/KiwiSDR_server` →
+  `web/kiwi/`, Schlagworte `topbar`/`header`/`callsign`/`collapse`/`expand`/`image`)
+  + Live-WebUI (**Port 8073/8074 validieren**): exakte Top-Bar-Höhe, Sektions-Layout,
+  Collapse/Expand-Mechanik, Bild-Container verifizieren. → Subagent.
+- [ ] **M4c.7.13c FIX:** Header-Redesign:
   - Top Bar dreiteilig (links Branding/Station-Info, Mitte Credits, rechts Callsign + Zeit/Logo-Slot).
   - Collapse/Expand-Toggle (Chevron ↓/↑) + expandierbarer Bild-Bereich mit weichen Transitions.
   - Overlays (position: absolute): Logos, Kontroll-Panel (Freq-Input + Band/Extension-Dropdowns + Play-Button), lila Play-Button links.
@@ -2055,7 +2071,11 @@ implementation plans: `doc/M3-implementation-plan.md` (M3),
   SOLL: "Spec RF" (aktiv grün) blendet Spektrumanalysator ein — Y-Achse dBm rechts
   (farbcodiert) + Grid-Lines, hellgraues Area-Chart, halbtransparentes Passband-Overlay,
   synchron zur Frequenzskala beim Pan/Zoom. ✅ 2026-08-29
-- [ ] **M4c.7.14b FIX:** Spektrumanalysator-Komponente bauen:
+- [ ] **M4c.7.14b RESEARCH (Pflicht vor Fix):** Kiwi SDK (`jks-prv/KiwiSDR_server` →
+  `web/kiwi/`, Schlagworte `spec_rf`/`spectrum`/`waterfall`) + Live-WebUI
+  (**Port 8073/8074 validieren**): exakte RF-Spektrums-Geometrie (Y-Achse dBm + Farbcodes,
+  Area-Chart, Passband-Overlay) verifizieren. → Subagent.
+- [ ] **M4c.7.14c FIX:** Spektrumanalysator-Komponente bauen:
   - Toggle-Button aktiv grün (`store.spectrumMode === 'specRF'`).
   - Area-Chart (Canvas/SVG) mit Y-Achse + Grid-Lines + Passband-Overlay.
   - Sync mit `viewLowKhz`/`viewHighKhz` + `lowCut`/`highCut` (reaktiv, Pan/Zoom-fest).
@@ -2071,10 +2091,37 @@ implementation plans: `doc/M3-implementation-plan.md` (M3),
   SOLL: "Spec AF" (aktiv grün) zeigt AF-Spektrum — Y-Achse identisch zur RF-Ansicht,
   Area-Chart um Träger zentriert, vertikales Grid, grüne Center-Linie (Träger),
   zwei rote Filtergrenzen, synchron beim Tuning. ✅ 2026-08-29
-- [ ] **M4c.7.15b FIX:** AF-Spektrumanalysator-Komponente bauen:
+- [ ] **M4c.7.15b RESEARCH (Pflicht vor Fix):** Kiwi SDK (`jks-prv/KiwiSDR_server` →
+  `web/kiwi/`, Schlagworte `spec_af`/`af_spectrum`/`audio spectrum`) + Live-WebUI
+  (**Port 8073/8074 validieren**): exakte AF-Geometrie (vertikales Grid, grüne
+  Center-Linie, rote Filtergrenzen, Träger-Zentrierung) verifizieren. → Subagent.
+- [ ] **M4c.7.15c FIX:** AF-Spektrumanalysator-Komponente bauen:
   - Toggle 3 Zustände; Button aktiv grün bei specRF/specAF.
   - AF-Graph (Canvas/SVG) mit vertikalem Grid + grüner Center-Linie + roten Filtergrenzen.
   - Sync mit `freqKhz`/`lowCut`/`highCut`/`viewLow/HighKhz` (reaktiv).
+
+#### Bug 15 — DRM-Tab (Button) funktioniert nicht
+
+> **Status: Offen + Research-Pflicht.** Der DRM-Mode-Button setzt nur `mode=12`,
+> löst aber kein DRM-UI aus. Es fehlen: Schedule/Services-Overlay oben, Decoder-Panel
+> unten links, DRM-Bandbreite (~10 kHz) auf der Tuning-Klammer. Sorgfältiger Research
+> in WebUI **und** Kiwi-SDK ist Pflicht vor Fix. Details: `doc/M4c.7-bugs.md` §Bug 15.
+
+- [x] **M4c.7.16a ANALYSE:** DRM-Modus gegen KiwiSDR-Referenz prüfen.
+  IST: `panelModes` → `{ idx: 12, label: 'DRM' }` → nur `setParam('mode', 12)`, kein UI.
+  SOLL: DRM-Aktivierung blendet Schedule/Services-Overlay (Status-Checkboxen IO/Time/
+  Frame/FAC/SDC/MSC + Services-Liste, Stations-Schedule mit Zeitleiste, Zeit/Legende)
+  + Decoder-Panel (Dream 2.2.1, Stop/Monitor IQ/Test 1/Test 2/LPF) ein; Tuning-Klammer
+  verbreitert sich auf ~10 kHz. ✅ 2026-08-29
+- [ ] **M4c.7.16b RESEARCH (Pflicht vor Fix):** Exakte DRM-UI-Spezifikation verifizieren:
+  `jks-prv/KiwiSDR_server` → `web/kiwi/` (Schlagworte `drm`, `dream`, `schedule`, `fac`,
+  `sdc`, `msc`) + Live-WebUI (**Port 8073/8074 validieren**: `subtabs.json`/`panel.json`
+  bzw. DRM-Modus aktivieren + DOM-Capture). Ergebnis: Feld-Labels, Checkbox-Semantik,
+  Schedule-Datenquelle, DRM-Bandbreite als verbindliche Checkliste. → Subagent.
+- [ ] **M4c.7.16c FIX:** DRM-UI bauen:
+  - Schedule/Services-Overlay (links schwarz / mitte weiß / rechts schwarz) + Decoder-Panel.
+  - DRM-Bandbreite (~10 kHz) auf der Tuning-Klammer (Bug 7).
+  - Vue-Transitions + Klick-Durchgriff (Canvas nicht blockieren).
 
 #### E2E-Lückenanalyse (vor Bug-Fixes)
 

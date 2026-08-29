@@ -15,6 +15,53 @@ Frequenz-Cursors präzisiert (drei getrennte Klick+Halten-Zonen):
 **Update:** [`checklist.md`](./checklist.md) — M4c.7.8a (Analyse) + M4c.7.8b (Fix)
 um die drei Zonen ergänzt.
 
+## 2026-08-29 — M4c.7: Research-Pflicht als fixe Anweisung pro Bug + WebUI-Port-Validierung
+
+**Update:** [`M4c.7-bugs.md`](./M4c.7-bugs.md) + [`checklist.md`](./checklist.md) —
+zwei strukturelle Korrekturen am Bug-Manifest:
+
+1. **Research-Pflicht als fixe Anweisung für JEDEN Bug.** Eine zentrale Regel im
+   Manifest-Header legt fest: Vor jedem Fix MUSS eine Research-Voranalyse aus
+   (a) Kiwi SDK/Server-Quellcode (`jks-prv/KiwiSDR_server` → `web/kiwi/`) und
+   (b) Live-WebUI durchgeführt werden. Die visuell abgeleiteten IST/SOLL-Beschreibungen
+   sind keine Faktengrundlage. Jeder Bug (7–15) erhielt einen eigenen
+   `### ⚠️ Research-Aufgabe (Pflicht vor Fix)`-Abschnitt; in der Checklist wurde pro
+   Bug ein `RESEARCH`-Task ergänzt (Nummerierung: a=Analyse, b=Research, c=Fix).
+2. **WebUI-Port validieren.** Die KiwiSDR-WebUI läuft auf **8073 oder 8074** (NICHT
+   8072 — das ist die externe API/WebSocket). Alle Research-Aufgaben referenzieren
+   jetzt "Port 8073/8074 validieren" statt eines festen (teils falschen) Ports, damit
+   Research/Tests nicht wegen falschem Port fehlschlagen.
+3. **Delegation:** Research-Tasks werden an Subagents (`general`/`explore`,
+   MCP: `netsdr_rag` + GitHub-Read-only) delegiert; erst nach Research wird gefixt.
+
+**Geänderte Dateien (3):**
+- `doc/M4c.7-bugs.md` — zentrale Research-Pflicht-Regel + Research-Abschnitt pro Bug
+- `doc/checklist.md` — RESEARCH-Tasks pro Bug + Port-Validierung
+- `doc/log.md` — dieser Eintrag
+
+## 2026-08-29 — M4c.7 Bug 15 erfasst: DRM-Tab (Button) funktioniert nicht
+
+**Update:** [`M4c.7-bugs.md`](./M4c.7-bugs.md) — neuer **Bug 15** dokumentiert
+(Status: offen + Research-Pflicht). Der DRM-Mode-Button (`panelModes` → `idx: 12`)
+setzt nur `mode=12`, löst aber kein DRM-UI aus.
+
+- **IST:** `store.setParam('mode', 12)` — kein Schedule/Services-Overlay, kein Decoder-Panel, keine DRM-Bandbreite.
+- **SOLL (KiwiSDR):** DRM-Aktivierung blendet (a) Schedule/Services-Overlay oben ein
+  (Status-Checkboxen IO/Time/Frame/FAC/SDC/MSC + Services-Liste, Stations-Schedule mit
+  Zeitleiste + roter "jetzt"-Linie, Zeit/Legende), (b) Decoder-Panel unten links
+  (Dream 2.2.1, Stop/Monitor IQ/Test 1/Test 2/LPF), (c) Tuning-Klammer verbreitert sich auf ~10 kHz.
+- **Research-Pflicht (neu als M4c.7.16b):** sorgfältiger Research in WebUI **und**
+  Kiwi-SDK — exakte Labels, Checkbox-Semantik, Schedule-Datenquelle (drmrx.org),
+  DRM-Bandbreite verifizieren.
+
+**Update:** [`checklist.md`](./checklist.md) — M4c.7.16a (Analyse, ✅) + M4c.7.16b
+(Research, offen) + M4c.7.16c (Fix, offen) ergänzt.
+
+**Geänderte Dateien (3):**
+- `doc/M4c.7-bugs.md` — Bug 15 (Analyse + Research + Fix-Plan), Übersicht, Chronologie, Frontmatter
+- `doc/checklist.md` — M4c.7.16a/16b/16c
+- `doc/log.md` — dieser Eintrag
+
 ## 2026-08-29 — M4c.7 Bug 14 erfasst: "Spec AF"-Button soll funktionieren
 
 **Update:** [`M4c.7-bugs.md`](./M4c.7-bugs.md) — neuer **Bug 14** dokumentiert

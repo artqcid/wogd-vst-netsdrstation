@@ -1,12 +1,12 @@
 ---
 type: Bug Manifest + Implementation Plan
 title: M4c.7 — Bug-Manifest + Implementation Plan
-description: 14 Bugs aus manueller Prüfung (2026-08-29) mit vollständiger Analyse und konkretem Fix-Plan pro Bug. Analysiert 2026-08-29 (agent:plan).
-status: bugs-1-6-done-bugs-7-14-open
+description: 15 Bugs aus manueller Prüfung (2026-08-29) mit vollständiger Analyse und konkretem Fix-Plan pro Bug. Analysiert 2026-08-29 (agent:plan).
+status: bugs-1-6-done-bugs-7-15-open
 generated:
   by: agent:plan
   at: 2026-08-29
-verified: 2026-08-29 (agent:DEV — offene Tasks 1–3 abgeschlossen, 85/85 E2E grün; Bug 7–14 neu erfasst 2026-08-29, noch offen)
+verified: 2026-08-29 (agent:DEV — offene Tasks 1–3 abgeschlossen, 85/85 E2E grün; Bug 7–15 neu erfasst 2026-08-29, noch offen)
 tags: [m4, m4c, bugs, analysis, ui, parity, extensions, implementation-plan]
 stale_after: 2026-10-31
 sources:
@@ -26,13 +26,37 @@ sources:
 
 # M4c.7 — Bug-Manifest & Implementation Plan
 
-14 Bugs aus manueller Prüfung des Live-Plugins am 2026-08-29 identifiziert.
+15 Bugs aus manueller Prüfung des Live-Plugins am 2026-08-29 identifiziert.
 Vollständig analysiert 2026-08-29 durch Abgleich mit `explore-8074.json`, `panel.json`, `subtabs.json` und Quellcode-Inspektion.
 
 **Vorgänger:** [`M4b-bugs.md`](./archive/M4b-bugs.md) — M4b-Bugs (archiviert, in M4c gefixt).
 
 **Grundregel:** Jeder Fix wird gegen `explore-8074.json` (127 Elemente, 272 IDs) validiert.
 Nach jedem Fix: `reference-matrix.md` aktualisieren (❌ → ✅), E2E-Test schreiben.
+
+> ## ⚠️ Research-Pflicht (gilt für JEDEN Bug, fixe Anweisung)
+>
+> Bevor ein Bug implementiert wird, MUSS eine **Research-Voranalyse** durchgeführt
+> werden. Die visuell abgeleiteten IST/SOLL-Beschreibungen in diesem Manifest sind
+> **keine Faktengrundlage** — exakte Labels, Parameter-IDs, Wertebereiche, Geometrien
+> und Verhaltensdetails müssen aus zwei Quellen verifiziert werden:
+>
+> 1. **Kiwi SDK / Server-Quellcode** (`jks-prv/KiwiSDR_server` → `web/kiwi/`,
+>    früher `Beagle_SDR_GPS`): Schlagworte pro Bug suchen (z. B. `cursor`, `pb_`,
+>    `zoom_step`, `dx`, `band`, `agc`, `squelch`, `drm`, …).
+> 2. **Live-WebUI — Port zuerst validieren!** Die KiwiSDR-WebUI läuft auf **8073
+>    oder 8074** (NICHT 8072 — das ist die externe API/WebSocket). Den tatsächlichen
+>    WebUI-Port vor dem Research verifizieren (Referenz-Capture `explore-8074.json`
+>    nutzte `:8074`). Referenz-DOM (`ui/e2e/reference/kiwisdr-reference/*.json`)
+>    prüfen; falls unvollständig, den betreffenden UI-Zustand im Browser aktivieren
+>    und den DOM erneut aufnehmen. Ein falscher Port darf Research/Tests nicht
+>    fehlschlagen lassen.
+>
+> **Delegation:** Research-Tasks werden **an Subagents delegiert** (`general`/
+> `explore`, MCP: `netsdr_rag` + GitHub-Read-only). Erst nach abgeschlossenem
+> Research wird der Fix implementiert. Das Research-Ergebnis wird als verbindliche
+> Checkliste (Feld-Label, ParamId, Range, Default, Geometrie) im Bug-Abschnitt
+> festgehalten.
 
 ---
 
@@ -54,6 +78,7 @@ Nach jedem Fix: `reference-matrix.md` aktualisieren (❌ → ✅), E2E-Test schr
 | [Bug 12](#bug-12--header-bereich-entspricht-nicht-der-web-ui) | PluginView.vue | Hoch | Gross | ⬜ |
 | [Bug 13](#bug-13--spec-rf-button-soll-funktionieren) | PluginView.vue / Waterfall.vue | Hoch | Gross | ⬜ |
 | [Bug 14](#bug-14--spec-af-button-soll-funktionieren) | PluginView.vue / Waterfall.vue | Hoch | Gross | ⬜ |
+| [Bug 15](#bug-15--drm-tab-button-funktioniert-nicht) | PluginView.vue | Hoch | Gross | ⬜ |
 
 ---
 
@@ -986,6 +1011,17 @@ linker/rechter Rand **und Kasten grün (breit genug)** → Filterbreite ändern.
 | **2. Unterhalb des Cursors** | in der Frequenzband-Anzeige (Band-Skala), unterhalb des Cursors | **Cursor selbst bewegen** — ganzer Cursor (Trägerfrequenz) verschiebt sich horizontal |
 | **3. Spektrometer-Feld** | im Wasserfall-/Spektrum-Bereich | **Pan** — Frequenzanzeige **inkl. Spektrometer** wird horizontal verschoben |
 
+### ⚠️ Research-Aufgabe (Pflicht vor Fix)
+
+1. **Kiwi SDK:** `jks-prv/KiwiSDR_server` → `web/kiwi/` — Schlagworte `cursor`,
+   `passband`, `pb_`, `tuning`, `bracket`. Exakte Cursor-Geometrie (gelbe T-/Trapez-
+   Form, grüne Klammer mit schrägen Flanken), Pixel-Breiten-Threshold
+   (`MIN_INTERACTIVE_WIDTH_PX`), `MIN_BANDWIDTH`/`MAX_BANDWIDTH`-Werte extrahieren.
+2. **Live-WebUI (Port 8073/8074 validieren):** Cursor bei verschiedenen Zoomstufen
+   prüfen; Referenz-DOM (`explore-8074.json`) auf Cursor-Elemente
+   (`id-*-cursor`/`id-*-bracket`) durchsuchen. Exakte Zustandsübergang-Geometrie +
+   Interaktions-Zonen verifizieren.
+
 ### Fix-Plan Bug 7
 
 **Ziel:** Den Cursor als zoom-abhängige **Passband-Repräsentation** neu bauen —
@@ -1139,6 +1175,14 @@ Startfrequenz ermittelt, per Modulo (`%`) der erste linke Teilstrich berechnet u
 in einer Schleife abwechselnd lange Striche (mit Text) und kurze Striche (ohne Text)
 gezeichnet.
 
+### ⚠️ Research-Aufgabe (Pflicht vor Fix)
+
+1. **Kiwi SDK:** `jks-prv/KiwiSDR_server` → `web/kiwi/waterfall.js` / `kiwi.js` —
+   `kiwi_draw_scale()` / `scale_draw()` / `zoom_step`-Tabelle vollständig extrahieren:
+   exakte Bucket-Werte, Major/Minor-Tick-Verhältnis (5× oder 10×), Label-Format-Logik.
+2. **Live-WebUI (Port 8073/8074 validieren):** Frequenzskala bei mehreren Zoomstufen
+   prüfen; exakte Tick-Dichte, Grid-Abstände und Label-Formatierung verifizieren.
+
 ### Fix-Plan Bug 8
 
 **Ziel:** Die Frequenzskala als adaptive Canvas-/SVG-Engine neu bauen, die
@@ -1272,6 +1316,15 @@ Die Pixel-Berechnung aus Frequenzen liegt traditionell in den JS-Dateien des Ord
 Balken mit zentriertem Label; DX-Labels = kleine farbcodierte Rechtecke mit
 vertikaler Verbindungslinie zur Frequenzachse + Kollisions-Layout-Algorithmus.
 
+### ⚠️ Research-Aufgabe (Pflicht vor Fix)
+
+1. **Kiwi SDK:** `jks-prv/KiwiSDR_server` → `web/kiwi/` — Schlagworte `dx`, `labels`,
+   `band`, `dx_label`, `band_scale`. Kollisions-Layout-Algorithmus (Ebenen-Zuweisung),
+   vertikale Verbindungslinien-Geometrie, Band-Label-Zentrierung extrahieren.
+2. **Live-WebUI (Port 8073/8074 validieren):** Band-Leiste + DX-Tags bei Zoom/Pan
+   prüfen; Referenz (`explore-8074.json` dx-label/band-Elemente) verifizieren.
+   Exaktes Ebenen-Verhalten beim Raus-/Hineinzoomen dokumentieren.
+
 ### Fix-Plan Bug 9
 
 **Ziel:** Beide Leisten als **dynamische** Overlays bauen, die kontinuierlich mit
@@ -1368,10 +1421,10 @@ daraus **nicht als Fakt belegbar**. Vor der Implementierung ist ein Research nö
    (Schlagworte: `audio`, `squelch`, `noise_blank`, `noise_filter`, `pb_`,
    `test_pulse`). Die exakten Parameter-IDs, Slider-Min/Max und Dropdown-Optionen
    extrahieren.
-2. **Live-DOM-Referenz:** `ui/e2e/reference/kiwisdr-reference/subtabs.json` prüfen —
-   enthält der Audio-Tab bereits alle Elemente? Falls nicht, `capture-reference.spec.ts`
-   (oder der Capture-Helper) gegen `kphsdr.com:8072` erneut laufen lassen und den
-   vollständigen Audio-Tab-DOM aufnehmen.
+2. **Live-DOM-Referenz (WebUI-Port 8073/8074 validieren):** `ui/e2e/reference/kiwisdr-reference/subtabs.json`
+   prüfen — enthält der Audio-Tab bereits alle Elemente? Falls nicht,
+   `capture-reference.spec.ts` (oder der Capture-Helper) gegen die WebUI erneut
+   laufen lassen und den vollständigen Audio-Tab-DOM aufnehmen.
 3. **Ergebnis:** Die Parameterliste in dieser Analyse als **verbindliche Checkliste**
    (jedes Element → ParamId + Range + Default) verfeinern, bevor gebaut wird.
 
@@ -1463,9 +1516,9 @@ daraus **nicht als Fakt belegbar**. Vor der Implementierung ist ein Research nö
    (Schlagworte: `agc`, `hang`, `slope`, `decay`, `threshold`, `thresh_cw`,
    `manual_gain`). Exakte Parameter-IDs, Slider-Min/Max, Einheiten und Toggle-
    Semantik extrahieren.
-2. **Live-DOM-Referenz:** `ui/e2e/reference/kiwisdr-reference/subtabs.json` prüfen —
-   enthält der AGC-Tab alle Elemente? Falls nicht, Capture gegen `kphsdr.com:8072`
-   erneut laufen lassen und den vollständigen AGC-Tab-DOM aufnehmen.
+2. **Live-DOM-Referenz (WebUI-Port 8073/8074 validieren):** `ui/e2e/reference/kiwisdr-reference/subtabs.json`
+   prüfen — enthält der AGC-Tab alle Elemente? Falls nicht, Capture gegen die
+   WebUI erneut laufen lassen und den vollständigen AGC-Tab-DOM aufnehmen.
 3. **Ergebnis:** verbindliche Parameterliste (ParamId + Range + Default + Einheit)
    als Checkliste verfeinern, bevor gebaut wird.
 
@@ -1541,6 +1594,15 @@ Sektion neben "Your name or callsign" oder als eigener Bereich).
 "Powered by OpenWebRX"-Logo **oder** mehrzeilige Zeitanzeige). Unten mittig ein
 halbtransparenter Reiter (Chevron ↓/↑) als Collapse/Expand-Toggle; darunter ein
 expandierbarer Bild-Container mit absolut positionierten Overlays.
+
+### ⚠️ Research-Aufgabe (Pflicht vor Fix)
+
+1. **Kiwi SDK:** `jks-prv/KiwiSDR_server` → `web/kiwi/` — Schlagworte `topbar`,
+   `header`, `callsign`, `collapse`, `expand`, `image`. Exakte Top-Bar-Höhe,
+   Sektions-Layout, Collapse/Expand-Mechanik und Bild-Container-Overlays extrahieren.
+2. **Live-WebUI (Port 8073/8074 validieren):** Header-Topbar prüfen; Referenz
+   `header-topbar.json` + `explore-8074.json` (`id-topbar-*`) verifizieren. Exakte
+   Höhe, Titel-/Untertitel-Format, Credits-Links und Bild-Bereich aufnehmen.
 
 ### Fix-Plan Bug 12
 
@@ -1634,6 +1696,15 @@ volle Breite, Y-Achse dBm rechts mit farbcodierten Werten + horizontalen Grid-Li
 hellgraues/weißes Area-Chart, halbtransparentes Passband-Overlay, synchron zur
 Frequenzskala.
 
+### ⚠️ Research-Aufgabe (Pflicht vor Fix)
+
+1. **Kiwi SDK:** `jks-prv/KiwiSDR_server` → `web/kiwi/` — Schlagworte `spec_rf`,
+   `spectrum`, `spec_display`, `waterfall`. Exakte RF-Spektrums-Geometrie
+   (Y-Achsen-Werte + Farbcodes, Area-Chart-Stil, Passband-Overlay) extrahieren.
+2. **Live-WebUI (Port 8073/8074 validieren):** "Spec RF"-Modus im Browser aktivieren;
+   Referenz-DOM (`explore-8074.json`/`subtabs.json`) prüfen. Exakte dBm-Skala,
+   Grid-Lines und Passband-Overlay-Verhalten verifizieren.
+
 ### Fix-Plan Bug 13
 
 **Schritt 1 — Toggle-Button aktiv grün:**
@@ -1715,6 +1786,14 @@ hellgraues/weißes Area-Chart (um Träger zentriert), zusätzlich vertikales Gri
 grüne Center-Linie (Träger) + zwei rote Filtergrenzen-Linien. Ein weiterer Klick
 blendet das Diagramm wieder aus.
 
+### ⚠️ Research-Aufgabe (Pflicht vor Fix)
+
+1. **Kiwi SDK:** `jks-prv/KiwiSDR_server` → `web/kiwi/` — Schlagworte `spec_af`,
+   `af_spectrum`, `audio spectrum`. Exakte AF-Geometrie (vertikales Grid,
+   grüne Center-Linie, rote Filtergrenzen, Zentrierung um Träger) extrahieren.
+2. **Live-WebUI (Port 8073/8074 validieren):** "Spec AF"-Modus im Browser aktivieren;
+   Referenz-DOM prüfen. Exakte AF-Overlays + Tuning-Sync-Verhalten verifizieren.
+
 ### Fix-Plan Bug 14
 
 **Schritt 1 — Toggle (drei Zustände) aktiv grün:**
@@ -1757,6 +1836,109 @@ blendet das Diagramm wieder aus.
 **E2E-Test:** `ui/e2e/wf0-tab.spec.ts` / neues `spec-af.spec.ts`:
 - 2× Klick auf Spectrum-Button → "Spec AF"-Label + AF-Diagramm sichtbar.
 - Grüne Center-Linie + rote Filtergrenzen vorhanden, verschieben sich beim Tuning.
+
+---
+
+## Bug 15 — DRM-Tab (Button) funktioniert nicht
+
+**Betroffene Datei:** `ui/src/views/PluginView.vue` (Mode-Button `DRM` + Layout) +
+ggf. neue `ui/src/components/DrmSchedule.vue`, `DrmDecoderPanel.vue`
+
+### Analyse (abgeschlossen 2026-08-29)
+
+**IST:** Der DRM-Mode-Button (`panelModes` → `{ idx: 12, label: 'DRM' }`) ruft nur
+`store.setParam('mode', 12)`. Es gibt **kein** DRM-spezifisches UI: kein Schedule-/
+Services-Overlay oben, kein Decoder-Panel, keine DRM-Bandbreiten-Anpassung der
+Tuning-Klammer.
+
+**Problem (Paritäts-Abweichung):**
+
+1. **Kein Top-Overlay (DRM Schedule & Services).** Bei aktivem DRM-Modus überlagert
+   im Original ein mehrteiliges Panel den oberen Bereich (wo sonst Spektrumanalysator/
+   Leerraum ist): Status-Checkboxen (IO/Time/Frame/FAC/SDC/MSC) + "Services:"-Liste,
+   Schedule-Ansicht mit Stationsliste + Zeitleiste, Zeit/Legende-Sektion.
+2. **Kein Decoder-Kontroll-Panel (unten links).** Ein freischwebendes
+   "Digital Radio Mondiale decoder"-Panel fehlt (Header + Content mit Hyperlinks +
+   Footer-Aktionsleiste Stop/Monitor IQ/Test 1/Test 2 + LPF-Checkbox).
+3. **Keine DRM-Bandbreite auf der Tuning-Klammer.** Die grüne Klammer (Bug 7) müsste
+   sich auf die typische DRM-Bandbreite (~10 kHz) verbreitern.
+
+**Referenz (KiwiSDR Web UI, visuell erfasst aus Screenshots):** DRM-Aktivierung
+löst weitreichende UI-Änderungen aus — ein Schedule/Services-Overlay oben und ein
+Decoder-Panel unten links, plus breitere Tuning-Klammer.
+
+### ⚠️ Research-Aufgabe (Pflicht vor Fix)
+
+Die Beschreibung ist **visuell (Screenshots) abgeleitet** — exakte Labels, Dropdown-
+Inhalte, Checkbox-Semantik, Decoder-Status-Flags (FAC/SDC/MSC), Schedule-Datenquelle
+und die genaue DRM-Bandbreite sind **nicht als Fakt belegbar**. Vor der
+Implementierung ist ein **sorgfältiger Research** in WebUI **und** Kiwi-SDK nötig:
+
+1. **Kiwi-SDK / Server-Quellcode:** `jks-prv/KiwiSDR_server` → `web/kiwi/` durchsuchen
+   (Schlagworte: `drm`, `dream`, `schedule`, `fac`, `sdc`, `msc`, `drmschedule`).
+   Exakte Feld-Labels, Decoder-Status-Flags, Schedule-Datenquelle (drmrx.org),
+   Default-Dropdown-Werte extrahieren.
+2. **Live-WebUI (Port 8073/8074 validieren):** `ui/e2e/reference/kiwisdr-reference/subtabs.json`
+   + `panel.json` prüfen; ggf. DRM-Modus auf einer DRM-fähigen Station im Browser
+   aktivieren und den vollständigen DOM aufnehmen (Schedule-Overlay + Decoder-Panel).
+3. **Ergebnis:** verbindliche UI-Spezifikation (Feld-Labels, Checkbox-Liste,
+   Schedule-Struktur, Zeitleisten-Semantik, DRM-Bandbreite) als Checkliste verfeinern.
+
+### Fix-Plan Bug 15
+
+**Schritt 0 — Research (Pflicht):** obige Research-Aufgabe abschließen.
+
+**Schritt 1 — DRM-Modus als Store-State:**
+
+```ts
+// store.mode === 12 (DRM) steuert die Sichtbarkeit der DRM-Overlays
+const isDrmActive = computed(() => store.mode === 12)
+```
+
+**Schritt 2 — Top-Overlay (DRM Schedule & Services):**
+
+```html
+<template v-if="isDrmActive">
+  <DrmSchedule />
+</template>
+```
+
+- **Links (schwarz):** Checkbox-Reihe IO/Time/Frame/FAC/SDC/MSC + "Services:"-Liste (1–4).
+- **Mitte (weiß):** scrollbare Stationsliste mit blauem Info-Icon links, Zeitleiste
+  rechts (grüne/rosafarbene Balken), rote vertikale "jetzt"-Linie, graue Trennlinien.
+- **Rechts (schwarz):** UTC/Local-Zeit, Dropdown ("by service"), Legenden-Buttons
+  "verified" (grün) / "not verified" (rosa).
+
+**Schritt 3 — DRM Decoder-Kontroll-Panel (unten links):**
+
+```html
+<DrmDecoderPanel v-if="isDrmActive" />
+```
+
+- Header (dunkelgrau, Titel cyan, "help" grün + "X" rechts).
+- Content: Text + Hyperlinks ("DRM decoder is based on Dream 2.2.1",
+  "Schedule information courtesy of drmrx.org"), vertikale Scrollbar.
+- Footer: Buttons Stop (rot) / Monitor IQ (magenta) / Test 1 + Test 2 (cyan) + "LPF"-Checkbox.
+
+**Schritt 4 — DRM-Bandbreite auf der Tuning-Klammer:**
+
+- Beim DRM-Modus setzt der Passband-Cursor (Bug 7) die Bandbreite auf ~10 kHz
+  (`low_cut`/`high_cut` entsprechend), deutlich breiter als AM/SSB.
+
+**Schritt 5 — Vue-Transitions + Klick-Durchgriff:**
+
+- Top-Panel + Decoder-Panel mit Vue-`<transition>` weich ein-/ausblenden.
+- Overlays dürfen das darunterliegende Canvas nicht funktional blockieren
+  (Klick außerhalb → Overlay schließen bzw. Event durchreichen).
+
+**Akzeptanzkriterium:**
+- DRM-Button blendet Schedule/Services-Overlay + Decoder-Panel weich ein/aus.
+- Tuning-Klammer verbreitert sich auf ~10 kHz im DRM-Modus.
+- Alle Labels/Checkboxen/Buttons gemäß (per Research verifizierter) Spezifikation.
+
+**E2E-Test:** `ui/e2e/mode-select.spec.ts` / neues `drm.spec.ts`:
+- DRM-Button → Schedule-Overlay + Decoder-Panel sichtbar.
+- Tuning-Klammer breiter (~10 kHz); Overlays schließen bei erneutem DRM-Klick.
 
 ---
 
@@ -1947,3 +2129,4 @@ Die E2E-Tests aus M4b-Zeiten (`.kiwi-control-panel`, `[data-testid="..."]`) wurd
 | 2026-08-29 | **Bug 12 erfasst:** Header-Bereich entspricht nicht der Web UI (Station-Info, Credits, Collapse/Expand + Bild-Bereich fehlen; Connect-Funktionalität muss erhalten bleiben) — Analyse + Fix-Plan dokumentiert, noch offen |
 | 2026-08-29 | **Bug 13 erfasst:** "Spec RF"-Button soll funktionieren (Spektrumanalysator-Top-View fehlt) — Analyse + Fix-Plan dokumentiert, noch offen |
 | 2026-08-29 | **Bug 14 erfasst:** "Spec AF"-Button soll funktionieren (AF-Spektrumanalysator mit Center-Linie + Filtergrenzen fehlt) — Analyse + Fix-Plan dokumentiert, noch offen |
+| 2026-08-29 | **Bug 15 erfasst:** DRM-Tab (Button) funktioniert nicht (Schedule/Services-Overlay + Decoder-Panel + DRM-Bandbreite fehlen; Research-Pflicht) — Analyse + Fix-Plan dokumentiert, noch offen |
