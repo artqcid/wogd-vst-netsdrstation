@@ -967,6 +967,9 @@ Darstellung rein über `zoomLevel` (diskret 0–14) umschaltet:
    aber kein definierter oberer/unterer Bandbreiten-Limit-Vertrag.
 5. **Rendering via HTML-Divs, nicht Vektor-Grafik.** Schräge Flanken + präzises
    Hit-Testing (Flanke vs. Mitte) sind mit `div`/CSS nur umständlich korrekt abbildbar.
+6. **Drei getrennte Interaktions-Zonen nicht abgebildet.** Das Original unterscheidet
+   beim Klick+Halten drei Bereiche mit unterschiedlicher Drag-Wirkung (siehe unten);
+   unsere `onDragMove` kennt nur `cursor`/`lo`/`hi` auf dem Cursor selbst.
 
 **Referenz (KiwiSDR, `jks-prv/KiwiSDR_server`):** Das Element wird nicht mit
 CSS-Boxen gelöst, sondern direkt als **Vektor-Grafik (Canvas-API 2D Context)** auf
@@ -974,6 +977,14 @@ die Frequenzskala gezeichnet (typisch in `ui.js`, `pb.js` (Passband) oder
 `waterfall.js`). Bei jedem Maus-Event (`mousemove`, `mousedown`) wird die
 Mausposition bestimmt: Mitte der berechneten Pixel-Box → Frequenz verschieben;
 linker/rechter Rand **und Kasten grün (breit genug)** → Filterbreite ändern.
+
+**Drei Interaktions-Zonen (Klick+Halten, Referenz-Verhalten):**
+
+| Zone | Bereich | Wirkung beim Ziehen |
+|------|---------|---------------------|
+| **1. Auf dem Cursor** | direkt auf der Klammer/den Flanken | **low/high-Band ändern** — linke Flanke → `low_cut`, rechte Flanke → `high_cut` (Edge-Resize) |
+| **2. Unterhalb des Cursors** | in der Frequenzband-Anzeige (Band-Skala), unterhalb des Cursors | **Cursor selbst bewegen** — ganzer Cursor (Trägerfrequenz) verschiebt sich horizontal |
+| **3. Spektrometer-Feld** | im Wasserfall-/Spektrum-Bereich | **Pan** — Frequenzanzeige **inkl. Spektrometer** wird horizontal verschoben |
 
 ### Fix-Plan Bug 7
 
@@ -1048,13 +1059,42 @@ function onPointerMove(e) {
 }
 ```
 
+**Schritt 6 — Drei Interaktions-Zonen (Hit-Testing):**
+
+Die Drag-Wirkung hängt davon ab, **wo** der User klickt und hält:
+
+1. **Auf dem Cursor** (Klammer/Flanken selbst): `pointerdown` auf der linken Flanke
+   startet `low-cut`-Resize, auf der rechten Flanke `high-cut`-Resize
+   (`cursor: ew-resize`). Nur im "zoomed-in"-Zustand aktiv (gelbe Form hat keine
+   draggable Flanken).
+2. **Unterhalb des Cursors** (in der Frequenzband-Anzeige / Band-Skala): `pointerdown`
+   in diesem Bereich startet **Cursor-Move** — der gesamte Cursor (Trägerfrequenz)
+   folgt der Maus horizontal (`emit('tune', ...)`).
+3. **Spektrometer-Feld** (Wasserfall/Spektrum-Bereich): `pointerdown` hier startet
+   **Pan** — Frequenzanzeige **inkl. Spektrometer** wird verschoben (nicht nur der
+   Cursor; der gesamte sichtbare Frequenzbereich `viewLow/HighKhz` wandert).
+
+```ts
+type DragZone = 'lo-flanke' | 'hi-flanke' | 'cursor-move' | 'pan'
+
+function hitTest(x: number, y: number): DragZone {
+  if (onCursorFlanke(x, y, 'lo')) return 'lo-flanke'
+  if (onCursorFlanke(x, y, 'hi')) return 'hi-flanke'
+  if (inBandScaleBelowCursor(y))    return 'cursor-move'
+  return 'pan'                       // Spektrometer-/Wasserfall-Bereich
+}
+```
+
 **Akzeptanzkriterium:**
-- Passbandbreite < 30px → gelbe Trapez-/T-Form, **kein** Edge-Resize, Center-Drag verschiebt Frequenz.
-- Passbandbreite ≥ 30px → grüne Form mit Mittellinie + schrägen Flanken; Center-Drag verschiebt, Flanken resizen unter `MIN_BANDWIDTH`/`MAX_BANDWIDTH`.
+- Passbandbreite < 30px → gelbe Trapez-/T-Form, **kein** Edge-Resize, Cursor per Klick+Halten unterhalb verschiebbar.
+- Passbandbreite ≥ 30px → grüne Form mit Mittellinie + schrägen Flanken; Klick auf Flanke resized `low_cut`/`high_cut` unter `MIN_BANDWIDTH`/`MAX_BANDWIDTH`.
+- Klick+Halten **unterhalb** des Cursors (Frequenzband) bewegt den Cursor.
+- Klick+Halten **im Spektrometer-Feld** panniert Frequenzanzeige inkl. Spektrometer.
 
 **E2E-Test:** `ui/e2e/frequency-ruler.spec.ts` — erweitern:
-- Zoomed-Out: Cursor hat gelbe Form, Flanken nicht draggable (`ew-resize` nicht aktiv), Center-Drag ändert `freqKhz`.
+- Zoomed-Out: Cursor hat gelbe Form, Flanken nicht draggable (`ew-resize` nicht aktiv), Drag unterhalb des Cursors ändert `freqKhz`.
 - Zoomed-In: Cursor grün, Flanken draggable, `low_cut`/`high_cut` ändern sich beim Ziehen, kreuzen nie.
+- Drag im Spektrometer-Feld panniert (`viewLow/HighKhz` wandern), nicht nur der Cursor.
 
 ---
 

@@ -3,6 +3,18 @@
 _Append-only, newest first. Parseable with `grep "^## "`. Entries use
 `**Creation**`, `**Update**` or `**Deprecation**` prefix + linked concept file._
 
+## 2026-08-29 — M4c.7 Bug 7 präzisiert: drei Cursor-Interaktions-Zonen
+
+**Update:** [`M4c.7-bugs.md`](./M4c.7-bugs.md) §Bug 7 — Interaktions-Logik des
+Frequenz-Cursors präzisiert (drei getrennte Klick+Halten-Zonen):
+
+1. **Auf dem Cursor** (Klammer/Flanken) → `low_cut`/`high_cut` ändern (Edge-Resize).
+2. **Unterhalb des Cursors** (Frequenzband-Anzeige) → Cursor selbst bewegen (Trägerfrequenz).
+3. **Spektrometer-Feld** (Wasserfall/Spektrum) → Pan — Frequenzanzeige inkl. Spektrometer verschieben.
+
+**Update:** [`checklist.md`](./checklist.md) — M4c.7.8a (Analyse) + M4c.7.8b (Fix)
+um die drei Zonen ergänzt.
+
 ## 2026-08-29 — M4c.7 Bug 14 erfasst: "Spec AF"-Button soll funktionieren
 
 **Update:** [`M4c.7-bugs.md`](./M4c.7-bugs.md) — neuer **Bug 14** dokumentiert
