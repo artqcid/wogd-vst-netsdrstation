@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-08-29T14:16:40.239Z",
+  "timestamp": "2026-08-29T17:26:09.427Z",
   "url": "http://kphsdr.com:8074/",
   "title": "KPH Kiwi74",
   "totalElements": 127,
@@ -1105,7 +1105,7 @@
       "type": "CANVAS",
       "rect": {
         "x": 0,
-        "y": 73,
+        "y": 78,
         "w": 1280,
         "h": 200
       },
@@ -3103,7 +3103,7 @@
     {
       "id": "id-topbar-R-container",
       "tag": "DIV",
-      "text": "14:16UTC07:16LocalAmerica/Los Angeles (PDT)Powered by"
+      "text": "17:25UTC10:25LocalAmerica/Los Angeles (PDT)Powered by"
     },
     {
       "id": "id-tuning-container",
@@ -3146,5 +3146,5 @@
       "text": ""
     }
   ],
-  "bodyText": "KPH Site\nHistoric Building - Open to the public on Saturdays - Kiwi rack is in the far corner - TCi530 - Kiwi rack closeup\nKPH Kiwi74\nPoint Reyes National Seashore, Northern California | Grid CM88mc, ASL 30m, [map], SNR 34/35 dB\nAntenna: TCI-530 Omni 3-30 Log Periodic\nMRHS\nYour name or callsign:\n14:16\nUTC\n07:16\nLocal\nAmerica/Los Angeles (PDT)\nPowered by\nLW 243\nNAVTEX\nWSPR\nDSC\nSTANAG DHO26\nSTANAG OUA4\nMWARA CAR\nSTANAG IDN\nMWARA SAT-1,2\nSSTV EU\nFAX ZAF\nSTANAG DHJ58\nFAX GRC\nThe Air Horn\nL marker\nThe Pip\nVOLMET\nR. Mi Amigo Intl\nDSC (distress)\nMWARA SEA-1\nWSPR ISM\nV marker\nFAX THA\nDDH7 GER\nFAX GER\nVMW AUS\nSTANAG PBC\nSTANAG FUM\nMWARA SAT-1\nSTANAG FUG\nHM01 CUB\nSuperDARN radar\nFAX RUS\nFAX AUS\nD marker\nFAX UK\nHFDL ZAF\nHM01 CUB\nSTANAG FUJ\nVMW AUS\nFAX CHN\nPBB NLD\nFAX JPN\nMWARA NAT-B/D/F\nD marker\nFAX GER\nSSTV\nDDH8 GER\nSTANAG FUG\nRWM RUS\nFAX AUS\nFAX GER\nD marker\nFAX CHN\nDSC (distress)\nFAX JPN\nFAX SGP\nHFDL PAN\nFAX ZAF\nSTANAG FUV\nDSC\nNAVTEX\nWWV\nFAX AUS\nFT8\nSSTV\nMWARA NP\nDSC\nFT8\nDSC\nNAVTEX\nFT8\nSSTV\nselect band\nBROADCAST\nLW\nMW\n120m\n90m\n75m\n60m\n49m\n41m\n31m\n25m\n22m\n19m\n16m\n15m\n13m\n11m\nUTILITY\nVLF\nLF\nNDB\nTime 2.5\nTime 3.33\nTime 5\nTime 7.85\nTime 10\nTime 14.67\nTime 15\nTime 20\nAMATEUR\nLF\nMF\n160m\n80m\n60m\n40m\n30m\n20m\n17m\n15m\n12m\n10m\nBEACONS\nIBP 20m\nIBP 17m\nIBP 15m\nIBP 12m\nIBP 10m\nMARINE\nMF\n2 MHz\n4 MHz\n6 MHz\n8 MHz\n12 MHz\n22 MHz\n25 MHz\nAERO\n2 MHz\n3 MHz\n3 MHz\n4 MHz\n5 MHz\n6 MHz\n8 MHz\n10 MHz\n11 MHz\n13 MHz\n15 MHz\n17 MHz\n22 MHz\nMARKERS\n3594\n4558\n5154\n5156 L\n5292 D/B\n6928 V\n7039\n7509\n8000 C\n8495\n10872\n13528\n16332\n20048\nextension\nALE_2G\nant_switch\ncolormap\nCW_decoder\nCW_skimmer\nDRM\nDX spots\nFAX\nFFT\nFSK\nFT8/FT4\nHFDL\nIBP_scan\niframe\nIQ_display\nLoran_C\nNAVTEX/DSC\nnoise_blank\nnoise_filter\nS_meter\nSSTV\nTDoA\ntimecode\nwaterfall\nWSPR\nA\n9\nSpectrum\nAM\nSAM\nDRM\nLSB\nUSB\nCW\nNBFM\nIQ\nRF\nWF0\nAudio\nAGC\nUser\nStat\nOff\nWF ceil\n+5 dB\nWF floor\n0 dB\nWF rate\nfast\nSpec Δ\n0.2 gain\nAuto\nScale\nSpec\nColor\nP1\ncolor\nmap\nKiwi\nCSDR\ngrey\nlinear\nturbo\nSdrDx\ncust1\ncust2\ncust3\ncust4\naper\nman\nauto\nwf\nIIR\nMMA\nEMA\noff\nspec\nIIR\nMMA\nEMA\noff\n"
+  "bodyText": "KPH Site\nHistoric Building - Open to the public on Saturdays - Kiwi rack is in the far corner - TCi530 - Kiwi rack closeup\nKPH Kiwi74\nPoint Reyes National Seashore, Northern California | Grid CM88mc, ASL 30m, [map], SNR 18/18 dB\nAntenna: TCI-530 Omni 3-30 Log Periodic\nMRHS\nYour name or callsign:\n17:25\nUTC\n10:25\nLocal\nAmerica/Los Angeles (PDT)\nPowered by\nLW 243\nNAVTEX\nWSPR\nDSC\nSTANAG DHO26\nSTANAG OUA4\nMWARA CAR\nSTANAG IDN\nMWARA SAT-1,2\nSSTV EU\nFAX ZAF\nSTANAG DHJ58\nFAX GRC\nThe Air Horn\nL marker\nThe Pip\nVOLMET\nR. Mi Amigo Intl\nDSC (distress)\nMWARA SEA-1\nWSPR ISM\nV marker\nFAX THA\nDDH7 GER\nFAX GER\nVMW AUS\nSTANAG PBC\nSTANAG FUM\nMWARA SAT-1\nSTANAG FUG\nHM01 CUB\nSuperDARN radar\nFAX RUS\nFAX AUS\nD marker\nFAX UK\nHFDL ZAF\nHM01 CUB\nSTANAG FUJ\nVMW AUS\nFAX CHN\nPBB NLD\nFAX JPN\nMWARA NAT-B/D/F\nD marker\nFAX GER\nSSTV\nDDH8 GER\nSTANAG FUG\nRWM RUS\nFAX AUS\nFAX GER\nD marker\nFAX CHN\nDSC (distress)\nFAX JPN\nFAX SGP\nHFDL PAN\nFAX ZAF\nSTANAG FUV\nDSC\nNAVTEX\nWWV\nFAX AUS\nFT8\nSSTV\nMWARA NP\nDSC\nFT8\nDSC\nNAVTEX\nFT8\nSSTV\nselect band\nBROADCAST\nLW\nMW\n120m\n90m\n75m\n60m\n49m\n41m\n31m\n25m\n22m\n19m\n16m\n15m\n13m\n11m\nUTILITY\nVLF\nLF\nNDB\nTime 2.5\nTime 3.33\nTime 5\nTime 7.85\nTime 10\nTime 14.67\nTime 15\nTime 20\nAMATEUR\nLF\nMF\n160m\n80m\n60m\n40m\n30m\n20m\n17m\n15m\n12m\n10m\nBEACONS\nIBP 20m\nIBP 17m\nIBP 15m\nIBP 12m\nIBP 10m\nMARINE\nMF\n2 MHz\n4 MHz\n6 MHz\n8 MHz\n12 MHz\n22 MHz\n25 MHz\nAERO\n2 MHz\n3 MHz\n3 MHz\n4 MHz\n5 MHz\n6 MHz\n8 MHz\n10 MHz\n11 MHz\n13 MHz\n15 MHz\n17 MHz\n22 MHz\nMARKERS\n3594\n4558\n5154\n5156 L\n5292 D/B\n6928 V\n7039\n7509\n8000 C\n8495\n10872\n13528\n16332\n20048\nextension\nALE_2G\nant_switch\ncolormap\nCW_decoder\nCW_skimmer\nDRM\nDX spots\nFAX\nFFT\nFSK\nFT8/FT4\nHFDL\nIBP_scan\niframe\nIQ_display\nLoran_C\nNAVTEX/DSC\nnoise_blank\nnoise_filter\nS_meter\nSSTV\nTDoA\ntimecode\nwaterfall\nWSPR\nA\n9\nSpectrum\nAM\nSAM\nDRM\nLSB\nUSB\nCW\nNBFM\nIQ\nRF\nWF0\nAudio\nAGC\nUser\nStat\nOff\nWF ceil\n+5 dB\nWF floor\n0 dB\nWF rate\nfast\nSpec Δ\n0.2 gain\nAuto\nScale\nSpec\nColor\nP1\ncolor\nmap\nKiwi\nCSDR\ngrey\nlinear\nturbo\nSdrDx\ncust1\ncust2\ncust3\ncust4\naper\nman\nauto\nwf\nIIR\nMMA\nEMA\noff\nspec\nIIR\nMMA\nEMA\noff\n"
 }

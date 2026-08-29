@@ -74,7 +74,7 @@
       />
 
       <!-- Waterfall canvas (fills remaining space) -->
-      <div class="kiwi-canvas-area">
+      <div class="kiwi-canvas-area" @mousedown="onCanvasMouseDown" ref="canvasArea">
         <!-- Floating Play button left edge -->
         <button class="kiwi-play-btn" aria-label="Start audio" @click="onToggleAudio()">▶</button>
 
@@ -402,7 +402,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { storeToRefs } from 'pinia'
 import StationInput from '@/components/StationInput.vue'
 import BandScaleBar from '@/components/BandScaleBar.vue'
@@ -431,6 +431,10 @@ const hiMhz = computed(() => hiKhz.value / 1000)
 // Panel state
 const isPanelOpen = ref(true)
 const activeTab = ref<string>('WF0')
+
+// Canvas width for pan calculations
+const canvasWidth = ref(0)
+const canvasArea = ref<HTMLElement | null>(null)
 
 // Time display
 const utcTime = ref('')
@@ -603,6 +607,40 @@ function onWfZoom(delta: number, anchorFrac: number) {
 function onPan(dir: number) {
   const shift = spanKhz.value * 0.5 * dir
   store.setParam('freqKhz', Math.max(0.001, Math.min(30000, store.freqKhz + shift)))
+}
+
+// Pan-Event von Wasserfall-Feld: Mausklick + horizontales Ziehen verschiebt Frequenz
+function onCanvasMouseDown(e: MouseEvent) {
+  // Cpanel und Play-Button vom Pan ausschliessen
+  const target = e.target as HTMLElement
+  if (target.closest('.kiwi-cpanel') || target.closest('.kiwi-play-btn')) return
+
+  const canvas = canvasArea.value || e.currentTarget as HTMLElement
+  nextTick(() => {
+    canvasWidth.value = canvas.clientWidth
+  })
+
+  const startX = e.clientX
+  const startFreq = store.freqKhz
+  const span = spanKhz.value
+
+  function onMouseMove(ev: MouseEvent) {
+    const deltaPx = ev.clientX - startX
+    const deltaKhz = -(deltaPx / canvasWidth.value) * span
+    const newFreq = Math.max(0.001, Math.min(30000, startFreq + deltaKhz))
+    store.setParam('freqKhz', newFreq)
+    canvas.style.cursor = 'grabbing'
+  }
+
+  function onMouseUp() {
+    window.removeEventListener('mousemove', onMouseMove)
+    window.removeEventListener('mouseup', onMouseUp)
+    canvas.style.cursor = 'grab'
+  }
+
+  window.addEventListener('mousemove', onMouseMove)
+  window.addEventListener('mouseup', onMouseUp)
+  canvas.style.cursor = 'grabbing'
 }
 
 onMounted(() => {
@@ -873,6 +911,7 @@ onBeforeUnmount(() => {
   background: #000;
   overflow: hidden;
   min-height: 0;
+  cursor: grab;
 }
 
 /* Floating play button */

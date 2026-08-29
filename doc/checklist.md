@@ -1929,32 +1929,27 @@ implementation plans: `doc/M3-implementation-plan.md` (M3),
 
 #### Bug 7 — Frequenz-Cursor entspricht nicht der KiwiSDR Web UI
 
-> **Status: Offen.** Zoom-abhängige Passband-Repräsentation fehlt — aktueller
-> Cursor schaltet über `zoomLevel` (diskret) statt über Pixel-Breite um und nutzt
-> HTML-`div`s statt Vektor-Grafik. Details + Fix-Plan: `doc/M4c.7-bugs.md` §Bug 7.
+> **Status: Erledigt (2026-08-29).** Cursor als SVG-Overlay mit zwei Zuständen
+> (gelb kollabiert / grün expandiert) + drei Interaktions-Zonen umgesetzt.
+> Details + Research-Ergebnis: `doc/M4c.7-bugs.md` §Bug 7.
 
 - [x] **M4c.7.8a ANALYSE:** `FrequencyRuler.vue` Cursor gegen KiwiSDR-Referenz prüfen.
   IST: gelber Pfeil (`zoomLevel < 9`) / grüne Klammer (`>= 9`), Umschaltung über
   `zoomLevel`, HTML-Divs, keine expliziten `MIN/MAX_BANDWIDTH`-Grenzen.
-  SOLL (KiwiSDR, `jks-prv/KiwiSDR_server` — `ui.js`/`pb.js`/`waterfall.js`):
-  Canvas-2D/Vector-Overlay, Zustandsübergang über Passband-Pixelbreite
-  (`MIN_INTERACTIVE_WIDTH_PX = 30px`), gelbe Trapez-/T-Form (zoomed-out, kein
-  Edge-Resize) vs. grüne Filter-Repräsentation (zoomed-in, Center-Drag + Edge-Resize).
-  Drei Interaktions-Zonen: (1) auf Cursor → low/high-Band ändern, (2) unterhalb des
-  Cursors (Frequenzband) → Cursor bewegen, (3) Spektrometer-Feld → Pan. ✅ 2026-08-29
-- [ ] **M4c.7.8b RESEARCH (Pflicht vor Fix):** Kiwi SDK (`jks-prv/KiwiSDR_server` →
-  `web/kiwi/`, Schlagworte `cursor`/`passband`/`pb_`/`bracket`) + Live-WebUI
-  (**Port 8073/8074 validieren**): exakte Cursor-Geometrie, Pixel-Breiten-Threshold,
-  `MIN/MAX_BANDWIDTH`-Werte verifizieren. → Subagent.
-- [ ] **M4c.7.8c FIX:** Cursor als interaktives SVG-Overlay neu bauen:
-  - Zustand über Pixel-Breite (`< 30px` → gelb/kollabiert, `>= 30px` → grün/expandiert).
-  - Gelb: T-/Trapez-Form, Flanken deaktiviert, nur Cursor-Move (Trägerfrequenz).
-  - Grün: Leiste + Mittellinie + schräge Flanken; Cursor-Move verschiebt,
-    Flanken resizen `low_cut`/`high_cut` unter `MIN_BANDWIDTH`/`MAX_BANDWIDTH`.
-  - **Drei Interaktions-Zonen (Hit-Testing):** (1) auf Cursor-Flanke → low/high ändern,
-    (2) unterhalb des Cursors in der Frequenzband-Anzeige → Cursor bewegen,
-    (3) Spektrometer-Feld → Pan (Frequenzanzeige inkl. Spektrometer verschieben).
-  - Events rechnen Offset über Hz-per-Pixel zurück in Frequenz.
+  SOLL (KiwiSDR, `web/openwebrx/openwebrx.js`): Vektor-Overlay, Zustandsübergang über
+  `passband_visible()` (frequenzbasiert), gelbe T-/Trapez-Form vs. grüne Filter-
+  Repräsentation, drei Interaktions-Zonen. ✅ 2026-08-29
+- [x] **M4c.7.8b RESEARCH (Pflicht vor Fix):** Kiwi SDK (`jks-prv/KiwiSDR_server` →
+  `web/openwebrx/openwebrx.js`, Schlagworte `cursor`/`passband`/`pb_`/`where_clicked`)
+  + Live-WebUI (Port 8074 bestätigt): exakte Cursor-Geometrie, Hit-Testing-Konstanten
+  (`env_slop`/`env_line_click_area`), `min_passband`=4 Hz, `±6000` Hz-Grenzen. ✅ 2026-08-29 → Subagent
+- [x] **M4c.7.8c FIX:** Cursor als interaktives SVG-Overlay neu gebaut:
+  - Zustand über `passband_visible()` (cursorKhz im sichtbaren Fenster) → grün/expandiert, sonst gelb.
+  - Grün: SVG mit `viewBox 0 0 100 26` + `left=loPct%`/`width=bwPct%` (echte Passband-Breite).
+  - Gelb: feste T-/Trapez-Form, nur Cursor-Move.
+  - Hit-Testing: linke Flanke (x=0..15) → `low-cut`, rechte Flanke (x=85..100) → `high-cut`,
+    Körper → `tune`. Clamp über `MIN_PASSBAND_HZ`/`LOW/HIGH_CUT_LIMIT`.
+  - **Pan-Zone** in `PluginView.vue` (`.kiwi-canvas-area`): Frequenzanzeige inkl. Spektrometer. ✅ 2026-08-29
 
 #### Bug 8 — Frequenzband-Skala verhält sich nicht wie die Web UI
 

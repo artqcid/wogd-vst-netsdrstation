@@ -70,7 +70,7 @@ Nach jedem Fix: `reference-matrix.md` aktualisieren (❌ → ✅), E2E-Test schr
 | [Bug 4](#bug-4--dx-tags-fehlen--layout-falsch) | TagArea.vue | Niedrig | Klein | ✅ |
 | [Bug 5](#bug-5--khz-lineal-skaliert-nicht-bei-hohem-zoom) | FrequencyRuler.vue | Mittel | Klein | ✅ |
 | [Bug 6](#bug-6--bedienpanel-61-68) | PluginView.vue | Hoch | Gross | ✅ |
-| [Bug 7](#bug-7--frequenz-cursor-entspricht-nicht-der-kiwisdr-web-ui) | FrequencyRuler.vue | Hoch | Gross | ⬜ |
+| [Bug 7](#bug-7--frequenz-cursor-entspricht-nicht-der-kiwisdr-web-ui) | FrequencyRuler.vue | Hoch | Gross | ✅ |
 | [Bug 8](#bug-8--frequenzband-skala-verhält-sich-nicht-wie-die-web-ui) | FrequencyRuler.vue | Hoch | Mittel | ⬜ |
 | [Bug 9](#bug-9--band--stationsleiste-verhält-sich-nicht-wie-die-web-ui) | BandScaleBar.vue / TagArea.vue | Hoch | Gross | ⬜ |
 | [Bug 10](#bug-10--audio-tab-fehlen-parameter--scrollbar) | PluginView.vue | Hoch | Gross | ⬜ |
@@ -1022,28 +1022,82 @@ linker/rechter Rand **und Kasten grün (breit genug)** → Filterbreite ändern.
    (`id-*-cursor`/`id-*-bracket`) durchsuchen. Exakte Zustandsübergang-Geometrie +
    Interaktions-Zonen verifizieren.
 
+### Research-Ergebnis (2026-08-29, agent:general)
+
+> **Wichtige Korrektur:** Der Passband-Cursor liegt **nicht** in `kiwi.js`/`waterfall.js`,
+> sondern im OpenWebRX-Extension-Framework **`web/openwebrx/openwebrx.js`**.
+
+- **Vier Adjust-Handles** (DOM `id-scale-container`): `pb_adj_car` (Center-Frequenz),
+  `pb_adj_lo` (low cut), `pb_adj_hi` (high cut), `pb_adj_cf` (cf/bw-Anzeige).
+- **Grüner Passband:** eigener Canvas `id-spectrum-pb-canvas`, gezeichnet via
+  `pb_ctx.fillRect(x1, 0, x2-x1, sh)`; `owrx.pbx1/pbx2` aus `where_clicked()`
+  (openwebrx.js ~1061–1062). Farbe **lime**; `spb_color: '#ffffff44'`.
+- **Sichtbarkeit/Zustand:** Passband sichtbar wenn `(x1 > 0 || x2 < sw1) &&
+  wfext.spb_on && owrx.allow_pb_adj` (openwebrx.js:4651); `wfext.spb_on: 1`.
+- **Hit-Zonen** in `where_clicked()` (openwebrx.js ~1028–1062): Flanke → low/high-cut,
+  Mitte → Frequenz, Spektrometer → Pan.
+- **Bandbreiten-Grenzen:** `filter.min_passband` (z. B. 4 Hz analog), mode-spezifisch
+  `kiwi_passbands(subtype).lo/hi`.
+- **Schlüsselfunktionen:** `freq_to_pixel()` (:2569), `passband_visible()` (:2597),
+  `freq_passband_center()` (:6421), `freq_passband(pbc_Hz)` (:6432).
+- **WebUI-Port:** `8074` (bestätigt aus `explore-8074.json` → `url: ...:8074/`).
+
+### Research-Ergebnis — Follow-up (2026-08-29, agent:general)
+
+**Zustandsübergang gelb↔grün (KORREKTUR):** KEINE Pixel-Breiten-Schwelle und kein
+Zoom-Level-Vergleich. Die Entscheidung ist **rein frequenzbasiert** über
+`passband_visible()` (openwebrx.js:1976): Liegt die Passband-**Mittelfrequenz**
+(`freq_passband_center()`) im sichtbaren Wasserfall-Fenster (Bin-Bereich
+`[x_bin, x_bin + bins_at_cur_zoom()]`) → **grün** (auf Spektrum-Canvas). Liegt sie
+außerhalb → **gelb** (nur auf der Skala, `#ffff00`, openwebrx.js:664).
+
+**Hit-Testing (Konstanten, openwebrx.js:666–672):**
+`env_bounding_line_w=5`, `env_att_w=5`, `env_h1=17`, `env_h2=5`,
+`env_line_click_area=8`, `env_slop=5`.
+
+| Region | Pixel-Bereich | Aktion |
+|--------|---------------|--------|
+| Mitte (Line) | `[line_px-4, line_px+4]` | Frequenz verschieben |
+| Linke Flanke (Beginning) | `[from_px, from_px+15]` | low-cut resizen |
+| Rechte Flanke (Ending) | `[to_px-15, to_px]` | high-cut resizen |
+| Körper (whole envelope) | `[from_px, to_px]` | Center verschieben |
+| Außerhalb (Scale-Canvas) | Rest | **Pan** |
+
+(Shift = BFO/PBS, Alt = bwlo/bwhi — optionale Modifier, M4c.7 optional.)
+
+**MIN/MAX-Bandbreite (openwebrx.js:833–837, 1093–1127):**
+- `min_passband = 4` Hz (nur Null-Kollaps-Schutz).
+- `low_cut_limit = -sampleRateDiv2`, `high_cut_limit = +sampleRateDiv2`
+  (Default ±5000 Hz; ±6000 Hz bei 12 kHz Audio-Rate).
+- **Kein separates MAX** — Obergrenze implizit = `high_cut_limit - low_cut_limit`.
+- Validierung: `new_lo >= low_cut_limit`, `new_hi <= high_cut_limit`,
+  `new_hi - new_lo >= min_passband`, `new_lo < new_hi`.
+
+**Passband-Tabelle (openwebrx.js:805–821, mode-spezifisch):**
+`am {-4900,+4900}` · `usb {+300,+2700}` · `lsb {-2700,-300}` · `cw {+300,+700}` ·
+`nbfm {-6000,+6000}` · `iq/drm {-5000,+5000}`.
+
 ### Fix-Plan Bug 7
 
 **Ziel:** Den Cursor als zoom-abhängige **Passband-Repräsentation** neu bauen —
 idealerweise als **absolut positioniertes, interaktives SVG-Overlay** (oder
 dedizierte Canvas-Schicht) exakt über der Frequenzskala.
 
-**Schritt 1 — Zustandsübergang über Pixel-Breite statt `zoomLevel`:**
+**Schritt 1 — Zustandsübergang über `passband_visible()` statt Pixel-Breite/`zoomLevel`:**
 
 ```ts
-const MIN_INTERACTIVE_WIDTH_PX = 30
-
-// Passband-Pixelbreite aus Hz-per-Pixel:
-//   spanKhz = viewHighKhz - viewLowKhz
-//   pxPerKhz = scaleEl.clientWidth / spanKhz
-//   passbandKhz = (highCutHz - lowCutHz) / 1000
-//   passbandPx = passbandKhz * pxPerKhz
-// Zustand: passbandPx < MIN_INTERACTIVE_WIDTH_PX  → "zoomed-out" (gelb)
-//          passbandPx >= MIN_INTERACTIVE_WIDTH_PX → "zoomed-in"  (grün)
+// KORREKTUR (Research): der Zustand hängt NICHT von einer 30px-Schwelle ab,
+// sondern davon, ob die Passband-Mitte im sichtbaren Frequenzfenster liegt.
+const isZoomedIn = computed(() =>
+  store.freqKhz >= props.viewLowKhz && store.freqKhz <= props.viewHighKhz
+)
+// isZoomedIn  → grün (expandierte Filter-Repräsentation)
+// !isZoomedIn → gelb (kollabierte T-/Trapez-Form)
 ```
 
-Der `zoomLevel`-Prop bleibt nur als indirekter Einfluss erhalten (er bestimmt den
-Span und damit die Pixel-Breite); die **Entscheidung** trifft die Pixel-Breite.
+`zoomLevel`/Pixel-Breite bleiben nur indirekt relevant (sie bestimmen den Span und
+damit `viewLow/HighKhz`); die **Entscheidung** trifft die Frequenz-Position
+(`freq_passband_center()`-Äquivalent = `cursorKhz`).
 
 **Schritt 2 — Zustand "Zoomed-Out" (gelb, kollabiert):**
 
@@ -2130,3 +2184,4 @@ Die E2E-Tests aus M4b-Zeiten (`.kiwi-control-panel`, `[data-testid="..."]`) wurd
 | 2026-08-29 | **Bug 13 erfasst:** "Spec RF"-Button soll funktionieren (Spektrumanalysator-Top-View fehlt) — Analyse + Fix-Plan dokumentiert, noch offen |
 | 2026-08-29 | **Bug 14 erfasst:** "Spec AF"-Button soll funktionieren (AF-Spektrumanalysator mit Center-Linie + Filtergrenzen fehlt) — Analyse + Fix-Plan dokumentiert, noch offen |
 | 2026-08-29 | **Bug 15 erfasst:** DRM-Tab (Button) funktioniert nicht (Schedule/Services-Overlay + Decoder-Panel + DRM-Bandbreite fehlen; Research-Pflicht) — Analyse + Fix-Plan dokumentiert, noch offen |
+| 2026-08-29 | **Bug 7 umgesetzt:** Research (openwebrx.js, Port 8074) + Cursor als SVG-Overlay (passband_visible-Zustand, drei Hit-Zonen, MIN/MAX-Clamp) + Pan-Zone im Wasserfall — vue-tsc + Vitest 112/112 + E2E 85/85 grün |

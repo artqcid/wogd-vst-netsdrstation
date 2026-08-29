@@ -15,6 +15,33 @@ Frequenz-Cursors präzisiert (drei getrennte Klick+Halten-Zonen):
 **Update:** [`checklist.md`](./checklist.md) — M4c.7.8a (Analyse) + M4c.7.8b (Fix)
 um die drei Zonen ergänzt.
 
+## 2026-08-29 — M4c.7 Bug 7 umgesetzt: Frequenz-Cursor als SVG-Overlay (Research + Implementierung)
+
+**Update:** [`M4c.7-bugs.md`](./M4c.7-bugs.md) §Bug 7 — erster offener Bug umgesetzt.
+
+**Research (2 Subagents, `jks-prv/KiwiSDR_server`):**
+- Korrektur: Cursor liegt in `web/openwebrx/openwebrx.js` (OpenWebRX-Framework),
+  nicht in `kiwi.js`/`waterfall.js`. WebUI-Port **8074** bestätigt.
+- Zustandsübergang gelb↔grün ist **frequenzbasiert** (`passband_visible()`: liegt die
+  Passband-Mitte im sichtbaren Fenster?), NICHT Pixel-Breite/Zoom-Level.
+- Vier Adjust-Handles (`pb_adj_car/lo/hi/cf`), Hit-Testing-Konstanten
+  (`env_slop=5`, `env_line_click_area=8`), `min_passband=4 Hz`, `±6000 Hz`-Grenzen.
+
+**Implementierung (2 Subagents + Primary-Fix):**
+- `FrequencyRuler.vue`: Cursor als SVG-Overlay (grün `viewBox 0 0 100 26`,
+  `left=loPct%`/`width=bwPct%` = echte Passband-Breite; gelb = feste T-/Trapez-Form).
+  Drei Hit-Zonen: Flanke lo/hi (resize) + Körper (tune), Clamp über
+  `MIN_PASSBAND_HZ`/`LOW/HIGH_CUT_LIMIT`. Primary fixte fehlende `cursorWidth`-Konstante.
+- `PluginView.vue`: Pan-Zone in `.kiwi-canvas-area` (Klick+Ziehen verschiebt
+  Frequenzanzeige inkl. Spektrometer; Cpanel/Play-Button ausgenommen).
+
+**Verifikation (Primary):** vue-tsc clean, Vitest 112/112, Playwright 85/85 (1 skipped).
+
+**Geänderte Dateien (6):**
+- `ui/src/components/FrequencyRuler.vue`, `ui/src/views/PluginView.vue`
+- `doc/M4c.7-bugs.md` (Bug 7 ✅ + Research-Ergebnis), `doc/checklist.md` (8a/8b/8c ✅)
+- `doc/index.md`, `doc/log.md`
+
 ## 2026-08-29 — M4c.7: Research-Pflicht als fixe Anweisung pro Bug + WebUI-Port-Validierung
 
 **Update:** [`M4c.7-bugs.md`](./M4c.7-bugs.md) + [`checklist.md`](./checklist.md) —

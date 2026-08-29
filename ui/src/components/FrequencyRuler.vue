@@ -13,21 +13,105 @@
         >{{ tick.label }}</span>
       </template>
     </div>
-    <!-- Cursor overlay (positioned absolutely over the scale) -->
-    <div class="freq-ruler__cursor" v-if="zoomLevel < 9"
-      :style="{ left: cursorPct + '%' }"
-      @mousedown.prevent="onCursorMouseDown">
-      <div class="freq-ruler__cursor-arrow"></div>
-    </div>
-    <div class="freq-ruler__cursor-bracket" v-else
-      :style="{ left: loPct + '%', width: bwPct + '%' }"
-      @mousedown.prevent="onCursorMouseDown">
-      <div class="freq-ruler__bracket-handle freq-ruler__bracket-handle--left"
-        @mousedown.stop="onLoMouseDown"></div>
-      <div class="freq-ruler__bracket-body"></div>
-      <div class="freq-ruler__bracket-handle freq-ruler__bracket-handle--right"
-        @mousedown.stop="onHiMouseDown"></div>
-    </div>
+    <!-- SVG cursor overlay — green (expanded / zoomed-in): passband width drawn in scale units -->
+    <svg
+      class="freq-ruler__cursor-svg"
+      :style="{ left: loPct + '%', width: Math.max(bwPct, 2) + '%' }"
+      v-if="isZoomedIn"
+      viewBox="0 0 100 26"
+      preserveAspectRatio="none"
+      @mousedown.prevent="onCursorMouseDown"
+    >
+      <!-- Body hit area (tune) — full passband width -->
+      <rect class="cursor-hit cursor-hit--body"
+        x="0" y="0"
+        width="100"
+        height="26"
+        @mousedown.stop="onBodyMouseDown"
+      />
+      <!-- Left flank hit area (low-cut resize) — x=0..15 in viewBox coords -->
+      <rect class="cursor-hit cursor-hit--lo"
+        x="0" y="0"
+        width="15"
+        height="26"
+        @mousedown.stop="onLoMouseDown"
+      />
+      <!-- Right flank hit area (high-cut resize) — x=85..100 in viewBox coords -->
+      <rect class="cursor-hit cursor-hit--hi"
+        x="85" y="0"
+        width="15"
+        height="26"
+        @mousedown.stop="onHiMouseDown"
+      />
+      <!-- Upper horizontal bar = exact passband (full viewBox width) -->
+      <rect class="cursor-bar-top"
+        x="0" y="2"
+        width="100"
+        height="4"
+        fill="#00FF00"
+      />
+      <!-- Center vertical line = carrier -->
+      <line class="cursor-center-line"
+        x1="50" y1="2"
+        x2="50" y2="24"
+        stroke="#00FF00"
+        stroke-width="1.5"
+      />
+      <!-- Left flank (filter roll-off) — body left edge x=15 -->
+      <polygon class="cursor-flap cursor-flap--lo"
+        points="15,6 15,24 9,24"
+        fill="#00FF00"
+        opacity="0.7"
+      />
+      <!-- Right flank (filter roll-off) — body right edge x=85 -->
+      <polygon class="cursor-flap cursor-flap--hi"
+        points="85,6 85,24 91,24"
+        fill="#00FF00"
+        opacity="0.7"
+      />
+    </svg>
+    <svg
+      class="freq-ruler__cursor-svg"
+      :style="{ left: cursorPct + '%', width: cursorWidth + 'px' }"
+      v-else
+      @mousedown.prevent="onCursorMouseDown"
+    >
+      <!-- Body hit area (tune) — whole cursor is draggable -->
+      <rect class="cursor-hit cursor-hit--body"
+        x="0" y="0"
+        :width="cursorWidth"
+        height="26"
+        @mousedown.stop="onBodyMouseDown"
+      />
+      <!-- Yellow collapsed T/trapezoid shape -->
+      <!-- Top horizontal bar -->
+      <rect class="cursor-bar-top"
+        x="cursorWidth / 2 - 12"
+        y="2"
+        width="24"
+        height="4"
+        fill="#ffff00"
+      />
+      <!-- Left diagonal (trapezoid upper-left) -->
+      <polygon class="cursor-flap cursor-flap--lo"
+        points="cursorWidth / 2 - 12,6 cursorWidth / 2 - 12,24 cursorWidth / 2 - 18,24"
+        fill="#ffff00"
+        opacity="0.7"
+      />
+      <!-- Right diagonal (trapezoid upper-right) -->
+      <polygon class="cursor-flap cursor-flap--hi"
+        points="cursorWidth / 2 + 12,6 cursorWidth / 2 + 12,24 cursorWidth / 2 + 18,24"
+        fill="#ffff00"
+        opacity="0.7"
+      />
+      <!-- Center tick -->
+      <line class="cursor-center-line"
+        x1="cursorWidth / 2" y1="2"
+        x2="cursorWidth / 2" y2="24"
+        stroke="#ffff00"
+        stroke-width="1.5"
+      />
+    </svg>
   </div>
 </template>
 
@@ -117,12 +201,22 @@ function formatFreq(khz: number): string {
 
 // ---- Cursor overlay computed positions ----
 
+const MIN_PASSBAND_HZ = 4        // min_passband
+const LOW_CUT_LIMIT_HZ = -6000   // low_cut_limit (12 kHz Audio-Rate)
+const HIGH_CUT_LIMIT_HZ = 6000   // high_cut_limit
+const cursorWidth = 40           // yellow collapsed cursor width (iconic T-shape)
+
+const isZoomedIn = computed(() =>
+  props.cursorKhz >= props.viewLowKhz && props.cursorKhz <= props.viewHighKhz
+)
+
 const cursorPct = computed(() => {
   const span = props.viewHighKhz - props.viewLowKhz
   if (span <= 0) return 0
   return ((props.cursorKhz - props.viewLowKhz) / span) * 100
 })
 
+// bwPct as 0..100 over scale (used by green SVG: left=loPct%, width=bwPct%)
 const loPct = computed(() => {
   const span = props.viewHighKhz - props.viewLowKhz
   if (span <= 0) return 0
@@ -152,19 +246,24 @@ interface DragState {
 let dragState: DragState | null = null
 
 function onCursorMouseDown(e: MouseEvent) {
+  // Legacy: full-cursor drag (body zone) — delegated from body hit area
+  onBodyMouseDown(e)
+}
+
+function onBodyMouseDown(e: MouseEvent) {
   dragState = { type: 'cursor', startX: e.clientX, startFreq: props.cursorKhz, startLo: 0, startHi: 0 }
   window.addEventListener('mousemove', onDragMove)
   window.addEventListener('mouseup', onDragUp)
 }
 
 function onLoMouseDown(e: MouseEvent) {
-  dragState = { type: 'lo', startX: e.clientX, startFreq: 0, startLo: props.lowCutHz, startHi: 0 }
+  dragState = { type: 'lo', startX: e.clientX, startFreq: 0, startLo: props.lowCutHz, startHi: props.highCutHz }
   window.addEventListener('mousemove', onDragMove)
   window.addEventListener('mouseup', onDragUp)
 }
 
 function onHiMouseDown(e: MouseEvent) {
-  dragState = { type: 'hi', startX: e.clientX, startFreq: 0, startLo: 0, startHi: props.highCutHz }
+  dragState = { type: 'hi', startX: e.clientX, startFreq: 0, startLo: props.lowCutHz, startHi: props.highCutHz }
   window.addEventListener('mousemove', onDragMove)
   window.addEventListener('mouseup', onDragUp)
 }
@@ -175,19 +274,23 @@ function onDragMove(e: MouseEvent) {
   const el = scaleEl.value
   if (!el || span <= 0) return
   const rect = el.getBoundingClientRect()
-  const deltaFrac = (e.clientX - dragState.startX) / rect.width
-  const deltaKhz = deltaFrac * span
+  const pxPerKhz = rect.width / span
+  const deltaHz = (e.clientX - dragState.startX) * pxPerKhz * 1000
 
   if (dragState.type === 'cursor') {
-    const newFreq = Math.max(props.viewLowKhz, Math.min(props.viewHighKhz, dragState.startFreq + deltaKhz))
+    const newFreq = Math.max(props.viewLowKhz, Math.min(props.viewHighKhz, dragState.startFreq + deltaHz / 1000))
     emit('tune', newFreq)
   } else if (dragState.type === 'lo') {
-    const newLo = Math.min(props.highCutHz - 100, dragState.startLo + deltaKhz * 1000)
+    const newLo = clamp(dragState.startLo + deltaHz, LOW_CUT_LIMIT_HZ, dragState.startHi - MIN_PASSBAND_HZ)
     emit('low-cut', newLo)
   } else if (dragState.type === 'hi') {
-    const newHi = Math.max(props.lowCutHz + 100, dragState.startHi + deltaKhz * 1000)
+    const newHi = clamp(dragState.startHi + deltaHz, dragState.startLo + MIN_PASSBAND_HZ, HIGH_CUT_LIMIT_HZ)
     emit('high-cut', newHi)
   }
+}
+
+function clamp(v: number, lo: number, hi: number): number {
+  return Math.max(lo, Math.min(hi, v))
 }
 
 function onDragUp() {
@@ -255,80 +358,59 @@ function onWheel(e: WheelEvent) {
   pointer-events: none;
 }
 
-/* Cursor overlay */
-.freq-ruler__cursor {
+/* SVG cursor overlay */
+.freq-ruler__cursor-svg {
   position: absolute;
   top: 0;
-  bottom: 0;
-  width: 0;
+  height: 26px;
   z-index: 2;
-  pointer-events: none;
+  overflow: visible;
+  pointer-events: none;  /* root passes through, hit-rects handle events */
   transform: translateX(-50%);
+}
+
+.cursor-hit {
+  fill: transparent;
+  pointer-events: auto;
   cursor: ew-resize;
 }
 
-.freq-ruler__cursor > * {
-  pointer-events: auto;
+.cursor-hit--body {
+  cursor: ew-resize;  /* tune drag */
 }
 
+.cursor-hit--lo,
+.cursor-hit--hi {
+  cursor: ew-resize;  /* flank resize */
+}
+
+.cursor-bar-top {
+  pointer-events: none;
+}
+
+.cursor-center-line {
+  pointer-events: none;
+}
+
+.cursor-flap {
+  pointer-events: none;
+}
+
+/* Legacy bracket/cursor styles preserved for any external CSS selector — now unused */
 .freq-ruler__cursor-arrow {
-  position: absolute;
-  top: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 0;
-  height: 0;
-  border-left: 6px solid transparent;
-  border-right: 6px solid transparent;
-  border-top: 8px solid #FFD700;
-  filter: drop-shadow(0 0 2px rgba(255,215,0,0.5));
+  display: none;
 }
 
 .freq-ruler__cursor::after {
-  content: '';
-  position: absolute;
-  top: 8px;
-  bottom: 0;
-  left: 50%;
-  width: 2px;
-  background: #FFD700;
-  transform: translateX(-50%);
-  box-shadow: 0 0 3px rgba(255,215,0,0.5);
+  display: none;
 }
 
-/* Bracket cursor (green, high zoom) */
 .freq-ruler__cursor-bracket {
-  position: absolute;
-  top: 2px;
-  height: 22px;
-  z-index: 2;
-  pointer-events: none;
-  display: flex;
-  align-items: stretch;
-  cursor: ew-resize;
+  display: none;
 }
 
-.freq-ruler__cursor-bracket > * {
-  pointer-events: auto;
-}
-
-.freq-ruler__bracket-body {
-  flex: 1;
-  background: rgba(0, 255, 0, 0.08);
-  border-top: 2px solid #00FF00;
-  border-bottom: 2px solid #00FF00;
-  position: relative;
-}
-
+.freq-ruler__bracket-body,
 .freq-ruler__bracket-handle {
-  width: 4px;
-  background: #00FF00;
-  cursor: ew-resize;
-  border-radius: 2px;
-}
-
-.freq-ruler__bracket-handle:hover {
-  background: #66FF66;
-  width: 6px;
+  display: none;
 }
 </style>
