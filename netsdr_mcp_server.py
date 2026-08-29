@@ -81,7 +81,7 @@ RAG_SCHEMA_VERSION = 6
 
 # Languages to index and their file extensions.
 # `.md` is included so that the central guide
-# (WORKSPACE_AGENT_PROMPT.md, AGENTS.md, docs) is searchable via RAG.
+# (AGENTS.md, docs) is searchable via RAG.
 RAG_LANGUAGE_EXTENSIONS = {
     ".cpp": "cpp",
     ".hpp": "cpp",
@@ -1297,7 +1297,7 @@ def index_project_code(directory_path: str) -> str:
     """Index the project directory into the SQLite RAG database (netsdr_rag.db).
 
     Recursively scans for C++ files (.cpp/.h/.hpp/.cc/.cxx/.c), Python files
-    (.py) and Markdown docs (.md, incl. AGENTS.md/WORKSPACE_AGENT_PROMPT.md)
+    (.py) and Markdown docs (.md, incl. AGENTS.md)
     and splits them **structurally** instead of into fixed line blocks: Python
     via `ast` (classes/functions/methods), C++ via a brace-based scanner
     (functions/classes/methods/namespaces), Markdown by headings. Each chunk

@@ -7,34 +7,20 @@ All agent rules, instructions, and agent-facing documentation in this workspace
 (`.opencode/skills/**/SKILL.md`), agent system prompts, and any other
 agent-facing configuration.
 
-## Project Overview
+## Mandatory Workflow (single source of truth for ALL agents)
 
-`wogd-vst-netsdrstation` is a native VST3/AU/CLAP audio plugin that streams SDR
-audio from KiwiSDR servers (WebSocket port 8073, IMA ADPCM) into a DAW.
-Three-thread model: GUI / DSP / network worker. C++20 + VST3 SDK + CMake.
-Full detail: `doc/architecture.md`.
+This section is the **single source of truth** for every workflow rule in this
+workspace. It applies to all workspace agents: `ARCHITECT`,
+`ARCHITECT_Openrouter`, `BUILD`, `BUILD_Openrouter`, `DEV`, `DEV_OpenRouter`,
+`DEV_JUNIOR_Openrouter`. The global agents `build` and `plan` are NOT
+workspace-specific and must never receive workspace-specific prompts or settings.
 
-## Project Main Notebook (NotebookLM devblogs)
-
-The main notebook for this project is **NetSDRStation-VST**.
-
-- **Notebook ID:** `8b6898aa-c3f4-4a89-8304-da9af60cf0e4`
-- **URL:** https://notebook.google.com/notebook/8b6898aa-c3f4-4a89-8304-da9af60cf0e4
-- **MCP Server:** `notebooklm_devblogs`
-- **Source count:** 19
-
-All NotebookLM work for this project (notes, research, reports, sources)
-runs through this notebook.
-
-## Autopilot Mode (Primary Agents)
-
-All primary agents run in full autopilot mode at all times:
+### Autopilot mode (no permission prompts)
 
 - **No permission prompts.** All tools are allowed (edit, bash, read, glob,
   grep, list, task, todowrite, question, webfetch, websearch, skill, external_directory).
 - **Work outside the workspace is always allowed** without asking.
-- **Todo-first workflow (mandatory):** Before starting ANY work on a task,
-  the agent MUST:
+- **Todo-first workflow (mandatory):** before starting ANY work on a task:
   1. Break the task into concrete, ordered steps.
   2. Create a todo list via `todowrite` with each step marked `pending`.
   3. Present the plan to the user in the response.
@@ -43,30 +29,36 @@ All primary agents run in full autopilot mode at all times:
 - **Once the plan is confirmed and execution begins**, never ask for
   permission again — proceed autonomously until the task is complete.
 
-This applies to all workspace-specific primary agents: `ARCHITECT`,
-`ARCHITECT_Openrouter`, `BUILD`, `BUILD_Openrouter`, `DEV`, `DEV_OpenRouter`,
-`DEV_JUNIOR_Openrouter`.
-The global agents `build` and `plan` are NOT workspace-specific and must never
-receive workspace-specific prompts or settings.
+### MCP-First workflow (RAG / Code-Wiki)
 
-## Role & Delegation Model
+The workspace provides a local RAG + Code-Wiki MCP server (`netsdr_rag`,
+see `netsdr_mcp_server.py`). Tools: `index_project_code`, `query_code_rag`,
+`query_code_wiki`, `get_rag_chunk` (called with server prefix, e.g.
+`netsdr_rag_query_code_wiki`).
 
-Primary agents form a responsibility hierarchy:
+1. **`doc/index.md`** — first place to look: find the relevant concept file
+   (architecture, plan, checklist, etc.).
+2. `doc/architecture.md` — detailed architecture knowledge (read directly).
+3. **`query_code_wiki("<symbol>")`** — signature, file, line number.
+4. **Only if knowledge is missing:** `query_code_rag(..., format="compact")`.
+5. **Only load the needed chunk:** `get_rag_chunk("<id>")`.
+6. Verify in the real code (path + line).
+7. **After a change:** `index_project_code` — wiki stays current.
 
-- **ARCHITECT / ARCHITECT_Openrouter** — decides and validates architectural
-  questions.
-- **BUILD / BUILD_Openrouter** — senior dev; considers every change project-wide.
-- **DEV / DEV_OpenRouter** — implements the assigned task, stays scoped.
-- **DEV_JUNIOR_Openrouter** — small, well-defined, self-contained tasks.
+**MCP-FIRST (no exceptions):**
+- `doc/code_wiki.md` must NEVER be loaded via `read()` — query via MCP.
+- Every agent with MCP access MUST use `query_code_wiki` / `query_code_rag` / `get_rag_chunk`.
+- Project and SDK files should be read only with `offset`/`limit` — never whole files.
+- Anything found once via MCP is never searched again.
 
-Delegation:
+### Subagent rules
 
+**Delegation:**
 - Escalate architectural questions upward: DEV → BUILD → ARCHITECT.
 - Delegate small, focused implementation/search tasks to subagents
-  (`general`, `explore`); subagents never build/test (see Subagent Rules).
+  (`general`, `explore`); subagents never build/test (see below).
 
-## Subagent Rules (Build & Test Ownership)
-
+**Build & test ownership:**
 - **Subagents must NEVER build or run tests.** This is always the job of the
   primary agent.
 - When a subagent has finished implementing, the **primary agent** takes over
@@ -75,8 +67,7 @@ Delegation:
 - Give subagents small, focused tasks; the primary agent always verifies the
   result (code review + build + test).
 
-## Subagent Rules (MCP Access)
-
+**MCP access:**
 - **Subagents have MCP access to `netsdr_rag`** (RAG + Code-Wiki tools:
   `query_code_wiki`, `query_code_rag`, `get_rag_chunk`). They may use these
   directly — the primary agent no longer needs to pre-fetch context.
@@ -88,45 +79,8 @@ Delegation:
   must not access these servers.
 - **After a subagent finishes**, the primary agent runs `index_project_code`
   to keep the wiki current (subagents cannot do this themselves).
-- Subagents must still be given small, focused tasks; the primary agent always
-  verifies the result (code review + build + test).
 
-## MCP-First Workflow (RAG / Code-Wiki)
-
-The workspace provides a local RAG + Code-Wiki MCP server (`netsdr_rag`,
-see `netsdr_mcp_server.py`). Tools: `index_project_code`, `query_code_rag`,
-`query_code_wiki`, `get_rag_chunk` (called with server prefix, e.g.
-`netsdr_rag_query_code_wiki`).
-
-**Primary navigation (LLM-Wiki, OKF v0.2):**
-- **`doc/index.md`** — Karpathy-style knowledge catalog (1-line summaries,
-  categories, links to all concept files). The FIRST place any agent looks
-  to find the right document.
-- **`doc/log.md`** — Append-only chronological changelog (newest first,
-  parseable with `grep "^## "`).
-
-**Mandatory workflow (no exceptions):**
-1. **`doc/index.md`** -> find the relevant concept file (architecture, plan, checklist, etc.)
-2. `doc/architecture.md` -> detailed architecture knowledge (manually maintained)
-3. **`query_code_wiki("<symbol>")`** -> signature, file, line number
-4. **Only if knowledge is missing:** `query_code_rag(..., format="compact")`
-5. **Only load the needed chunk:** `get_rag_chunk("<id>")`
-6. Verify in the real code (path + line)
-7. **After a change:** `index_project_code` -> wiki stays current
-
-**MCP-FIRST (no exceptions):**
-- `doc/code_wiki.md` must NEVER be loaded via `read()` - query via MCP.
-- Every agent with MCP access MUST use `query_code_wiki` / `query_code_rag` / `get_rag_chunk`.
-- Project and SDK files should be read only with `offset`/`limit` - never whole files.
-- Anything found once via MCP is never searched again.
-
-**Post-Task Sync (after each completed task):**
-- Run `index_project_code` so the wiki stays current.
-- Run `pwsh doc/lint.ps1` to check for orphan pages, stale claims,
-  duplicate entries and contradictions.
-- If not possible (no MCP access): explicitly report that sync is pending.
-
-## Definition of Done
+### Definition of Done
 
 A task is complete only when ALL of the following hold:
 
@@ -139,6 +93,41 @@ A task is complete only when ALL of the following hold:
 
 Release builds need the UI target first (`--target netsdrstation_ui`); full
 build/debug/hot-reload workflow: `doc/workspace-workflow.md`.
+
+**Post-Task Sync (after each completed task):**
+- Run `index_project_code` so the wiki stays current.
+- Run `pwsh doc/lint.ps1` to check for orphan pages, stale claims,
+  duplicate entries and contradictions.
+- If not possible (no MCP access): explicitly report that sync is pending.
+
+## Project Overview
+
+`wogd-vst-netsdrstation` is a native VST3/AU/CLAP audio plugin that streams SDR
+audio from KiwiSDR servers (WebSocket port 8073, IMA ADPCM) into a DAW.
+Three-thread model: GUI / DSP / network worker. C++20 + VST3 SDK + CMake.
+Full detail: `doc/architecture.md`.
+
+## Role & Delegation Model
+
+Primary agents form a responsibility hierarchy:
+
+- **ARCHITECT / ARCHITECT_Openrouter** — decides and validates architectural
+  questions.
+- **BUILD / BUILD_Openrouter** — senior dev; considers every change project-wide.
+- **DEV / DEV_OpenRouter** — implements the assigned task, stays scoped.
+- **DEV_JUNIOR_Openrouter** — small, well-defined, self-contained tasks.
+
+## Project Main Notebook (NotebookLM devblogs)
+
+The main notebook for this project is **NetSDRStation-VST**.
+
+- **Notebook ID:** `8b6898aa-c3f4-4a89-8304-da9af60cf0e4`
+- **URL:** https://notebook.google.com/notebook/8b6898aa-c3f4-4a89-8304-da9af60cf0e4
+- **MCP Server:** `notebooklm_devblogs`
+- **Source count:** 19
+
+All NotebookLM work for this project (notes, research, reports, sources)
+runs through this notebook.
 
 ## Wiki Lint Workflow (Phase 4 — automatic, runs on every Post-Task Sync)
 

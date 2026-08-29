@@ -3,6 +3,28 @@
 _Append-only, newest first. Parseable with `grep "^## "`. Entries use
 `**Creation**`, `**Update**` or `**Deprecation**` prefix + linked concept file._
 
+## 2026-08-29 — AGENTS.md konsolidiert: Single Source of Truth für alle Agenten
+
+**Update:** [`AGENTS.md`](./AGENTS.md) — Alle verbindlichen Workflow-Regeln
+(Autopilot/Todo-first, MCP-First, Subagent-Regeln, Definition of Done) in EINE
+prominente Sektion **"Mandatory Workflow"** am Dateianfang konsolidiert.
+Vorher waren sie über 6 getrennte Sektionen verstreut, was bei schwächeren
+Modellen zu Befolgungsverlust führte. Referenz-Sektionen (Project Overview,
+Role & Delegation, Wiki Lint, Knowledge-Sync, Logging, etc.) bleiben unterhalb
+erhalten.
+
+**Löschung:** `WORKSPACE_AGENT_PROMPT.md` — duplizierte die MCP-First-Regeln
+(zweite Quelle); entfernt, um die Single-Source-of-Truth-Garantie zu erzwingen.
+
+**Update:** `netsdr_mcp_server.py` — Kommentare bereinigt (Verweise auf die
+gelöschte Datei entfernt).
+
+Hintergrund: Commit `4b841b9` hatte die Regeln aus den Agenten-System-Prompts
+entfernt und nur in AGENTS.md belassen ("System-Prompts auf Identität+Rolle
+reduziert"); damit verloren sie ihre Prominenz. Die Agenten-Definitionen bleiben
+bewusst global (`~/.config/opencode/agent/*.md`, wiederverwendbar), die Regeln
+liegen workspace-lokal und zentral in AGENTS.md.
+
 ## 2026-08-29 — M4c.7 Bugs implementiert (6 Bugs, 13 Dateien)
 
 **Update:** [`M4c.7-bugs.md`](./M4c.7-bugs.md) — Alle 6 Bugs implementiert.
