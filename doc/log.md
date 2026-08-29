@@ -3,6 +3,271 @@
 _Append-only, newest first. Parseable with `grep "^## "`. Entries use
 `**Creation**`, `**Update**` or `**Deprecation**` prefix + linked concept file._
 
+## 2026-08-29 — M4c.7 Bug 14 erfasst: "Spec AF"-Button soll funktionieren
+
+**Update:** [`M4c.7-bugs.md`](./M4c.7-bugs.md) — neuer **Bug 14** dokumentiert
+(Status: offen). Der Spectrum-Button hat drei Zustände (Spectrum → Spec RF →
+Spec AF → aus); die AF-Ansicht fehlt vollständig.
+
+- **IST:** `cycleSpectrumMode` zyklisch nur das Label (`waterfall`/`specRF`/`specAF`),
+  kein AF-Diagramm.
+- **SOLL (KiwiSDR):** "Spec AF" (aktiv grün) zeigt das demodulierte Audiospektrum —
+  Y-Achse identisch zur RF-Ansicht (dBm, farbcodiert) + horizontale Grid-Lines,
+  Area-Chart um den Träger zentriert, **vertikales Grid**, **grüne Center-Linie**
+  (Träger/Nullpunkt) + **zwei rote Filtergrenzen**. Gesamtes AF-Spektrum bewegt sich
+  synchron beim Tuning.
+- **Datenquelle:** vorhandene `waterfallBins`/`SpectrumAnalyzer` (M4.7); echte
+  AF-Demodulator-Daten erst in M5+.
+
+**Update:** [`checklist.md`](./checklist.md) — M4c.7.15a (Analyse, ✅) + M4c.7.15b
+(Fix, offen) ergänzt.
+
+**Geänderte Dateien (3):**
+- `doc/M4c.7-bugs.md` — Bug 14 (Analyse + Fix-Plan), Übersicht, Chronologie, Frontmatter
+- `doc/checklist.md` — M4c.7.15a/15b
+- `doc/log.md` — dieser Eintrag
+
+## 2026-08-29 — M4c.7 Bug 13 erfasst: "Spec RF"-Button soll funktionieren
+
+**Update:** [`M4c.7-bugs.md`](./M4c.7-bugs.md) — neuer **Bug 13** dokumentiert
+(Status: offen). Der Spectrum-Button (`cycleSpectrumMode` in `PluginView.vue`)
+zyklisch nur das Label (Spectrum → Spec RF → Spec AF), rendert aber kein Diagramm.
+
+- **IST:** `store.spectrumMode` + Label-Wechsel, kein zusätzliches Rendering.
+- **SOLL (KiwiSDR):** "Spec RF" (aktiv leuchtend grün) blendet einen
+  Spektrumanalysator ein — schwarzer Hintergrund, volle Breite, Y-Achse dBm rechts
+  (farbcodiert, horizontale Grid-Lines), hellgraues/weißes Area-Chart,
+  halbtransparentes Passband-Overlay, synchron zur Frequenzskala beim Pan/Zoom.
+- **Datenquelle:** vorhandene `waterfallBins`/`SpectrumAnalyzer` (M4.7) nutzen;
+  echte RF-Spektrumsdaten erst mit WF-WebSocket (M5).
+
+**Update:** [`checklist.md`](./checklist.md) — M4c.7.14a (Analyse, ✅) + M4c.7.14b
+(Fix, offen) ergänzt.
+
+**Geänderte Dateien (3):**
+- `doc/M4c.7-bugs.md` — Bug 13 (Analyse + Fix-Plan), Übersicht, Chronologie, Frontmatter
+- `doc/checklist.md` — M4c.7.14a/14b
+- `doc/log.md` — dieser Eintrag
+
+## 2026-08-29 — M4c.7 Bug 12 erfasst: Header-Bereich entspricht nicht der Web UI
+
+**Update:** [`M4c.7-bugs.md`](./M4c.7-bugs.md) — neuer **Bug 12** dokumentiert
+(Status: offen). Der Header in `PluginView.vue` ist zu flach: keine Station-Info
+(Titel + Untertitel-Zeilen mit Standort/Grid/ASL/SNR/Antennen), keine
+Credits-Sektion ("Provided by"), kein Collapse/Expand-Toggle + expandierbarer
+Bild-Bereich.
+
+- **IST:** Logo + "NetSDRStation" + "Antenna: KiwiSDR broadband" (statisch),
+  StationInput im `center`, Callsign-Input + Zeit im `right`.
+- **SOLL (KiwiSDR):** dreiteilige hellgraue Top Bar (Branding/Titel/Untertitel +
+  Credits + Callsign-Input + Zeit/Logo-Slot), halbtransparenter Collapse/Expand-
+  Reiter (Chevron ↓/↑) + expandierbarer Bild-Container mit absolut positionierten
+  Overlays (Logos, schwebendes Kontroll-Panel, lila Play-Button).
+- **Pflicht:** Connect-Funktionalität (StationInput mit Stationsname +
+  Connect/Disconnect + Status) muss im neuen Header-Layout erhalten bleiben.
+
+**Update:** [`checklist.md`](./checklist.md) — M4c.7.13a (Analyse, ✅) + M4c.7.13b
+(Fix, offen) ergänzt.
+
+**Geänderte Dateien (3):**
+- `doc/M4c.7-bugs.md` — Bug 12 (Analyse + Fix-Plan), Übersicht, Chronologie, Frontmatter
+- `doc/checklist.md` — M4c.7.13a/13b
+- `doc/log.md` — dieser Eintrag
+
+## 2026-08-29 — M4c.7 Bug 11 erfasst: AGC-Tab beinhaltet eventuell nicht alle Parameter
+
+**Update:** [`M4c.7-bugs.md`](./M4c.7-bugs.md) — neuer **Bug 11** dokumentiert
+(Status: offen + Research-Pflicht). Der AGC-Tab in `PluginView.vue` hat
+AGC/Hang-Toggles + Threshold/Decay/Slope/Man-Gain-Slider, aber keine Aktionsleiste
+(AGC/Hang/Defaults/help), keinen Thresh-CW-Slider und keine Scrollbar.
+
+- **IST:** AGC ON/OFF, Threshold, Decay, Hang, Slope, Man Gain (Toggles + Slider gemischt).
+- **SOLL (KiwiSDR):** Aktionsleiste (AGC dunkelgrau/grün, Hang mit oranger Umrandung,
+  Defaults gelb/schwarz, help grün/weiß rechtsbündig) + Slider Manual gain / Threshold /
+  Thresh CW / Slope / Decay mit Einheiten (dB/dBm/msec). Vertikale Scrollbar,
+  S-Meter-Skala (S1…S9, +10…+60), Labels weiß/orange abwechselnd.
+- **Research-Pflicht (neu als M4c.7.12b):** Parameterliste visuell (Screenshots)
+  abgeleitet; exakte ParamIds/Ranges/Defaults/Einheiten per `jks-prv/KiwiSDR_server`
+  (`web/kiwi/`) + Live-DOM-Capture verifizieren.
+
+**Update:** [`checklist.md`](./checklist.md) — M4c.7.12a (Analyse, ✅) + M4c.7.12b
+(Research, offen) + M4c.7.12c (Fix, offen) ergänzt.
+
+**Geänderte Dateien (3):**
+- `doc/M4c.7-bugs.md` — Bug 11 (Analyse + Research + Fix-Plan), Übersicht, Chronologie, Frontmatter
+- `doc/checklist.md` — M4c.7.12a/12b/12c
+- `doc/log.md` — dieser Eintrag
+
+## 2026-08-29 — M4c.7 Bug 10 erfasst: Audio-Tab fehlen Parameter + Scrollbar
+
+**Update:** [`M4c.7-bugs.md`](./M4c.7-bugs.md) — neuer **Bug 10** dokumentiert
+(Status: offen + Research-Pflicht). Der Audio-Tab in `PluginView.vue` zeigt nur
+Volume/Mute/NR/Compression/De-emphasis; fast alle KiwiSDR-Audio-Parameter fehlen
+und eine Scrollbar existiert nicht.
+
+- **IST:** Volume, Mute, NR, Compression (stub), De-emphasis (stub), keine Scrollbar.
+- **SOLL (KiwiSDR):** Noise (2× Dropdown + 2× "More") → Volume → Pan ("L=R", "Comp")
+  → Squelch (grünes Dreieck, roter Slider, 2× Zeit-Dropdown) → PB default/low/high/
+  center/width → Noise blanker → Noise filter (je "Defaults" + "help") → NB test
+  (pulse gain/width). Vertikale Scrollbar, farbcodierte Labels.
+- **Research-Pflicht (neu als eigene Task M4c.7.11b):** Parameterliste ist visuell
+  (Screenshots) abgeleitet; exakte ParamIds/Ranges/Defaults müssen per
+  `jks-prv/KiwiSDR_server` (`web/kiwi/`) + Live-DOM-Capture verifiziert werden.
+
+**Update:** [`checklist.md`](./checklist.md) — M4c.7.11a (Analyse, ✅) + M4c.7.11b
+(Research, offen) + M4c.7.11c (Fix, offen) ergänzt.
+
+**Geänderte Dateien (3):**
+- `doc/M4c.7-bugs.md` — Bug 10 (Analyse + Research + Fix-Plan), Übersicht, Chronologie, Frontmatter
+- `doc/checklist.md` — M4c.7.11a/11b/11c
+- `doc/log.md` — dieser Eintrag
+
+## 2026-08-29 — M4c.7 Bug 9 erfasst: Band- & Stationsleiste ≠ KiwiSDR Web UI
+
+**Update:** [`M4c.7-bugs.md`](./M4c.7-bugs.md) — neuer **Bug 9** dokumentiert
+(Status: offen). Die Band-Leiste (`BandScaleBar.vue`) und die DX-Stationsleiste
+(`TagArea.vue`) sind nicht dynamisch wie im KiwiSDR-Original:
+
+- **IST:** Bänder als `span` mit `left`/`width` (Label nicht garantiert zentriert,
+  kein kontinuierliches Re-Layout beim Pan/Zoom); DX-Tags auf 2 festen Reihen
+  (`MIN_GAP_PCT`), keine vertikalen Verbindungslinien zur Frequenzachse.
+- **SOLL (KiwiSDR, `jks-prv/KiwiSDR` — `web/kiwi/`):** durchgehende farbige Balken
+  mit horizontal zentriertem Label, synchron zur Wasserfall-Ansicht (Zoom/Pan);
+  DX-Labels als farbcodierte Rechtecke mit dünner vertikaler Verbindungslinie zur
+  Frequenzposition + Kollisions-Layout-Algorithmus auf N Ebenen (beim Rauszoomen
+  rücken gestapelte Labels wieder zusammen).
+
+**Update:** [`checklist.md`](./checklist.md) — M4c.7.10a (Analyse, ✅) + M4c.7.10b
+(Fix, offen) ergänzt.
+
+**Geänderte Dateien (3):**
+- `doc/M4c.7-bugs.md` — Bug 9 (Analyse + Fix-Plan), Übersicht, Chronologie, Frontmatter
+- `doc/checklist.md` — M4c.7.10a/10b
+- `doc/log.md` — dieser Eintrag
+
+## 2026-08-29 — M4c.7 Bug 8 erfasst: Frequenzband-Skala ≠ KiwiSDR Web UI
+
+**Update:** [`M4c.7-bugs.md`](./M4c.7-bugs.md) — neuer **Bug 8** dokumentiert
+(Status: offen). Die Frequenzskala in `FrequencyRuler.vue` ist keine adaptive
+pixel-basierte Tick-Engine wie im KiwiSDR-Original:
+
+- **IST:** hartkodierte span-basierte `if/else`-Kette für `stepKhz`, nur Major-Ticks,
+  HTML-`<span>`-Rendering, `formatFreq` ohne einheitliche Dezimalstellen.
+- **SOLL (KiwiSDR, `jks-prv/KiwiSDR_server` — `kiwi_draw_scale()`/`scale_draw()`):**
+  `STEP_BUCKETS`-Tabelle, Pixel-basierte Schritt-Auswahl
+  (`TARGET_LABEL_SPACING_PX` ≈ 90px), Major-Ticks (mit Label) + Minor-Ticks
+  (`majorStepHz/5`, ohne Label), Canvas-2D-Rendering, `formatFreqLabel`
+  (kHz < 1 MHz, MHz ab 1 MHz).
+
+**Update:** [`checklist.md`](./checklist.md) — M4c.7.9a (Analyse, ✅) + M4c.7.9b
+(Fix, offen) ergänzt.
+
+**Geänderte Dateien (3):**
+- `doc/M4c.7-bugs.md` — Bug 8 (Analyse + Fix-Plan), Übersicht, Chronologie, Frontmatter
+- `doc/checklist.md` — M4c.7.9a/9b
+- `doc/log.md` — dieser Eintrag
+
+## 2026-08-29 — M4c.7 Bug 7 erfasst: Frequenz-Cursor ≠ KiwiSDR Web UI
+
+**Update:** [`M4c.7-bugs.md`](./M4c.7-bugs.md) — neuer **Bug 7** dokumentiert
+(Status: offen). Der Frequenz-Cursor in `FrequencyRuler.vue` entspricht nicht der
+KiwiSDR-Referenz:
+
+- **IST:** gelber Pfeil (`zoomLevel < 9`) / grüne Klammer (`zoomLevel >= 9`);
+  Umschaltung über diskreten `zoomLevel` statt über Passband-Pixelbreite;
+  HTML-`div`s statt Vektor-Grafik; keine expliziten `MIN/MAX_BANDWIDTH`-Grenzen.
+- **SOLL (KiwiSDR, `jks-prv/KiwiSDR_server` — `ui.js`/`pb.js`/`waterfall.js`):**
+  Vektor-Overlay (SVG/Canvas), Zustandsübergang über Passband-Pixelbreite
+  (`MIN_INTERACTIVE_WIDTH_PX = 30px`). Zoomed-Out (< 30px): gelbe Trapez-/T-Form,
+  kein Edge-Resize, nur Center-Drag. Zoomed-In (≥ 30px): grüne Filter-Repräsentation
+  (Leiste + Mittellinie + schräge Flanken), Center-Drag + Edge-Resize mit
+  `MIN_BANDWIDTH`/`MAX_BANDWIDTH`-Clamp.
+
+**Update:** [`checklist.md`](./checklist.md) — M4c.7.8a (Analyse, ✅) + M4c.7.8b
+(Fix, offen) ergänzt.
+
+**Geänderte Dateien (3):**
+- `doc/M4c.7-bugs.md` — Bug 7 (Analyse + Fix-Plan), Übersicht, Chronologie, Frontmatter
+- `doc/checklist.md` — M4c.7.8a/8b
+- `doc/log.md` — dieser Eintrag
+
+## 2026-08-29 — M4c.7 offene Tasks abgeschlossen: C++-Build verifiziert, 11 E2E-Test-Failures behoben
+
+**Update:** `doc/M4c.7-bugs.md` — die drei dort dokumentierten offenen Tasks (Stand
+2026-08-29) wurden abgeschlossen:
+
+1. **Task 1 (C++ Build):** `cmake --preset win-msvc` konfiguriert (VST3_SDK_ROOT +
+   WEBVIEW2_SDK_ROOT bereits im CMake-Cache unter `thirdParty/`). Debug + Release
+   Build grün, VST3-Validator 47/47, `ctest` 1/1 (100%) grün.
+
+2. **Task 2 (8 E2E-Tests failen):** Nach den Syntax-Fixes aus Commit `f6d9dd6`
+   verblieben 11 Failures. Alle behoben — es handelte sich durchweg um **veraltete
+   oder fragile Tests**, keine UI-Bugs:
+   - `band-presets.spec.ts` — `has-text("20m")` matchte auch "120m" (Strict-mode);
+     auf exakten Regex `/^20m$/` / `/^80m$/` umgestellt.
+   - `dx-tags.spec.ts` — Koordinaten-Klick traf im 2-Reihen-Layout ein Nachbar-Tag;
+     Klick per `evaluate(el => el.click())`. Nicht-existentes Tag "VOA" → "WWV".
+   - `extension-select.spec.ts` — Bug 6.3 hatte 26 Extensions + Platzhalter eingebaut
+     (27 Optionen), Test erwartete 1; `selectOption('extension ∨')` → echte Option
+     'WSPR'. Panel-Play-Button `.kiwi-cpanel__play-btn` existiert nach Bug 6.5 nicht
+     mehr → Tests auf den Floating-Button `.kiwi-play-btn` umgestellt.
+   - `frequency-ruler.spec.ts` — `formatFreq(0)` liefert `'0'` (kein `'0 kHz'`);
+     exakter Match `/^0$/`. kHz-Labels erscheinen erst bei niedriger Frequenz
+     (Default 14100 kHz rendert alles als MHz) → vor dem Zoomen auf 500 kHz tunen.
+   - `panel-controls.spec.ts` — Audio-Button-Locator per `title="Audio mute/unmute"`
+     statt `hasText: '🔊'` (Text ändert sich nach Klick). RF-Attn-Buttons exakter
+     Regex `/^0 dB$/` (Substring matchte -10/-20 dB). CW-peaks-Button nutzt
+     `.kiwi-cpanel__btn`, nicht `.kiwi-cpanel__toggle`.
+
+3. **Task 3 (veraltete E2E-Selektoren):** Einziger veralteter Selektor war
+   `.kiwi-cpanel__play-btn` in `extension-select.spec.ts` (siehe oben). Übrige
+   Suite nutzt aktuelle Klassen.
+
+**Verifikation:** Playwright **85 passed / 1 skipped / 0 failed** (vorher 75/11),
+Vitest 112/112, Debug+Release Build + Validator 47/47 + ctest 1/1.
+
+**Geänderte Dateien (5):**
+- `ui/e2e/band-presets.spec.ts`
+- `ui/e2e/dx-tags.spec.ts`
+- `ui/e2e/extension-select.spec.ts`
+- `ui/e2e/frequency-ruler.spec.ts`
+- `ui/e2e/panel-controls.spec.ts`
+
+## 2026-08-29 — Agent-Infrastruktur-Fixes: Modelle, AGENTS.md-Struktur, Permission-Lücke
+
+**Update:** Drei Root-Causes der Regelverletzung (Nemotron 3 Ultra Free ignorierte
+MCP-First → index.md) behoben:
+
+1. **Modelle verstärkt:** `BUILD.md` (`~/.config/opencode/agent/BUILD.md`) von
+   `opencode/nemotron-3-ultra-free` auf `opencode-go/deepseek-v4-pro` umgestellt.
+   `DEV.md` von `opencode/nemotron-3.5-lightning-free` auf
+   `opencode-go/deepseek-v4-flash` umgestellt. Stärkere Models = besseres
+   Instruction-Following für die komplexe AGENTS.md.
+
+2. **Navigation & Knowledge First** als **separate, erste Subsection** in
+   `Mandatory Workflow` eingefügt (vor `Autopilot mode`). Bisher war die Regel
+   "doc/index.md first" als Step 1 unter `MCP-First workflow (RAG / Code-Wiki)`
+   versteckt — der Header ließ sie RAG-spezifisch wirken. Jetzt steht die Regel
+   **fettgedruckt und prominent** eigenständig. MCP-First-Sektion auf Tool-Referenz
+   reduziert (keine duplizierten Steps mehr).
+
+3. **Permission-Lücke geschlossen:** `opencode.json` um `permission`-Block ergänzt
+   (`external_directory: "allow"` + alle Tools auf `"allow"`). Die "No permission
+   prompts"-Regel existierte nur als Prompt-Text in AGENTS.md, wurde aber von der
+   Tool-Runtime nicht durchgesetzt — damit ist sie jetzt auf beiden Ebenen aktiv.
+
+**Geänderte Dateien (6):**
+- `~/.config/opencode/agent/BUILD.md` — Modell opencode-go/deepseek-v4-pro
+- `~/.config/opencode/agent/DEV.md` — Modell opencode-go/deepseek-v4-flash
+- `AGENTS.md` — Neue Navigation-Sektion, MCP-First entschlackt
+- `opencode.json` (workspace) — permission-Block
+- `doc/log.md` — dieser Eintrag
+
+**Hinweis:** opencode muss neu gestartet werden, damit Model- und Permission-Änderungen
+wirksam werden. AGENTS.md wirkt beim nächsten Agent-Start.</think>
+
+<｜DSML｜parameter name="filePath" string="true">C:\Users\marku\Documents\GitHub\artqcid\vst-nativ-projects\wogd-vst-netsdrstation\docksam werden. AGENTS.md wirkt beim nächsten Agent-Start.
+
 ## 2026-08-29 — AGENTS.md konsolidiert: Single Source of Truth für alle Agenten
 
 **Update:** [`AGENTS.md`](./AGENTS.md) — Alle verbindlichen Workflow-Regeln

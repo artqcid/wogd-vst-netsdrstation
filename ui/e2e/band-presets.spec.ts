@@ -21,8 +21,8 @@ test.describe('Band presets', () => {
 
   test('clicking a band updates frequency', async ({ page }) => {
     const input = page.locator('.kiwi-cpanel__freq-input')
-    // Click on the 20m amateur band label
-    await page.locator('.band-scale__block:has-text("20m")').click()
+    // Click on the 20m amateur band label (exact text — '120m' must not match)
+    await page.locator('.band-scale__block', { hasText: /^20m$/ }).first().click()
     const value = parseFloat(await input.inputValue())
     // 20m band centre is ~14.150 MHz → 14150 kHz
     expect(value).toBeGreaterThan(14000)
@@ -43,7 +43,7 @@ test.describe('Band presets', () => {
       if (msg.type() === 'log') logs.push(msg.text())
     })
     const freqBefore = parseFloat(await page.locator('.kiwi-cpanel__freq-input').inputValue())
-    await page.locator('.band-scale__block:has-text("80m")').click()
+    await page.locator('.band-scale__block', { hasText: /^80m$/ }).first().click()
     const freqAfter = parseFloat(await page.locator('.kiwi-cpanel__freq-input').inputValue())
     expect(freqAfter).not.toBe(freqBefore)
     // OnBandTune sets freqKhz; no console event in Vue3 but frequency change is the observable outcome

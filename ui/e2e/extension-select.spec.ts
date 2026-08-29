@@ -15,14 +15,15 @@ test.describe('Extension select', () => {
   test('extension select has options', async ({ page }) => {
     const select = page.locator('.kiwi-cpanel__select[aria-label="Extension"]')
     const options = select.locator('option')
-    await expect(options).toHaveCount(1)
+    // Bug 6.3: 26 KiwiSDR extensions + placeholder are now populated (M4c.7 fix).
+    await expect(options).toHaveCount(27)
     await expect(options.first()).toContainText('extension')
   })
 
   test('extension select can be changed', async ({ page }) => {
     const select = page.locator('.kiwi-cpanel__select[aria-label="Extension"]')
-    await select.selectOption({ label: 'extension ∨' })
-    await expect(select).toHaveValue('extension ∨')
+    await select.selectOption({ label: 'WSPR' })
+    await expect(select).toHaveValue('WSPR')
   })
 })
 
@@ -32,20 +33,17 @@ test.describe('Play button', () => {
   })
 
   // --- PLAY BUTTON (ref-matrix 4.5) ---
-  test('panel play button exists', async ({ page }) => {
-    const btn = page.locator('.kiwi-cpanel__play-btn')
-    await expect(btn).toBeVisible()
-    await expect(btn).toHaveAttribute('aria-label', 'Play')
-  })
-
+  // Bug 6.5 removed the panel-integrated play button (it does not exist in the
+  // KiwiSDR reference — the floating play button left of the canvas is the
+  // correct 1:1 element). The old .kiwi-cpanel__play-btn selector is obsolete.
   test('floating play button exists', async ({ page }) => {
     const btn = page.locator('.kiwi-play-btn')
     await expect(btn).toBeVisible()
     await expect(btn).toHaveAttribute('aria-label', 'Start audio')
   })
 
-  test('panel play button click is actionable', async ({ page }) => {
-    const btn = page.locator('.kiwi-cpanel__play-btn')
+  test('floating play button click toggles mute state', async ({ page }) => {
+    const btn = page.locator('.kiwi-play-btn')
     await expect(btn).toBeVisible()
     await btn.click()
     // Clicking toggles mute state; no visible change on button itself but button remains present

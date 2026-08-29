@@ -114,8 +114,9 @@ test.describe('Panel controls', () => {
     const wf0Tab = page.locator('.kiwi-cpanel__tab-btn', { hasText: 'WF0' })
     await wf0Tab.click()
 
-    // Find audio button in icons row - locate by emoji since class changes on click
-    const audioBtn = page.locator('.kiwi-cpanel__icon-btn', { hasText: '🔊' })
+    // Find audio button in icons row - locate by title (stable across mute toggle,
+    // unlike the 🔊/🔇 emoji which changes and breaks a hasText locator)
+    const audioBtn = page.locator('button[title="Audio mute/unmute"]')
 
     // Expect it shows 🔊 emoji
     await expect(audioBtn).toContainText('🔊')
@@ -147,18 +148,19 @@ test.describe('Panel controls', () => {
     const rfTab = page.locator('.kiwi-cpanel__tab-btn', { hasText: 'RF' })
     await rfTab.click()
 
-    // Expect to see Attn buttons - use text-based locator since no special class exists
-    await expect(page.locator('.kiwi-cpanel__btn', { hasText: '0 dB' })).toBeVisible()
-    await expect(page.locator('.kiwi-cpanel__btn', { hasText: '-10 dB' })).toBeVisible()
-    await expect(page.locator('.kiwi-cpanel__btn', { hasText: '-20 dB' })).toBeVisible()
-    await expect(page.locator('.kiwi-cpanel__btn', { hasText: '-30 dB' })).toBeVisible()
-    await expect(page.locator('.kiwi-cpanel__btn', { hasText: '-40 dB' })).toBeVisible()
+    // Expect to see Attn buttons - use text-based locator since no special class exists.
+    // Exact regex: 'hasText: "0 dB"' would substring-match -10/-20/-30/-40 dB.
+    await expect(page.locator('.kiwi-cpanel__btn', { hasText: /^0 dB$/ })).toBeVisible()
+    await expect(page.locator('.kiwi-cpanel__btn', { hasText: /^-10 dB$/ })).toBeVisible()
+    await expect(page.locator('.kiwi-cpanel__btn', { hasText: /^-20 dB$/ })).toBeVisible()
+    await expect(page.locator('.kiwi-cpanel__btn', { hasText: /^-30 dB$/ })).toBeVisible()
+    await expect(page.locator('.kiwi-cpanel__btn', { hasText: /^-40 dB$/ })).toBeVisible()
 
     // Expect to see "NB level" label
     await expect(page.locator('text=NB level')).toBeVisible()
 
-    // Expect to see "CW peaks" label and ON/OFF toggle
+    // Expect to see "CW peaks" label and ON/OFF toggle button
     await expect(page.locator('text=CW peaks')).toBeVisible()
-    await expect(page.locator('.kiwi-cpanel__toggle')).toContainText('ON')
+    await expect(page.locator('.kiwi-cpanel__btn', { hasText: /^ON$|^OFF$/ })).toBeVisible()
   })
 })

@@ -1,12 +1,12 @@
 ---
 type: Bug Manifest + Implementation Plan
 title: M4c.7 — Bug-Manifest + Implementation Plan
-description: 6 Bugs aus manueller Prüfung (2026-08-29) mit vollständiger Analyse und konkretem Fix-Plan pro Bug. Analysiert 2026-08-29 (agent:plan).
-status: bugs-fixed-e2e-pending
+description: 14 Bugs aus manueller Prüfung (2026-08-29) mit vollständiger Analyse und konkretem Fix-Plan pro Bug. Analysiert 2026-08-29 (agent:plan).
+status: bugs-1-6-done-bugs-7-14-open
 generated:
   by: agent:plan
   at: 2026-08-29
-verified: ~
+verified: 2026-08-29 (agent:DEV — offene Tasks 1–3 abgeschlossen, 85/85 E2E grün; Bug 7–14 neu erfasst 2026-08-29, noch offen)
 tags: [m4, m4c, bugs, analysis, ui, parity, extensions, implementation-plan]
 stale_after: 2026-10-31
 sources:
@@ -26,7 +26,7 @@ sources:
 
 # M4c.7 — Bug-Manifest & Implementation Plan
 
-6 Bugs aus manueller Prüfung des Live-Plugins am 2026-08-29 identifiziert.
+14 Bugs aus manueller Prüfung des Live-Plugins am 2026-08-29 identifiziert.
 Vollständig analysiert 2026-08-29 durch Abgleich mit `explore-8074.json`, `panel.json`, `subtabs.json` und Quellcode-Inspektion.
 
 **Vorgänger:** [`M4b-bugs.md`](./archive/M4b-bugs.md) — M4b-Bugs (archiviert, in M4c gefixt).
@@ -46,6 +46,14 @@ Nach jedem Fix: `reference-matrix.md` aktualisieren (❌ → ✅), E2E-Test schr
 | [Bug 4](#bug-4--dx-tags-fehlen--layout-falsch) | TagArea.vue | Niedrig | Klein | ✅ |
 | [Bug 5](#bug-5--khz-lineal-skaliert-nicht-bei-hohem-zoom) | FrequencyRuler.vue | Mittel | Klein | ✅ |
 | [Bug 6](#bug-6--bedienpanel-61-68) | PluginView.vue | Hoch | Gross | ✅ |
+| [Bug 7](#bug-7--frequenz-cursor-entspricht-nicht-der-kiwisdr-web-ui) | FrequencyRuler.vue | Hoch | Gross | ⬜ |
+| [Bug 8](#bug-8--frequenzband-skala-verhält-sich-nicht-wie-die-web-ui) | FrequencyRuler.vue | Hoch | Mittel | ⬜ |
+| [Bug 9](#bug-9--band--stationsleiste-verhält-sich-nicht-wie-die-web-ui) | BandScaleBar.vue / TagArea.vue | Hoch | Gross | ⬜ |
+| [Bug 10](#bug-10--audio-tab-fehlen-parameter--scrollbar) | PluginView.vue | Hoch | Gross | ⬜ |
+| [Bug 11](#bug-11--agc-tab-beinhaltet-eventuell-nicht-alle-parameter) | PluginView.vue | Hoch | Mittel | ⬜ |
+| [Bug 12](#bug-12--header-bereich-entspricht-nicht-der-web-ui) | PluginView.vue | Hoch | Gross | ⬜ |
+| [Bug 13](#bug-13--spec-rf-button-soll-funktionieren) | PluginView.vue / Waterfall.vue | Hoch | Gross | ⬜ |
+| [Bug 14](#bug-14--spec-af-button-soll-funktionieren) | PluginView.vue / Waterfall.vue | Hoch | Gross | ⬜ |
 
 ---
 
@@ -928,6 +936,790 @@ cwPeaks: false,
 
 ---
 
+## Bug 7 — Frequenz-Cursor entspricht nicht der KiwiSDR Web UI
+
+**Betroffene Datei:** `ui/src/components/FrequencyRuler.vue`
+
+### Analyse (abgeschlossen 2026-08-29)
+
+**IST:** Der Cursor ist aktuell ein statisches Overlay aus HTML-`div`s, dessen
+Darstellung rein über `zoomLevel` (diskret 0–14) umschaltet:
+
+- `zoomLevel < 9` → gelber Pfeil (`freq-ruler__cursor-arrow` + vertikale Linie), **nur** Center-Drag.
+- `zoomLevel >= 9` → grüne Klammer (`freq-ruler__cursor-bracket`) mit zwei Griffen (`lo`/`hi`), Center-Drag + Edge-Resize.
+
+**Problem (Paritäts-Abweichung):**
+
+1. **Umschaltung über `zoomLevel`, nicht über Pixel-Breite.** Die KiwiSDR-Logik
+   entscheidet anhand der **physischen Pixel-Breite des Passbands**
+   (`MIN_INTERACTIVE_WIDTH_PX = 30px`), nicht anhand eines diskreten Zoom-Stufen-Zählers.
+   Bei kleinem Viewport/anderem Hz-per-Pixel-Verhältnis unterscheiden sich die Zustände.
+2. **"Zoomed-Out"-Zustand ist falsch.** KiwiSDR zeigt bei schmalem Passband eine
+   **gelbe Trapez-/T-Form** (obere Leiste + zwei nach außen abfallende Linien +
+   Mittel-Tick) als feste, ikonische Form. Unser gelber Pfeil ist eine andere Geometrie
+   und hat keine sichtbare Passband-Andeutung.
+3. **"Zoomed-In"-Zustand ist unvollständig.** KiwiSDR zeichnet eine **echte
+   Filter-Repräsentation**: obere Leiste = Passbandbreite, vertikale Mittellinie =
+   Trägerfrequenz, schräge Flanken links/rechts = Filter-Roll-off bis zur Baseline.
+   Unsere Klammer hat nur Griffe, keine schrägen Flanken.
+4. **Edge-Resizing ohne explizite `MIN_BANDWIDTH`/`MAX_BANDWIDTH`-Grenzen.** Aktuell
+   wird nur ein `±100 Hz`-Minimalabstand erzwungen (`onLoMouseDown`/`onHiMouseDown`),
+   aber kein definierter oberer/unterer Bandbreiten-Limit-Vertrag.
+5. **Rendering via HTML-Divs, nicht Vektor-Grafik.** Schräge Flanken + präzises
+   Hit-Testing (Flanke vs. Mitte) sind mit `div`/CSS nur umständlich korrekt abbildbar.
+
+**Referenz (KiwiSDR, `jks-prv/KiwiSDR_server`):** Das Element wird nicht mit
+CSS-Boxen gelöst, sondern direkt als **Vektor-Grafik (Canvas-API 2D Context)** auf
+die Frequenzskala gezeichnet (typisch in `ui.js`, `pb.js` (Passband) oder
+`waterfall.js`). Bei jedem Maus-Event (`mousemove`, `mousedown`) wird die
+Mausposition bestimmt: Mitte der berechneten Pixel-Box → Frequenz verschieben;
+linker/rechter Rand **und Kasten grün (breit genug)** → Filterbreite ändern.
+
+### Fix-Plan Bug 7
+
+**Ziel:** Den Cursor als zoom-abhängige **Passband-Repräsentation** neu bauen —
+idealerweise als **absolut positioniertes, interaktives SVG-Overlay** (oder
+dedizierte Canvas-Schicht) exakt über der Frequenzskala.
+
+**Schritt 1 — Zustandsübergang über Pixel-Breite statt `zoomLevel`:**
+
+```ts
+const MIN_INTERACTIVE_WIDTH_PX = 30
+
+// Passband-Pixelbreite aus Hz-per-Pixel:
+//   spanKhz = viewHighKhz - viewLowKhz
+//   pxPerKhz = scaleEl.clientWidth / spanKhz
+//   passbandKhz = (highCutHz - lowCutHz) / 1000
+//   passbandPx = passbandKhz * pxPerKhz
+// Zustand: passbandPx < MIN_INTERACTIVE_WIDTH_PX  → "zoomed-out" (gelb)
+//          passbandPx >= MIN_INTERACTIVE_WIDTH_PX → "zoomed-in"  (grün)
+```
+
+Der `zoomLevel`-Prop bleibt nur als indirekter Einfluss erhalten (er bestimmt den
+Span und damit die Pixel-Breite); die **Entscheidung** trifft die Pixel-Breite.
+
+**Schritt 2 — Zustand "Zoomed-Out" (gelb, kollabiert):**
+
+- **Visual:** feste ikonische Trapez-/T-Form: obere horizontale Leiste, zwei nach
+  außen abfallende Linien, Mittel-Tick. Farbe `#FFFF00` / `#FFD700`.
+- **Interaktivität:**
+  - Linke/rechte Flanke **deaktiviert** (kein Bandbreiten-Resize).
+  - Gesamte gelbe Form per Klick+Ziehen horizontal verschiebbar → Trägerfrequenz
+    (`center_carrier_frequency`) ändert sich.
+
+**Schritt 3 — Zustand "Zoomed-In" (grün, expandiert):**
+
+- **Visual:** echte Filter-Repräsentation:
+  - obere horizontale Leiste = exakte Passbandbreite,
+  - vertikale Linie exakt in der Mitte = Trägerfrequenz,
+  - schräge Flanken links/rechts = Filter-Roll-off bis Baseline.
+  - Farbe `#00FF00`.
+- **Interaktivität:**
+  - **Center-Drag:** Mitte ziehen → gesamtes Passband verschieben (Trägerfrequenz).
+  - **Edge-Resize:** linke/rechte schräge Flanke als Draggriff (`cursor: ew-resize`).
+  - **Limits:** links ändert `low_cut`, rechts ändert `high_cut`; Bandbreite darf
+    `MAX_BANDWIDTH` nicht überschreiten und `MIN_BANDWIDTH` nicht unterschreiten
+    (Flanken dürfen sich nicht kreuzen).
+
+**Schritt 4 — Rendering als SVG-Overlay statt HTML-Divs:**
+
+```html
+<svg class="freq-ruler__cursor-svg" ...>
+  <!-- gelb: T-/Trapez-Form -->
+  <!-- grün: Leiste + Mittellinie + schräge Flanken -->
+</svg>
+```
+
+- SVG erlaubt schräge Flanken (`<polygon>`/`<path>`) und präzises Hit-Testing
+  (separate `<path>`-Elemente für Mitte / linke Flanke / rechte Flanke mit
+  eigenen `pointerdown`-Handlern).
+- Maus-/Touch-Events rechnen den Offset über das aktuelle Hz-per-Pixel-Verhältnis
+  zurück in Frequenz (wie im Original: Mitte → `SET freq`, Flanke → `SET low_cut`/`high_cut`).
+
+**Schritt 5 — Event-Handling nach KiwiSDR-Muster:**
+
+```ts
+function onPointerDown(e, zone: 'center' | 'lo' | 'hi') { /* ... */ }
+function onPointerMove(e) {
+  const deltaKhz = (e.clientX - startX) / pxPerKhz
+  if (zone === 'center') emit('tune', startFreq + deltaKhz)
+  else if (zone === 'lo')  emit('low-cut', clamp(startLo + deltaKhz * 1000, ...))
+  else if (zone === 'hi')  emit('high-cut', clamp(startHi + deltaKhz * 1000, ...))
+}
+```
+
+**Akzeptanzkriterium:**
+- Passbandbreite < 30px → gelbe Trapez-/T-Form, **kein** Edge-Resize, Center-Drag verschiebt Frequenz.
+- Passbandbreite ≥ 30px → grüne Form mit Mittellinie + schrägen Flanken; Center-Drag verschiebt, Flanken resizen unter `MIN_BANDWIDTH`/`MAX_BANDWIDTH`.
+
+**E2E-Test:** `ui/e2e/frequency-ruler.spec.ts` — erweitern:
+- Zoomed-Out: Cursor hat gelbe Form, Flanken nicht draggable (`ew-resize` nicht aktiv), Center-Drag ändert `freqKhz`.
+- Zoomed-In: Cursor grün, Flanken draggable, `low_cut`/`high_cut` ändern sich beim Ziehen, kreuzen nie.
+
+---
+
+## Bug 8 — Frequenzband-Skala verhält sich nicht wie die Web UI
+
+**Betroffene Datei:** `ui/src/components/FrequencyRuler.vue`
+
+**Verwandt:** Bug 5 (kHz-Lineal skaliert nicht bei hohem Zoom) — Bug 5 erweiterte nur
+die span-basierte `if/else`-Kette um sub-kHz-Stufen. Bug 8 ist die **vollständige**
+Parität: die KiwiSDR-Skala ist eine **adaptive, pixel-basierte** Tick-Engine, keine
+hartkodierte Schritt-Kette.
+
+### Analyse (abgeschlossen 2026-08-29)
+
+**IST:** `ticks`-Computed in `FrequencyRuler.vue` wählt `stepKhz` über eine feste
+`if/else`-Kette basierend auf `span` (kHz), erzeugt **nur Major-Ticks** (keine
+Minor-Subdivisions) und rendert HTML-`<span>`-Elemente (`.freq-ruler__tick` /
+`.freq-ruler__label`). `formatFreq()` liefert `'0'`, `'x kHz'`, `'x.x MHz'`.
+
+**Problem (Paritäts-Abweichung):**
+
+1. **Hartkodierte Schritt-Kette statt Bucket-Tabelle.** KiwiSDR wählt die
+   Schrittweite dynamisch aus einer Tabelle (`zoom_step` / `STEP_BUCKETS`) anhand
+   der **Pixel-Auflösung**, damit Labels nie kollidieren. Unser `if/else` ist starr
+   und kennt kein Kollisions-Feedback.
+2. **Keine Minor-Ticks.** KiwiSDR zeichnet **Major-Ticks (mit Label)** und
+   **Minor-Ticks (ohne Label, 5×/10× feinere Unterteilung)**. Wir zeichnen nur eine
+   Tick-Art.
+3. **HTML-DOM statt Canvas/SVG.** KiwiSDR rendert die Skala direkt per
+   Canvas-2D (`kiwi_draw_scale()` / `scale_draw()`) — lange Striche mit Text,
+   kurze Striche ohne Text im Schleifendurchlauf. Unser DOM-Ansatz skaliert bei
+   hoher Tick-Zahl schlecht und erschwert exakte Positionierung.
+4. **Label-Formatierung nicht einheitlich.** KiwiSDR formatiert konsistent:
+   `< 1 MHz` → kHz, `>= 1 MHz` → MHz, mit einheitlicher Dezimalstellen-Zahl im
+   gezoomten Zustand.
+
+**Referenz (KiwiSDR, `jks-prv/KiwiSDR_server` — `web/kiwi/waterfall.js` / `kiwi.js`):**
+Kern-Funktion `kiwi_draw_scale()` / `scale_draw()`. Es wird eine Tabelle
+`zoom_step` gepflegt; je nach `zoom`-Stufe (0–14) wechselt die Schrittweite
+(z. B. Zoom 0 = 5 MHz, Zoom 10 = 5 kHz). Bei jedem `redraw()` wird die sichtbare
+Startfrequenz ermittelt, per Modulo (`%`) der erste linke Teilstrich berechnet und
+in einer Schleife abwechselnd lange Striche (mit Text) und kurze Striche (ohne Text)
+gezeichnet.
+
+### Fix-Plan Bug 8
+
+**Ziel:** Die Frequenzskala als adaptive Canvas-/SVG-Engine neu bauen, die
+Tick-Dichte, Schrittweite und Label-Format dynamisch aus Zoom-Level + sichtbarem
+Frequenzbereich ableitet.
+
+**Schritt 1 — Pixel-basierte Schritt-Auswahl statt hartkodierter Kette:**
+
+```ts
+const STEP_BUCKETS = [
+  100, 200, 500, 1000, 2000, 5000, 10000, 20000, 50000,
+  100000, 200000, 500000, 1000000, 2000000, 5000000,
+] // Hz
+
+// Hz-per-Pixel aus sichtbarem Bereich:
+//   hzPerPx = (maxFreqHz - minFreqHz) / canvasWidthPx
+// target Hz-Abstand zwischen Major-Labels (TARGET_LABEL_SPACING_PX ~ 80–100px):
+//   targetHz = TARGET_LABEL_SPACING_PX * hzPerPx
+// majorStepHz = kleinster Bucket-Wert >= targetHz
+```
+
+**Schritt 2 — Major-/Minor-Tick-Hierarchie:**
+
+- `minorStepHz = majorStepHz / 5` (5 Sub-Ticks pro Major-Tick).
+- Major-Tick: höher (10px), dicker (`lineWidth=2`), **mit Label**.
+- Minor-Tick: kürzer (5px), dünner (`lineWidth=1`), **ohne Label**.
+
+**Schritt 3 — Rendering-Loop (Canvas 2D):**
+
+```ts
+function drawFrequencyScale(ctx, width, height, minFreqHz, maxFreqHz) {
+  ctx.clearRect(0, 0, width, height)
+  const hzPerPx = (maxFreqHz - minFreqHz) / width
+  const majorStepHz = selectStepBucket(hzPerPx * 90) // ~90px Abstand
+  const minorStepHz = majorStepHz / 5
+  const firstMinorHz = Math.floor(minFreqHz / minorStepHz) * minorStepHz
+
+  for (let freq = firstMinorHz; freq <= maxFreqHz; freq += minorStepHz) {
+    const x = (freq - minFreqHz) / hzPerPx
+    if (x < 0 || x > width) continue
+    const isMajor = Math.abs(freq % majorStepHz) < 0.001
+      || Math.abs((freq % majorStepHz) - majorStepHz) < 0.001
+    ctx.strokeStyle = '#FFFFFF'
+    ctx.beginPath()
+    if (isMajor) {
+      ctx.lineWidth = 2
+      ctx.moveTo(x, 0); ctx.lineTo(x, 10); ctx.stroke()
+      ctx.fillStyle = '#FFFFFF'
+      ctx.font = 'bold 11px sans-serif'
+      ctx.textAlign = 'center'
+      ctx.fillText(formatFreqLabel(freq), x, 22)
+    } else {
+      ctx.lineWidth = 1
+      ctx.moveTo(x, 0); ctx.lineTo(x, 5); ctx.stroke()
+    }
+  }
+}
+```
+
+**Schritt 4 — Label-Formatierung (`formatFreqLabel`):**
+
+- `< 1 MHz` → kHz (z. B. `175 kHz`, `400 kHz`)
+- `>= 1 MHz` → MHz (z. B. `7.100 MHz`, `14.080 MHz`)
+- Überflüssige Trailing-Nullen entfernen, aber **einheitliche Dezimalstellen** im
+  gezoomten Zustand.
+
+**Schritt 5 — Zustands-Übergang über Zoom (KiwiSDR `zoom_step`):**
+
+Die adaptive Engine darf gern zusätzlich eine `zoom_step`-Tabelle pflegen, die pro
+`zoom`-Stufe (0–14) eine grobe Start-Schrittweite liefert und durch die
+Pixel-Berechnung verfeinert wird — exakt wie im Original.
+
+**Akzeptanzkriterium:**
+- Labels kollidieren nie (Pixel-basierte Schritt-Auswahl mit `TARGET_LABEL_SPACING_PX`).
+- Major-Ticks tragen Labels, Minor-Ticks (5× feiner) tragen keine.
+- Zoom 0 → grobe MHz-Striche; hoher Zoom → feine kHz-/Hz-Striche (vgl. Bug 5).
+- Labels konsistent formatiert (kHz unter 1 MHz, MHz ab 1 MHz).
+
+**E2E-Test:** `ui/e2e/frequency-ruler.spec.ts` — erweitern:
+- Bei default zoom: Major-Ticks mit MHz-Labels + Minor-Ticks ohne Label vorhanden.
+- Nach Zoom-in: Tick-Dichte nimmt zu, Labels überlappen nicht (Kollisions-Check).
+- Label-Format: unter 1 MHz `kHz`, ab 1 MHz `MHz`.
+
+---
+
+## Bug 9 — Band- & Stationsleiste verhält sich nicht wie die Web UI
+
+**Betroffene Dateien:** `ui/src/components/BandScaleBar.vue` (obere Leiste),
+`ui/src/components/TagArea.vue` (untere Leiste)
+
+**Verwandt:** Bug 3 (Frequenzband-Leiste inkorrekt) + Bug 4 (DX-Tags fehlen /
+zweireihiges Layout). Bug 3/4 lieferten die **Daten** (Bänder mit start/endFreq,
+73 DX-Tags) und die grundlegende Struktur. Bug 9 ist die **dynamische** Parität:
+synchrones Mitlaufen mit dem Wasserfall (Zoom/Pan) und der Kollisions-Layout-
+Algorithmus mit vertikalen Verbindungslinien.
+
+### Analyse (abgeschlossen 2026-08-29)
+
+**IST:**
+
+- **BandScaleBar.vue:** farbige `span`-Blöcke (`left`/`width` aus `startFreq`/`endFreq`
+  über `viewLowMhz`/`viewHighMhz`). Labels sind `white-space: nowrap` und bei sehr
+  schmalen Bändern teilweise abgeschnitten. Positionen sind zwar an `viewLow/High`
+  gebunden, aber nicht garantiert **kontinuierlich synchron** zum Pan/Zoom (kein
+  explizites Re-Layout bei jeder Pixeländerung).
+- **TagArea.vue:** DX-Tags als absolute `span`s auf 2 Reihen (Kollisions-Detection
+  über `MIN_GAP_PCT = 3`). **Keine** vertikalen Verbindungslinien (Zeiger) vom
+  Rechteck zur Frequenz-Achse.
+
+**Problem (Paritäts-Abweichung):**
+
+1. **Balken nicht durchgehend / Label-Zentrierung.** KiwiSDR rendert Bänder als
+   durchgehende horizontale Balken mit **horizontal zentriertem** Label. Unser
+   Label sitzt in einem `span` mit `padding`, nicht garantiert in der Balkenmitte.
+2. **Keine kontinuierliche Synchronisation.** Beim Zoomen/Pannen müssen sich
+   Balkenbreite, -start und -ende synchron zur Frequenzskala vergrößern/verkleinern/
+   herausbewegen. Unsere Implementierung reagiert nur auf Prop-Änderungen, nicht
+   auf ein explizites Re-Layout bei jedem Redraw.
+3. **Fehlende vertikale Verbindungslinien (Zeiger).** KiwiSDR zeichnet eine dünne
+   vertikale Linie von der Unterkante des DX-Labels exakt zur Frequenzposition auf
+   der Achse. Unsere TagArea hat keine solche Linie.
+4. **Kollisionsvermeidung nur 2 Reihen, nicht dynamisch.** KiwiSDR prüft
+   X-Koordinate + Breite jeder Box; überlappen zwei Boxen, wird die zweite auf eine
+   tiefere/höhere Y-Ebene verschoben (nicht nur 2 feste Reihen) und die
+   Verbindungslinie verlängert sich. Beim Rauszoomen werden gestapelte Labels wieder
+   auf dieselbe Ebene gelegt. Unsere Logik kennt nur `row: 0|1`.
+
+**Referenz (KiwiSDR, `jks-prv/KiwiSDR` — früher `Beagle_SDR_GPS`, `web/kiwi/`):**
+Die Pixel-Berechnung aus Frequenzen liegt traditionell in den JS-Dateien des Ordners
+`web/kiwi/` (Schlagworte: `dx`, `labels`, `band`). Bänder = durchgehende farbige
+Balken mit zentriertem Label; DX-Labels = kleine farbcodierte Rechtecke mit
+vertikaler Verbindungslinie zur Frequenzachse + Kollisions-Layout-Algorithmus.
+
+### Fix-Plan Bug 9
+
+**Ziel:** Beide Leisten als **dynamische** Overlays bauen, die kontinuierlich mit
+dem Wasserfall-Viewport (Start-/Endfrequenz) mitlaufen.
+
+**Schritt 1 — BandScaleBar: durchgehende Balken + zentriertes Label:**
+
+- Balken als durchgehende `<div>`/SVG-Rechtecke mit `left = freqToPercent(startFreq)`,
+  `width = freqWidthPercent(startFreq, endFreq)`.
+- Label **absolut zentriert** im Balken (Flexbox `justify-content: center` oder
+  `text-align: center` + `overflow: hidden`); bei zu schmalem Balken Label
+  ausblenden statt abschneiden.
+
+**Schritt 2 — Kontinuierliche Synchronisation beim Zoom/Pan:**
+
+```ts
+// Beide Leisten erhalten dieselben viewLow/viewHigh wie FrequencyRuler (loKhz/hiKhz)
+// aus PluginView. Bei jeder Änderung (wfZoom/freqKhz) re-rendern die Bänder/Tags
+// synchron. Für Canvas/SVG: Redraw in einem requestAnimationFrame-Kanal.
+```
+
+**Schritt 3 — TagArea: vertikale Verbindungslinie (Zeiger):**
+
+- Pro Tag eine dünne vertikale Linie von der Unterkante des Labels bis zur
+  Frequenzachse (via `::before` mit `border-left`, Höhe = Abstand zur Achse, oder
+  als `<line>` im SVG).
+
+**Schritt 4 — Kollisions-Layout-Algorithmus (N Ebenen statt 2):**
+
+```ts
+// Statt row: 0|1 — dynamische Ebenen-Zuordnung:
+// Für jedes Tag (nach Frequenz sortiert): prüfe ob es sich mit dem zuletzt auf
+// jeder Ebene platzierten Tag überlappt (X + Breite). Überlappung → nächste Ebene.
+// Beim Zoom-out (Abstand wächst) → Ebenen neu berechnen, Labels rücken wieder zusammen.
+```
+
+**Akzeptanzkriterium:**
+- Bänder als durchgehende farbige Balken mit zentriertem Label, synchron zum Zoom/Pan.
+- DX-Labels mit vertikaler Verbindungslinie zur Frequenzachse.
+- Kollisionsvermeidung auf N Ebenen; beim Rauszoomen rücken gestapelte Labels wieder zusammen.
+
+**E2E-Test:** `ui/e2e/band-scale.spec.ts` + `ui/e2e/tag-area.spec.ts` — erweitern:
+- Bänder: Breite/Position ändern sich nach Zoom/Pan; Label zentriert.
+- Tags: vertikale Verbindungslinien vorhanden; nach Rauszoomen keine Überlappung mehr.
+
+---
+
+## Bug 10 — Audio-Tab: fehlende Parameter + Scrollbar
+
+**Betroffene Datei:** `ui/src/views/PluginView.vue` (Audio-Tab) + `ui/src/components/AudioPanel.vue`
+
+### Analyse (abgeschlossen 2026-08-29)
+
+**IST:** Der Audio-Tab (`<template v-if="activeTab === 'Audio'">`) enthält aktuell
+nur: Volume-Slider + Mute-Button, NR-Toggle, Compression (stub), De-emphasis (stub).
+Es fehlen fast alle KiwiSDR-Audio-Parameter. Zudem hat das Panel **keine Scrollbar**
+— im Original erreicht man alle Parameter nur per Scrollen.
+
+**Referenz (KiwiSDR Web UI, visuell erfasst aus Screenshots + Quellcode):**
+
+Der vollständige Audio-Tab umfasst (Reihenfolge von oben nach unten):
+
+1. **Allgemeine Audio-Kontrollen**
+   - **Noise:** Dropdown (Std. "off") + Button "More" (dunkelgrau/oranger Text) + Dropdown (Std. "off") + Button "More".
+   - **Volume:** Slider + Dropdown (Std. "off", rechtsbündig).
+   - **Pan:** Slider (mit "L=R"-Indikator) + Button "Comp" (dunkelgrau/grüner Text).
+   - **Squelch:** Label mit grünem Dreieck + Slider (roter Track) + Text-Label "off" + 2× Dropdown für Zeitwert (z. B. "0s").
+2. **Passband (PB) Konfiguration**
+   - **PB default:** Button "PB default" (gelb/schwarz) + Dropdown (Std. "off", rechtsbündig).
+   - **PB low:** Slider + Wertanzeige (z. B. "-4900").
+   - **PB high:** Slider + Wertanzeige (z. B. "4900").
+   - **PB center:** Slider + Wertanzeige (z. B. "0").
+   - **PB width:** Slider + Wertanzeige (z. B. "9800").
+   - Trennlinie.
+3. **Noise Blanker & Noise Filter**
+   - **Noise blanker:** Dropdown (Std. "off") + Button "Defaults" (gelb/schwarz) + Button "help" (grün/weiß, rechtsbündig). Trennlinie.
+   - **Noise filter:** Dropdown (Std. "off") + Button "Defaults" + Button "help". Trennlinie.
+4. **Noise Blanker Test**
+   - **Noise blanker test (Header):** Dropdown (Std. "test off", roter Text).
+   - **Test pulse gain:** dynamisches Label (z. B. "Test pulse gain: 0 dB") + Slider.
+   - **Test pulse width:** dynamisches Label (z. B. "Test pulse width: 1 samples") + Slider.
+
+**Styling:** dunkelgrauer Hintergrund; Parameter-Labels farbcodiert (Noise/Volume/Pan/
+PB... orange, Squelch grün, Noise blanker/filter cyan); **vertikale Scrollbar rechts**
+(nicht alles passt auf den Bildschirm).
+
+### ⚠️ Research-Aufgabe (Pflicht vor Fix)
+
+Die Parameterliste oben ist **aus Screenshots visuell abgeleitet** — exakte
+Wertebereiche der Slider, Dropdown-Inhalte und mögliche versteckte Parameter sind
+daraus **nicht als Fakt belegbar**. Vor der Implementierung ist ein Research nötig:
+
+1. **Quellcode-Referenz:** `jks-prv/KiwiSDR_server` → `web/kiwi/` durchsuchen
+   (Schlagworte: `audio`, `squelch`, `noise_blank`, `noise_filter`, `pb_`,
+   `test_pulse`). Die exakten Parameter-IDs, Slider-Min/Max und Dropdown-Optionen
+   extrahieren.
+2. **Live-DOM-Referenz:** `ui/e2e/reference/kiwisdr-reference/subtabs.json` prüfen —
+   enthält der Audio-Tab bereits alle Elemente? Falls nicht, `capture-reference.spec.ts`
+   (oder der Capture-Helper) gegen `kphsdr.com:8072` erneut laufen lassen und den
+   vollständigen Audio-Tab-DOM aufnehmen.
+3. **Ergebnis:** Die Parameterliste in dieser Analyse als **verbindliche Checkliste**
+   (jedes Element → ParamId + Range + Default) verfeinern, bevor gebaut wird.
+
+### Fix-Plan Bug 10
+
+**Schritt 0 — Research (Pflicht):** obige Research-Aufgabe abschließen; die
+verbindliche Parameterliste festhalten.
+
+**Schritt 1 — Scrollbare Container-Komponente:**
+
+```html
+<!-- Audio-Tab-Inhalt in scrollbaren Wrapper kapseln -->
+<div class="kiwi-cpanel__tab-scroll" role="tabpanel">
+  <!-- alle Audio-Parameter in fester Reihenfolge -->
+</div>
+```
+```css
+.kiwi-cpanel__tab-scroll {
+  max-height: 320px;          /* oder flex: 1 innerhalb des Panels */
+  overflow-y: auto;           /* vertikale Scrollbar rechts */
+}
+```
+
+**Schritt 2 — Wiederverwendbare Sub-Komponenten:**
+
+- `SliderRow` (Label + Slider + Wertanzeige)
+- `DropdownRow` (Label + Dropdown)
+- `ActionRow` (Label + Button(s), farbcodiert)
+
+**Schritt 3 — Parameter in fester Reihenfolge einbauen** (siehe Referenz-Liste):
+Noise (2× Dropdown + 2× "More") → Volume → Pan → Squelch → PB default/low/high/
+center/width → Noise blanker → Noise filter → Noise blanker test (pulse gain/width).
+
+**Schritt 4 — Farbcodierte Labels:** Noise/Volume/Pan/PB orange, Squelch grün,
+Noise blanker/filter cyan — via CSS-Klassen (`kiwi-cpanel__ctrl-label--orange/--green/--cyan`).
+
+**Akzeptanzkriterium:**
+- Audio-Tab zeigt alle Parameter aus der (per Research verifizierten) Liste.
+- Vertikale Scrollbar rechts; alle Parameter per Scrollen erreichbar.
+- Labels farbcodiert, Slider/Dropdowns/Buttons in fester Reihenfolge.
+
+**E2E-Test:** `ui/e2e/audio-tab.spec.ts` — erweitern:
+- Alle Audio-Parameter sichtbar (nach `scrollIntoView`).
+- Scrollbar vorhanden (`overflow-y: auto`), letzte Parameter per Scroll erreichbar.
+- Parameter-Reihenfolge entspricht Referenz.
+
+---
+
+## Bug 11 — AGC-Tab beinhaltet eventuell nicht alle Parameter
+
+**Betroffene Datei:** `ui/src/views/PluginView.vue` (AGC-Tab)
+
+### Analyse (abgeschlossen 2026-08-29)
+
+**IST:** Der AGC-Tab (`<template v-if="activeTab === 'AGC'">`) enthält aktuell:
+AGC ON/OFF-Toggle, Threshold-Slider, Decay-Slider, Hang-Toggle, Slope-Slider,
+Man Gain-Slider. Der Aufbau weicht vom KiwiSDR-Original ab: dort sitzt eine
+**horizontale Aktionsleiste (AGC / Hang / Defaults / help)** oben, darunter die
+Slider-Parameter; unser Layout mischt Toggles und Slider ohne diese Struktur.
+Zudem fehlt **Thresh CW** (ein eigener CW-Threshold-Slider) und eine **Scrollbar**.
+
+**Referenz (KiwiSDR Web UI, visuell erfasst aus Screenshots + Quellcode):**
+
+1. **Obere Aktionsleiste (Buttons, horizontal):**
+   - **AGC:** Button (dunkelgrau/grüner Text) — globaler Ein-/Ausschalter.
+   - **Hang:** Button (dunkelgrau/weißer Text, orangene Umrandung).
+   - **Defaults:** Button (gelb/schwarz).
+   - **help:** Button (grün/weiß), **rechtsbündig** auf derselben Zeile.
+2. **Slider-Parameter (Label links | Slider mitte | Wert rechts):**
+   - **Manual gain:** Label weiß, Wert z. B. "50 dB".
+   - **Threshold:** Label orange, Wert z. B. "-110 dBm".
+   - **Thresh CW:** Label weiß, Wert z. B. "-130 dBm".
+   - **Slope:** Label orange, Wert z. B. "6 dB".
+   - **Decay:** Label orange, Wert z. B. "1000 msec".
+
+**Styling:** dunkelgrauer Hintergrund; Labels wechseln zwischen weiß/orange
+(Gruppierungs-/Prioritäts-Hinweis); **vertikale Scrollbar rechts**; S-Meter-Skala
+(S1…S9, +10…+60) entweder als Teil des Scroll-Containers oder **fest am unteren
+Rand** des übergeordneten UI-Fensters.
+
+### ⚠️ Research-Aufgabe (Pflicht vor Fix)
+
+Die Parameterliste ist **visuell (Screenshots) abgeleitet** — exakte Wertebereiche,
+Dropdown-/Toggle-Semantik und mögliche versteckte Parameter (z. B. weitere
+AGC-Parameter wie `agc_gain`/`agc_hold`/`agc_mintop` in manchen KiwiSDR-Builds) sind
+daraus **nicht als Fakt belegbar**. Vor der Implementierung ist ein Research nötig:
+
+1. **Quellcode-Referenz:** `jks-prv/KiwiSDR_server` → `web/kiwi/` durchsuchen
+   (Schlagworte: `agc`, `hang`, `slope`, `decay`, `threshold`, `thresh_cw`,
+   `manual_gain`). Exakte Parameter-IDs, Slider-Min/Max, Einheiten und Toggle-
+   Semantik extrahieren.
+2. **Live-DOM-Referenz:** `ui/e2e/reference/kiwisdr-reference/subtabs.json` prüfen —
+   enthält der AGC-Tab alle Elemente? Falls nicht, Capture gegen `kphsdr.com:8072`
+   erneut laufen lassen und den vollständigen AGC-Tab-DOM aufnehmen.
+3. **Ergebnis:** verbindliche Parameterliste (ParamId + Range + Default + Einheit)
+   als Checkliste verfeinern, bevor gebaut wird.
+
+### Fix-Plan Bug 11
+
+**Schritt 0 — Research (Pflicht):** obige Research-Aufgabe abschließen.
+
+**Schritt 1 — Scrollbare Container-Komponente:** AGC-Inhalt in
+`.kiwi-cpanel__tab-scroll` (wie Bug 10) kapseln (`max-height` + `overflow-y: auto`).
+
+**Schritt 2 — Obere Aktionsleiste:** `AGC` / `Hang` / `Defaults` / `help`
+(rechtsbündig) als Button-Reihe.
+
+**Schritt 3 — Slider-Parameter (Label | Slider | Wert):** Manual gain, Threshold,
+Thresh CW, Slope, Decay — in fester Reihenfolge, Wert-Anzeige mit Einheit
+(`dB`/`dBm`/`msec`).
+
+**Schritt 4 — S-Meter-Skala:** entweder Teil des Scroll-Containers oder fest am
+unteren Rand fixiert (je nach Original-Verhalten).
+
+**Schritt 5 — Farbcodierte Labels:** weiß/orange abwechselnd wie in der Referenz.
+
+**Akzeptanzkriterium:**
+- AGC-Tab zeigt Aktionsleiste + alle Slider (inkl. Thresh CW) + Scrollbar.
+- Werte-Anzeigen mit korrekten Einheiten; S-Meter-Skala korrekt integriert.
+- Parameterliste per Research verifiziert.
+
+**E2E-Test:** `ui/e2e/agc.spec.ts` — erweitern:
+- Aktionsleiste (AGC/Hang/Defaults/help) + alle Slider vorhanden (nach `scrollIntoView`).
+- Thresh CW-Slider vorhanden; S-Meter-Skala sichtbar; Scrollbar funktioniert.
+
+---
+
+## Bug 12 — Header-Bereich entspricht nicht der Web UI
+
+**Betroffene Datei:** `ui/src/views/PluginView.vue` (Header-Block) + ggf. neue
+`ui/src/components/HeaderBar.vue`
+
+### Analyse (abgeschlossen 2026-08-29)
+
+**IST:** Der Header ist eine einfache, flache Zeile mit drei Sektionen
+(`kiwi-header__left` Logo + Titel + "Antenna: KiwiSDR broadband",
+`kiwi-header__center` Name + Status + `StationInput`,
+`kiwi-header__right` Callsign-Input + UTC/Local/Timezone). Höhe und
+Informationsdichte weichen vom KiwiSDR-Original ab.
+
+**Problem (Paritäts-Abweichung):**
+
+1. **Fehlende Station-Info.** KiwiSDR zeigt einen **großen, fetten Titel** (z. B.
+   "VK5ARG Public KiwiSDR Receiver #1") plus **zwei Untertitel-Zeilen**:
+   - Zeile 1: Standort, Grid, ASL, `[map]`-Link, SNR-Werte.
+   - Zeile 2: Antennen-Spezifikationen.
+   Unser Header zeigt nur "NetSDRStation" + "Antenna: KiwiSDR broadband" (statisch).
+2. **Fehlende Credits-Sektion.** KiwiSDR hat eine mittlere Sektion "Provided by"
+   + zwei Hyperlinks. Unser Header hat diese nicht.
+3. **Fehlender Collapse/Expand-Toggle.** KiwiSDR hat am unteren mittleren Rand der
+   Top Bar einen halbtransparenten Reiter mit Dreieck/Chevron, der einen
+   **Bild-Bereich** (Panoramabild der Station) auf-/zuklappt. Unser Header hat keine
+   Ausklapp-Funktion.
+4. **Fehlender Bild-Bereich (Expanded View).** KiwiSDR klappt ein breites
+   Hintergrundbild aus mit Overlays: Logos in den Ecken, schwebendes Kontroll-Panel
+   (Frequenz-Input + "select band"/"extension"-Dropdowns + runder Play-Button) unten
+   rechts, lila Play-Button vertikal zentriert links.
+
+**WICHTIG — Bestands-Funktion erhalten:** Die **Connect-Funktionalität**
+(`StationInput` mit Stationsname, Connect/Disconnect-Button, Status-Badge) MUSS im
+neuen Header-Layout erhalten bleiben. Sie ist aktuell in `kiwi-header__center`
+integriert; im Redesign ist ein fester Platz dafür vorzusehen (z. B. in der rechten
+Sektion neben "Your name or callsign" oder als eigener Bereich).
+
+**Referenz (KiwiSDR Web UI):** hellgraue Top Bar in drei Sektionen
+(links Branding/Station-Info, Mitte Credits "Provided by", rechts Callsign-Input +
+"Powered by OpenWebRX"-Logo **oder** mehrzeilige Zeitanzeige). Unten mittig ein
+halbtransparenter Reiter (Chevron ↓/↑) als Collapse/Expand-Toggle; darunter ein
+expandierbarer Bild-Container mit absolut positionierten Overlays.
+
+### Fix-Plan Bug 12
+
+**Schritt 1 — Top Bar dreiteilig (hellgrau, Flexbox/Grid):**
+
+- **Links:** Logo (Kiwi-Vogel) + Titel (groß/fett) + Untertitel-Zeile 1 (Standort,
+  Grid, ASL, `[map]`, SNR) + Untertitel-Zeile 2 (Antennen).
+- **Mitte:** "Provided by" + zwei Hyperlinks (unterstrichen).
+- **Rechts:** "Your name or callsign:"-Input + Slot für **entweder** "Powered by
+  OpenWebRX"-Logo **oder** Zeitanzeige (UTC/Local/Timezone).
+
+**Schritt 2 — Connect-Funktionalität erhalten (Pflicht):**
+
+```html
+<!-- StationInput bleibt im Header (Stationsname + Connect/Disconnect + Status) -->
+<StationInput :station="store.station" :status="store.status"
+  @connect="onStation" @disconnect="store.disconnect()" />
+```
+
+**Schritt 3 — Collapse/Expand-Toggle (Reiter):**
+
+```ts
+const isExpanded = ref(false)
+// Chevron: isExpanded ? '▲' : '▼' (bzw. CSS-Rotation)
+```
+
+**Schritt 4 — Expandierbarer Bild-Bereich (Transitions):**
+
+```html
+<div class="kiwi-header__expand" :class="{ '--open': isExpanded }">
+  <!-- Panoramabild + Overlays (position: absolute): Logos, Kontroll-Panel, Play-Button -->
+</div>
+```
+```css
+.kiwi-header__expand { max-height: 0; overflow: hidden; transition: max-height 0.3s ease; }
+.kiwi-header__expand.--open { max-height: 400px; }
+```
+
+**Schritt 5 — Overlays im Bild-Container (position: absolute):**
+- Logos in Ecken (unten links, oben rechts).
+- Schwebendes Kontroll-Panel unten rechts: numerisches Frequenz-Input + zwei
+  Dropdowns ("select band", "extension") + runder Play/Pause-Button.
+- Lila Play-Button links, vertikal zentriert.
+
+**Akzeptanzkriterium:**
+- Header hat Titel + Untertitel-Zeilen + Credits + Callsign-Input + Zeit/Logo-Slot.
+- Collapse/Expand-Toggle klappt Bild-Bereich weich ein/aus (Chevron ↓/↑).
+- **Connect-Funktionalität (StationInput + Status) bleibt vollständig erhalten.**
+
+**E2E-Test:** `ui/e2e/kiwi-layout.spec.ts` / `header-topbar`-Tests — erweitern:
+- Titel + Untertitel + "Provided by" + Callsign-Input vorhanden.
+- Toggle-Reiter klappt Bild-Bereich ein/aus.
+- `StationInput` (Connect/Status) weiterhin sichtbar und funktional.
+
+---
+
+## Bug 13 — "Spec RF"-Button soll funktionieren
+
+**Betroffene Dateien:** `ui/src/views/PluginView.vue` (Spectrum-Button + Layout),
+`ui/src/components/Waterfall.vue` + ggf. neue `ui/src/components/SpecRf.vue`
+
+### Analyse (abgeschlossen 2026-08-29)
+
+**IST:** Der Spectrum-Button (`cycleSpectrumMode` in `PluginView.vue`, Bug 6.6)
+zyklisch nur das **Label** durch `Spectrum` → `Spec RF` → `Spec AF`
+(`SPECTRUM_MODES`/`SPECTRUM_LABELS`, `store.spectrumMode`). Es wird **kein**
+zusätzliches Diagramm gerendert — der Modus-Wechsel ist rein kosmetisch.
+
+**Problem (Paritäts-Abweichung):**
+
+1. **Kein Spektrumanalysator.** Bei "Spec RF" soll über Frequenzskala + Wasserfall
+   ein 2D-Spektrumanalysator (Area-Chart) eingeblendet werden. Aktuell passiert nichts.
+2. **Fehlende Y-Achse (Signalstärke dBm).** Rechts eine vertikale dBm-Skala
+   (z. B. -50 oben bis -100 unten), Werte farblich hinterlegt (rot/hellgrün/cyan/
+   dunkelblau), mit horizontalen grauen Rasterlinien über die volle Breite.
+3. **Fehlendes Passband-Overlay.** Ein halbtransparentes graues Rechteck markiert die
+   aktuelle Passband-Breite und muss synchron zur grünen Klammer (Bug 7) mitwandern
+   und sich in der Breite ändern.
+4. **Fehlende Sync mit der Frequenzachse.** Der Graph muss beim Pan/Zoom verzögerungs-
+   frei mit dem Wasserfall mitskalieren/verschieben (X-Achse exakt synchron).
+
+**Datenquelle (Hinweis):** M4.7 hat bereits `SpectrumAnalyzer` (Goertzel-DFT) +
+`waterfallBins` (dBFS) im Store + `setWaterfallBins`. Der Spec-RF-Graph kann diese
+Bins als Grundlage verwenden; echte RF-Spektrumsdaten kommen erst mit dem
+WF-WebSocket (M5). Für M4c.7 reicht das Rendern des vorhandenen Spektrums
+(kein Fake-Datenstrom — siehe Bug 2 Entscheidung).
+
+**Referenz (KiwiSDR Web UI):** "Spec RF"-Toggle im schwebenden Kontroll-Panel
+(aktiv = leuchtend grün) blendet einen Spektrumanalysator ein: schwarzer Hintergrund,
+volle Breite, Y-Achse dBm rechts mit farbcodierten Werten + horizontalen Grid-Lines,
+hellgraues/weißes Area-Chart, halbtransparentes Passband-Overlay, synchron zur
+Frequenzskala.
+
+### Fix-Plan Bug 13
+
+**Schritt 1 — Toggle-Button aktiv grün:**
+
+```html
+<button class="kiwi-cpanel__spectrum-btn"
+  :class="{ 'kiwi-cpanel__spectrum-btn--active': store.spectrumMode === 'specRF' }"
+  @click="cycleSpectrumMode">Spec RF</button>
+```
+
+**Schritt 2 — Spektrumanalysator-Komponente (Area-Chart):**
+
+```html
+<template v-if="store.spectrumMode === 'specRF'">
+  <SpecRf :bins="store.waterfallBins"
+          :view-low-khz="loKhz" :view-high-khz="hiKhz"
+          :low-cut-hz="store.lowCut" :high-cut-hz="store.highCut" />
+</template>
+```
+
+**Schritt 3 — Diagramm-Rendering (Canvas/SVG, schwarzer Hintergrund):**
+- Y-Achse rechts: dBm-Werte (-50 … -100), farbcodiert; horizontale Grid-Lines grau.
+- Area-Chart hellgrau/weiß, X-Achse synchron zur Frequenzskala (`viewLow/HighKhz`).
+
+**Schritt 4 — Passband-Overlay (halbtransparentes graues Rechteck):**
+- Position aus `lowCut`/`highCut` + `freqKhz` → X-Prozent wie in `FrequencyRuler`
+  (`loPct`/`hiPct`/`bwPct`). Synchron zur grünen Klammer (Bug 7).
+
+**Schritt 5 — Sync bei Pan/Zoom:**
+- Spec-RF-Graph bekommt dieselben `viewLowKhz`/`viewHighKhz` wie `FrequencyRuler`/
+  `Waterfall` und re-rendert reaktiv (Canvas-Redraw bei Prop-Änderung).
+
+**Akzeptanzkriterium:**
+- "Spec RF"-Button (aktiv grün) blendet den Spektrumanalysator ein/aus.
+- Area-Chart mit Y-Achse (dBm, farbcodiert) + Grid-Lines + Passband-Overlay.
+- Graph skaliert/verschiebt synchron mit Wasserfall + Frequenzskala beim Pan/Zoom.
+
+**E2E-Test:** `ui/e2e/wf0-tab.spec.ts` / neues `spec-rf.spec.ts`:
+- Klick auf "Spec RF" → Spektrumanalysator sichtbar, Button aktiv (grün).
+- Area-Chart vorhanden; Passband-Overlay verschiebt sich bei Änderung von low/high cut.
+
+---
+
+## Bug 14 — "Spec AF"-Button soll funktionieren
+
+**Betroffene Dateien:** `ui/src/views/PluginView.vue` (Spectrum-Button + Layout),
+`ui/src/components/Waterfall.vue` + ggf. neue `ui/src/components/SpecAf.vue`
+
+**Verwandt:** Bug 13 (Spec RF). Der Spectrum-Button hat **drei Zustände**
+(`Spectrum` → `Spec RF` → `Spec AF` → aus). Bug 13 behandelt die RF-Ansicht,
+Bug 14 die AF-Ansicht. Beide nutzen `store.spectrumMode`.
+
+### Analyse (abgeschlossen 2026-08-29)
+
+**IST:** `cycleSpectrumMode` zyklisch nur das Label (`waterfall`/`specRF`/`specAF`),
+rendert aber weder RF- noch AF-Diagramm. Die AF-Ansicht fehlt vollständig.
+
+**Problem (Paritäts-Abweichung):**
+
+1. **Kein AF-Spektrumanalysator.** Beim zweiten Klick ("Spec AF") soll ein
+   AF-Spektrum des demodulierten Audiosignals erscheinen — aktuell passiert nichts.
+2. **Fehlende AF-spezifische Overlays:**
+   - **Vertikales Grid** (hellgraue Linien) für Audio-Frequenzschritte.
+   - **Grüne Center-Linie** (Mittelachse) = Nullpunkt/Träger des Audiosignals,
+     exakt synchron zur Mitte der grünen Klammer (Tuning-Bereich).
+   - **Rote Begrenzungslinien** links/rechts = äußere Audio-Passband-Grenzen
+     (Filtergrenzen).
+3. **AF-Graph ist um die getunte Frequenz zentriert** (im Gegensatz zum RF-Graph),
+   muss sich beim Tuning (grüne Klammer verschieben) synchron mitbewegen.
+
+**Datenquelle (Hinweis):** Wie Bug 13 nutzt die AF-Ansicht die vorhandenen
+`waterfallBins`/`SpectrumAnalyzer` (M4.7) als Grundlage. Echte AF-Demodulator-Daten
+(Audio-Basisband) sind ein DSP-/Netzwerk-Thema für M5+. Für M4c.7 reicht das
+korrekte Rendern der AF-Ansicht (kein Fake-Datenstrom, siehe Bug 2).
+
+**Referenz (KiwiSDR Web UI):** "Spec AF"-Toggle (aktiv grün) wechselt das obere
+Diagramm von RF auf AF: gleiche Y-Achse (dBm, farbcodiert) + horizontale Grid-Lines,
+hellgraues/weißes Area-Chart (um Träger zentriert), zusätzlich vertikales Grid,
+grüne Center-Linie (Träger) + zwei rote Filtergrenzen-Linien. Ein weiterer Klick
+blendet das Diagramm wieder aus.
+
+### Fix-Plan Bug 14
+
+**Schritt 1 — Toggle (drei Zustände) aktiv grün:**
+
+```ts
+// Bestand (Bug 6.6): SPECTRUM_MODES = ['waterfall','specRF','specAF']
+// cycleSpectrumMode() zyklisch durch alle drei; Button aktiv bei specRF/specAF.
+```
+
+**Schritt 2 — AF-Spektrumanalysator-Komponente:**
+
+```html
+<template v-if="store.spectrumMode === 'specAF'">
+  <SpecAf :bins="store.waterfallBins"
+          :view-low-khz="loKhz" :view-high-khz="hiKhz"
+          :cursor-khz="store.freqKhz"
+          :low-cut-hz="store.lowCut" :high-cut-hz="store.highCut" />
+</template>
+```
+
+**Schritt 3 — Diagramm-Rendering (Canvas/SVG, schwarzer Hintergrund):**
+- Y-Achse rechts identisch zur RF-Ansicht (-50…-100 dBm, farbcodiert) + horizontale Grid-Lines.
+- AF-Area-Chart hellgrau/weiß, **um den Träger zentriert**.
+- **Vertikales Grid** (hellgraue Linien) für Audio-Frequenzschritte.
+
+**Schritt 4 — Overlays (AF-spezifisch):**
+- **Grüne Center-Linie:** X-Position = `cursorPct` (Mittenfrequenz), leuchtend grün.
+- **Rote Begrenzungslinien:** X-Positionen = `loPct`/`hiPct` (aus `lowCut`/`highCut`),
+  synchron zu den Filtergrenzen.
+
+**Schritt 5 — Sync bei Pan/Tuning:**
+- AF-Graph + grüne Center-Linie + rote Filtergrenzen re-rendern reaktiv bei
+  `freqKhz`/`lowCut`/`highCut`/`viewLow/HighKhz`-Änderung.
+
+**Akzeptanzkriterium:**
+- "Spec AF"-Button (aktiv grün) wechselt das Diagramm von RF auf AF (und wieder aus).
+- AF-Graph um Träger zentriert, mit vertikalem Grid, grüner Center-Linie + zwei roten Filtergrenzen.
+- Gesamtes AF-Spektrum bewegt sich synchron beim Tuning (grüne Klammer verschieben).
+
+**E2E-Test:** `ui/e2e/wf0-tab.spec.ts` / neues `spec-af.spec.ts`:
+- 2× Klick auf Spectrum-Button → "Spec AF"-Label + AF-Diagramm sichtbar.
+- Grüne Center-Linie + rote Filtergrenzen vorhanden, verschieben sich beim Tuning.
+
+---
+
 ## E2E-Lückenanalyse
 
 ### Problem 1: Playwright sieht nur sichtbare Elemente
@@ -999,6 +1791,10 @@ KiwiSDR-Extensions werden über `id-select-ext` (27 Optionen) ausgewählt.
 
 ## M4c.7 Offene Tasks (Stand 2026-08-29)
 
+> **Status 2026-08-29 (agent:DEV):** Alle drei offenen Tasks sind abgeschlossen.
+> Verifikation: C++-Build Debug+Release grün (Validator 47/47, ctest 1/1), Playwright
+> 85 passed / 1 skipped / 0 failed, Vitest 112/112. Details: `doc/log.md`.
+
 ### Task 1: C++ Build (VST3_SDK_ROOT)
 
 **Fehler:**
@@ -1013,11 +1809,21 @@ CMake Error at CMakeLists.txt:57 (message):
 
 **Fix:** VST3 SDK als Git-Submodul (`git submodule add` mit NS_VENDOR_VST3_SDK=ON) ODER Umgebungsvariable setzen. Dazu WEBVIEW2_SDK_ROOT prüfen.
 
-**Status:** Offen
+**Status:** ✅ Erledigt — SDKs existieren unter `C:/Users/marku/Documents/GitHub/thirdParty/`
+(`vst3sdk`, `WebView2SDK`). Der CMake-Cache (`build/win-msvc/CMakeCache.txt`) hat die
+Pfade bereits korrekt gesetzt; `cmake --build build/win-msvc --config Debug|Release`
+läuft durch (VST3-Validator 47/47, ctest 1/1).
 
 ---
 
 ### Task 2: 8 E2E-Tests failen
+
+> **Status 2026-08-29 (agent:DEV):** ✅ Erledigt. Die Syntax-Fixes aus Commit
+> `f6d9dd6` deckten die Fälle 2.1–2.7 ab; danach verblieben 11 Failures (alle
+> veraltete/fragile Tests, keine UI-Bugs). Behandelt in
+> `ui/e2e/band-presets.spec.ts`, `dx-tags.spec.ts`, `extension-select.spec.ts`,
+> `frequency-ruler.spec.ts`, `panel-controls.spec.ts`. Resultat: **85 passed /
+> 1 skipped / 0 failed**.
 
 22 Tests ausgeführt, 13 passed, 1 skipped, **8 failed**.
 
@@ -1075,6 +1881,11 @@ Die E2E-Tests aus M4b-Zeiten (`.kiwi-control-panel`, `[data-testid="..."]`) wurd
 
 **Fix:** Alle E2E-Tests in `ui/e2e/` gegen das aktuelle DOM prüfen.
 
+> **Status 2026-08-29 (agent:DEV):** ✅ Erledigt. Einziger veralteter Selektor war
+> `.kiwi-cpanel__play-btn` in `extension-select.spec.ts` (Panel-Play-Button durch
+> Bug 6.5 entfernt; Tests auf Floating-Button `.kiwi-play-btn` umgestellt). Keine
+> weiteren `kiwi-control-panel`/`data-testid`-Referenzen in `ui/e2e/*.spec.ts`.
+
 ---
 
 ## Chronologie
@@ -1087,3 +1898,12 @@ Die E2E-Tests aus M4b-Zeiten (`.kiwi-control-panel`, `[data-testid="..."]`) wurd
 | 2026-08-29 | M4c.7 Bugs implementiert (6 Bugs + 12 Sub-Bugs gefixt, Build ✅, 112 Unit-Tests ✅) |
 | 2026-08-29 | M4c.7 E2E-Tests geschrieben (5 neue Files, 22 Tests) — 8 failen, 2 haben Syntax-Fehler |
 | 2026-08-29 | C++ Build blockiert (VST3_SDK_ROOT fehlt) — als Task dokumentiert |
+| 2026-08-29 | **M4c.7 Tasks 1–3 abgeschlossen:** C++-Build verifiziert (SDK-Pfade im Cache), 11 E2E-Failures behoben (veraltete/fragile Tests), Playwright 85/85 grün |
+| 2026-08-29 | **Bug 7 erfasst:** Frequenz-Cursor entspricht nicht KiwiSDR (zoom-abhängige Passband-Repräsentation fehlt) — Analyse + Fix-Plan dokumentiert, noch offen |
+| 2026-08-29 | **Bug 8 erfasst:** Frequenzband-Skala verhält sich nicht wie Web UI (adaptive pixel-basierte Tick-Engine fehlt) — Analyse + Fix-Plan dokumentiert, noch offen |
+| 2026-08-29 | **Bug 9 erfasst:** Band- & Stationsleiste verhält sich nicht wie Web UI (dynamische Skalierung + Kollisions-Layout + Verbindungslinien fehlen) — Analyse + Fix-Plan dokumentiert, noch offen |
+| 2026-08-29 | **Bug 10 erfasst:** Audio-Tab fehlen Parameter + Scrollbar (Research-Pflicht vor Fix) — Analyse + Fix-Plan dokumentiert, noch offen |
+| 2026-08-29 | **Bug 11 erfasst:** AGC-Tab beinhaltet eventuell nicht alle Parameter (Research-Pflicht vor Fix) — Analyse + Fix-Plan dokumentiert, noch offen |
+| 2026-08-29 | **Bug 12 erfasst:** Header-Bereich entspricht nicht der Web UI (Station-Info, Credits, Collapse/Expand + Bild-Bereich fehlen; Connect-Funktionalität muss erhalten bleiben) — Analyse + Fix-Plan dokumentiert, noch offen |
+| 2026-08-29 | **Bug 13 erfasst:** "Spec RF"-Button soll funktionieren (Spektrumanalysator-Top-View fehlt) — Analyse + Fix-Plan dokumentiert, noch offen |
+| 2026-08-29 | **Bug 14 erfasst:** "Spec AF"-Button soll funktionieren (AF-Spektrumanalysator mit Center-Linie + Filtergrenzen fehlt) — Analyse + Fix-Plan dokumentiert, noch offen |

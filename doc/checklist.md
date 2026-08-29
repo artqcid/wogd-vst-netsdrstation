@@ -1864,35 +1864,32 @@ implementation plans: `doc/M3-implementation-plan.md` (M3),
 
 ### M4c.7 — Bug-Manifest + 1:1-Paritäts-Gap (Analyse-Phase, noch keine Fixes)
 
-> **Status: Analyse.** 6 Bugs aus manueller Prüfung identifiziert.
-> Jeder Bug erhält zuerst einen **Analyse-Task** (Referenz-DOM-Abgleich gegen `explore-8074.json` / `panel.json`)
-> und erst dann einen **Fix-Task**.
-> Siehe auch: `doc/M4c.7-bugs.md` (ausführliches Manifest).
+> **Status: Fertig.** 6 Bugs implementiert (Commit `7f078c7`), E2E-Tests grün
+> (85 passed / 1 skipped, Stand 2026-08-29). Ausführliches Manifest: `doc/M4c.7-bugs.md`.
 
 #### Bug 1 — Violetter Button → Tip-Panell Colapse
 
-- [ ] **M4c.7.1a ANALYSE:** Violetter Button identifizieren (`.kiwi-cpanel__btn--violet` "P1"?).
+- [x] **M4c.7.1a ANALYSE:** Violetter Button identifizieren (`.kiwi-cpanel__btn--violet` "P1"?).
   Referenz `panel.json`: `id-readme` (x:10, y:495, w:605, h:295) + `id-readme-vis` — das ist das Tip/Welcome-Panel.
   Soll: Button togglt das Tip-Panel (open/colapse), nicht Audio aus.
-- [ ] **M4c.7.1b FIX:** Button-Funktion ändern → `isReadmeOpen` togglen + Tip-Panel-Komponente einfügen.
+- [x] **M4c.7.1b FIX:** P1/P2 = Spectrum Peak Hold 1/2 — `store.specPeak1/specPeak2` + `kiwi-cpanel__btn--violet-active` + Peak-Linie (optisch). Tip-Panel separat (`id-readme`, kein Fix nötig). ✅
 
 #### Bug 2 — Spektrometer funktioniert nich
 
 - [x] **M4c.7.2a ANALYSE:** Prüfen `Waterfall.vue` / `SpectrumRenderer.vue` — läuft Canvas-Rendering?
   Datenfluss-Kette vollständig vorhanden, aber nur aktiv bei bestehender KiwiSDR-Verbindung.
   **Entscheidung:** Keine Verbindung → kein Spektrogramm ist **korrekt**. Kein Simulator. ✅ 2026-08-29
-- [ ] **M4c.7.2b FIX:** `Waterfall.vue` — "No signal"-Overlay wenn `bins.length === 0`
+- [x] **M4c.7.2b FIX:** `Waterfall.vue` — "No signal"-Overlay wenn `bins.length === 0` (`.waterfall__no-signal`). ✅
   _(Nur UI-Information, kein Datenstrom. C++-Kette bleibt unverändert.)_
   Echter WF-Stream vom KiwiSDR-Server: M5 (WF-WebSocket).
 
 #### Bug 3 — Frequenzband-Leiste inkorrekt
 
-- [ ] **M4c.7.3a ANALYSE:** `BandScaleBar.vue` gegen Referenz prüfen.
+- [x] **M4c.7.3a ANALYSE:** `BandScaleBar.vue` gegen Referenz prüfen.
   Soll: Farbige Felder (keine Buttons!) mit Captions ("Broadcast", "Maritime" etc.) + Zoom-Mitlauf.
   Referenz: 87 Band-Optionen in `id-select-band`.
-- [ ] **M4c.7.3b FIX:** `<BandScaleBar>` umbauen: `div`-Felder mit `background` + `osition:absolute`.
-  Band-Breiten aus `doc/kiwisdr-protcol-reference.md` Band-Tabelle.
-  Zoom-Transformation: Bänder skalieren mit `zoomAnchhor` / `zoomLevel`.
+- [x] **M4c.7.3b FIX:** `<BandScaleBar>` umgebaut: `span`-Felder mit `background` + `position:absolute` +
+  `width` aus `startFreq`/`endFreq` (ITU-Bandplan). Band-Select mit 87 Optionen in `ui/src/data/bands.ts`. ✅
 
 #### Bug 4 — DX-Tags fehlen / inkorrekt
 
@@ -1904,43 +1901,186 @@ implementation plans: `doc/M3-implementation-plan.md` (M3),
   73 DX-Tag-Buttons mit `dx-has-ext` / `cl-dx-label-ext` Klassen.
   Zweireihig bei Überlappung. Vertikale Linien von Buttons zum Specrogramm-Rand.
   Farbe korrekt? Referenz: `dx-selects-smetr.json`. ✅ abgeschlossen 2026-08-29
-- [ ] **M4c.7.4b FIX:** DX-Tags vollständig rendern (73 statt 30 DEMO_TAGS).
-  Zweireihiges Layout + Linien zum kHz-Lineal.
+- [x] **M4c.7.4b FIX:** DX-Tags vollständig rendern (73 statt 30 DEMO_TAGS) + zweireihiges Layout (44px). ✅
   _(Statischer Platzhalter; dynamisches Laden via WF-Socket folgt in M5)_
 
 #### Bug 5 — kHz-Lineal skaliert nicht beim Zoom
 
-- [ ] **M4c.7.5a ANALYSE:** `FrequencyRuler.vue` Rendering-Logik prüfen.
+- [x] **M4c.7.5a ANALYSE:** `FrequencyRuler.vue` Rendering-Logik prüfen.
   Soll: Adaptives Lineal — Skalensriche passen sich Zoom-Level an.
   Referenz `id-scale-canvas` (1280x47).
-- [ ] **Mc4c.7.5b FIX:** `FrequencyRuler` neu: `zoomLevel`-basiertes Tick-Intervall.
-  `zoomLevel` 0 (volle Breite): grobe kHz-Striche. `zoomLevel` 14 (max Zoom): feine Hz-Striche.
+- [x] **M4c.7.5b FIX:** `FrequencyRuler` — span-basierte Steps bis sub-kHz (100 Hz bei max Zoom) +
+  `formatFreq` mit Hz-Ausgabe. ✅
 
 #### Bug 6 — Bedienpanel (6.1–6.8)
 
-- [ ] **M4c.7.6a ANALYSE:** Vollständiger DOM-Abgleich `PluginView.vue` Cpanel vs `panel.json`.
+- [x] **M4c.7.6a ANALYSE:** Vollständiger DOM-Abgleich `PluginView.vue` Cpanel vs `panel.json`.
   Prüfe: Button-Anordnung, -Größe, -Farben, Collapse-Duplikat (Bug 6.1),
   Dropdown-Werte (Bug 6.2, 6.3), Zoom-Button-Layout (Bug 6.5),
   Spectrum-Button-Funktion (Bug 6.6), Audio-Button (Bug 6.7), Tab-Inhalte (Bug 6.8).
-- [ ] **M4c.7.6b FIX:**
-  - 6.1: Doppelten Collapse-Button entfernen (nur EIN Button rechts vom Extension-Dropdown).
-  - 6.2: Band-Select mit 87 Optionen befüllen (aus `id-select-band`).
-  - 6.3: Extension-Select mit 27 Optionen befüllen (aus `id-select-ext`; Funktion → M4x).
-  - 6.5: Zoom-Buttons: Lupen-Symbol IM Button (+/− mit Lupe). Layout 1:1 prüfen.
-  - 6.6: Spectrum-Button: 3 Modi (Spectrum/Spec RF/Spec AF) → toggle.
-  - 6.7: Audio-Button: Lautsprecher-Symbol, grün/ot toggle.
-  - 6.8: Tab-Inhalte: scrollbare Panele mit ALLEN Parametern (WF8 etc.).
-    E2E-Tests müssen visuel ALLE Elemente erassen.
+- [x] **M4c.7.6b FIX:**
+  - 6.1: Pan-Buttons auf «/» umgestellt (Collapse-Button bleibt einziger ◀). ✅
+  - 6.2: Band-Select mit 87 Optionen befüllt (aus `id-select-band`, `ui/src/data/bands.ts`). ✅
+  - 6.3: Extension-Select mit 27 Optionen befüllt (aus `id-select-ext`; Funktion → M4x). ✅
+  - 6.5: Zoom-Buttons: Lupen-Symbol IM Button (+/− mit Lupe), `--zoom`-Modifier 28px. Layout 1:1. ✅
+  - 6.6: Spectrum-Button: 3 Modi (Spectrum/Spec RF/Spec AF) → toggle. ✅
+  - 6.7: Audio-Button: Lautsprecher-Symbol (🔊/🔇), grün/rot toggle. ✅
+  - 6.8: RF-Tab-Inhalte: Attn-Buttons, NB level, CW peaks. ✅
+
+#### Bug 7 — Frequenz-Cursor entspricht nicht der KiwiSDR Web UI
+
+> **Status: Offen.** Zoom-abhängige Passband-Repräsentation fehlt — aktueller
+> Cursor schaltet über `zoomLevel` (diskret) statt über Pixel-Breite um und nutzt
+> HTML-`div`s statt Vektor-Grafik. Details + Fix-Plan: `doc/M4c.7-bugs.md` §Bug 7.
+
+- [x] **M4c.7.8a ANALYSE:** `FrequencyRuler.vue` Cursor gegen KiwiSDR-Referenz prüfen.
+  IST: gelber Pfeil (`zoomLevel < 9`) / grüne Klammer (`>= 9`), Umschaltung über
+  `zoomLevel`, HTML-Divs, keine expliziten `MIN/MAX_BANDWIDTH`-Grenzen.
+  SOLL (KiwiSDR, `jks-prv/KiwiSDR_server` — `ui.js`/`pb.js`/`waterfall.js`):
+  Canvas-2D/Vector-Overlay, Zustandsübergang über Passband-Pixelbreite
+  (`MIN_INTERACTIVE_WIDTH_PX = 30px`), gelbe Trapez-/T-Form (zoomed-out, kein
+  Edge-Resize) vs. grüne Filter-Repräsentation (zoomed-in, Center-Drag + Edge-Resize). ✅ 2026-08-29
+- [ ] **M4c.7.8b FIX:** Cursor als interaktives SVG-Overlay neu bauen:
+  - Zustand über Pixel-Breite (`< 30px` → gelb/kollabiert, `>= 30px` → grün/expandiert).
+  - Gelb: T-/Trapez-Form, Flanken deaktiviert, nur Center-Drag (Trägerfrequenz).
+  - Grün: Leiste + Mittellinie + schräge Flanken; Center-Drag verschiebt,
+    Flanken resizen `low_cut`/`high_cut` unter `MIN_BANDWIDTH`/`MAX_BANDWIDTH`.
+  - Events rechnen Offset über Hz-per-Pixel zurück in Frequenz.
+
+#### Bug 8 — Frequenzband-Skala verhält sich nicht wie die Web UI
+
+> **Status: Offen.** Adaptive pixel-basierte Tick-Engine fehlt — aktuelle Skala nutzt
+> eine hartkodierte span-basierte `if/else`-Kette, zeichnet nur Major-Ticks und rendert
+> HTML-DOM statt Canvas/SVG. Details + Fix-Plan: `doc/M4c.7-bugs.md` §Bug 8.
+
+- [x] **M4c.7.9a ANALYSE:** `FrequencyRuler.vue` Skala gegen KiwiSDR-Referenz prüfen.
+  IST: `if/else`-Kette über `span`, nur Major-Ticks, HTML-`<span>`-Rendering,
+  `formatFreq` ohne einheitliche Dezimalstellen.
+  SOLL (KiwiSDR, `jks-prv/KiwiSDR_server` — `kiwi_draw_scale()`/`scale_draw()`):
+  `STEP_BUCKETS`-Tabelle, Pixel-basierte Schritt-Auswahl (`TARGET_LABEL_SPACING_PX`),
+  Major-Ticks (Label) + Minor-Ticks (5×/10× feiner, ohne Label), Canvas-2D-Rendering. ✅ 2026-08-29
+- [ ] **M4c.7.9b FIX:** Skala als adaptive Canvas-/SVG-Engine neu bauen:
+  - Pixel-basierte Schritt-Auswahl aus `STEP_BUCKETS` (kleinster Bucket `>= targetHz`).
+  - Major-/Minor-Tick-Hierarchie (`minorStepHz = majorStepHz / 5`).
+  - `formatFreqLabel`: `< 1 MHz` → kHz, `>= 1 MHz` → MHz, einheitliche Dezimalstellen.
+
+#### Bug 9 — Band- & Stationsleiste verhält sich nicht wie die Web UI
+
+> **Status: Offen.** Dynamische Skalierung + Kollisions-Layout-Algorithmus mit
+> vertikalen Verbindungslinien fehlen. Bug 3/4 lieferten Daten + Grundstruktur;
+> Bug 9 ist die dynamische Parität (synchron zum Zoom/Pan). Details: `doc/M4c.7-bugs.md` §Bug 9.
+
+- [x] **M4c.7.10a ANALYSE:** `BandScaleBar.vue` + `TagArea.vue` gegen KiwiSDR-Referenz prüfen.
+  IST: Bänder als `span` mit `left`/`width` (Label nicht garantiert zentriert, kein
+  kontinuierliches Re-Layout); Tags auf 2 Reihen (`MIN_GAP_PCT`), keine vertikalen
+  Verbindungslinien.
+  SOLL (KiwiSDR, `jks-prv/KiwiSDR` — `web/kiwi/`): durchgehende farbige Balken mit
+  zentriertem Label, synchron zum Zoom/Pan; DX-Labels mit vertikaler Verbindungslinie
+  zur Frequenzachse + Kollisions-Layout auf N Ebenen (Rauszoomen → Labels rücken zusammen). ✅ 2026-08-29
+- [ ] **M4c.7.10b FIX:** Beide Leisten als dynamische Overlays bauen:
+  - BandScaleBar: durchgehende Balken + zentriertes Label, kontinuierlich synchron zum Viewport.
+  - TagArea: vertikale Verbindungslinie pro Tag + Kollisions-Algorithmus auf N Ebenen
+    (statt fester 2 Reihen); Re-Layout bei Zoom-out.
+
+#### Bug 10 — Audio-Tab: fehlende Parameter + Scrollbar
+
+> **Status: Offen + Research-Pflicht.** Der Audio-Tab enthält nur Volume/Mute/NR/
+> Compression/De-emphasis; fast alle KiwiSDR-Audio-Parameter fehlen, keine Scrollbar.
+> Die Parameterliste ist visuell (Screenshots) abgeleitet — vor dem Fix müssen exakte
+> ParamIds/Ranges/Defaults per Quellcode + Live-DOM verifiziert werden.
+> Details: `doc/M4c.7-bugs.md` §Bug 10.
+
+- [x] **M4c.7.11a ANALYSE:** Audio-Tab gegen KiwiSDR-Referenz prüfen.
+  IST: nur Volume, Mute, NR, Compression (stub), De-emphasis (stub), keine Scrollbar.
+  SOLL: Noise/Volume/Pan/Squelch → PB default/low/high/center/width → Noise blanker/
+  filter → NB test (pulse gain/width); vertikale Scrollbar, farbcodierte Labels. ✅ 2026-08-29
+- [ ] **M4c.7.11b RESEARCH (Pflicht vor Fix):** Exakte Parameter verifizieren:
+  `jks-prv/KiwiSDR_server` → `web/kiwi/` (Schlagworte `audio`, `squelch`,
+  `noise_blank`, `noise_filter`, `pb_`, `test_pulse`) + `subtabs.json` / Live-DOM-Capture
+  gegen `kphsdr.com:8072`. Ergebnis: verbindliche Parameterliste (ParamId + Range + Default).
+- [ ] **M4c.7.11c FIX:** Scrollbare Audio-Tab-Komponente + Sub-Komponenten (SliderRow/
+  DropdownRow/ActionRow); alle Parameter in fester Reihenfolge, Labels farbcodiert.
+
+#### Bug 11 — AGC-Tab beinhaltet eventuell nicht alle Parameter
+
+> **Status: Offen + Research-Pflicht.** Der AGC-Tab hat AGC/Hang/Threshold/Slope/
+> Decay/Man-Gain, aber kein Thresh-CW-Slider, keine Aktionsleiste (AGC/Hang/Defaults/
+> help) und keine Scrollbar. Parameterliste visuell abgeleitet → vor Fix verifizieren.
+> Details: `doc/M4c.7-bugs.md` §Bug 11.
+
+- [x] **M4c.7.12a ANALYSE:** AGC-Tab gegen KiwiSDR-Referenz prüfen.
+  IST: AGC/Hang-Toggles + Threshold/Decay/Slope/Man-Gain-Slider, keine Aktionsleiste,
+  kein Thresh CW, keine Scrollbar.
+  SOLL: Aktionsleiste (AGC/Hang/Defaults/help rechtsbündig) + Slider Manual gain/
+  Threshold/Thresh CW/Slope/Decay mit Einheiten; Scrollbar + S-Meter-Skala. ✅ 2026-08-29
+- [ ] **M4c.7.12b RESEARCH (Pflicht vor Fix):** Exakte Parameter verifizieren:
+  `jks-prv/KiwiSDR_server` → `web/kiwi/` (Schlagworte `agc`, `hang`, `slope`, `decay`,
+  `threshold`, `thresh_cw`, `manual_gain`) + `subtabs.json` / Live-DOM-Capture gegen
+  `kphsdr.com:8072`. Ergebnis: verbindliche Parameterliste (ParamId + Range + Default + Einheit).
+- [ ] **M4c.7.12c FIX:** Scrollbare AGC-Tab-Komponente + Aktionsleiste + Slider-Reihen
+  (inkl. Thresh CW) + S-Meter-Skala integrieren; Labels weiß/orange abwechselnd.
+
+#### Bug 12 — Header-Bereich entspricht nicht der Web UI
+
+> **Status: Offen.** Header zu flach: keine Station-Info (Titel + Untertitel-Zeilen
+> mit Standort/Grid/ASL/SNR/Antennen), keine Credits-Sektion, kein Collapse/Expand-
+> Toggle + Bild-Bereich. **Connect-Funktionalität (StationInput + Status) muss
+> erhalten bleiben.** Details: `doc/M4c.7-bugs.md` §Bug 12.
+
+- [x] **M4c.7.13a ANALYSE:** Header gegen KiwiSDR-Referenz prüfen.
+  IST: Logo + "NetSDRStation" + "Antenna: KiwiSDR broadband" (statisch), StationInput
+  in `center`, Callsign-Input + Zeit in `right`; keine Credits, kein Collapse/Expand.
+  SOLL: dreiteilige hellgraue Top Bar (Branding/Titel/Untertitel + Credits "Provided
+  by" + Callsign-Input + Zeit/Logo-Slot), Collapse/Expand-Reiter + expandierbarer
+  Bild-Bereich mit Overlays. Connect-Funktionalität bleibt erhalten. ✅ 2026-08-29
+- [ ] **M4c.7.13b FIX:** Header-Redesign:
+  - Top Bar dreiteilig (links Branding/Station-Info, Mitte Credits, rechts Callsign + Zeit/Logo-Slot).
+  - Collapse/Expand-Toggle (Chevron ↓/↑) + expandierbarer Bild-Bereich mit weichen Transitions.
+  - Overlays (position: absolute): Logos, Kontroll-Panel (Freq-Input + Band/Extension-Dropdowns + Play-Button), lila Play-Button links.
+  - **Connect-Funktionalität (StationInput) im neuen Layout integrieren.**
+
+#### Bug 13 — "Spec RF"-Button soll funktionieren
+
+> **Status: Offen.** Der Spectrum-Button zyklisch nur das Label (Spectrum/Spec RF/
+> Spec AF), rendert aber kein Diagramm. "Spec RF" soll einen Spektrumanalysator
+> (Area-Chart) über Wasserfall + Frequenzskala einblenden. Details: `doc/M4c.7-bugs.md` §Bug 13.
+
+- [x] **M4c.7.14a ANALYSE:** Spectrum-Button + Rendering gegen KiwiSDR-Referenz prüfen.
+  IST: `cycleSpectrumMode` ändert nur `store.spectrumMode` + Label, kein Diagramm.
+  SOLL: "Spec RF" (aktiv grün) blendet Spektrumanalysator ein — Y-Achse dBm rechts
+  (farbcodiert) + Grid-Lines, hellgraues Area-Chart, halbtransparentes Passband-Overlay,
+  synchron zur Frequenzskala beim Pan/Zoom. ✅ 2026-08-29
+- [ ] **M4c.7.14b FIX:** Spektrumanalysator-Komponente bauen:
+  - Toggle-Button aktiv grün (`store.spectrumMode === 'specRF'`).
+  - Area-Chart (Canvas/SVG) mit Y-Achse + Grid-Lines + Passband-Overlay.
+  - Sync mit `viewLowKhz`/`viewHighKhz` + `lowCut`/`highCut` (reaktiv, Pan/Zoom-fest).
+
+#### Bug 14 — "Spec AF"-Button soll funktionieren
+
+> **Status: Offen.** Der Spectrum-Button hat drei Zustände (Spectrum → Spec RF →
+> Spec AF → aus); "Spec AF" soll ein AF-Spektrum (um Träger zentriert) mit grüner
+> Center-Linie + roten Filtergrenzen anzeigen. Details: `doc/M4c.7-bugs.md` §Bug 14.
+
+- [x] **M4c.7.15a ANALYSE:** Spectrum-Button (3 Zustände) + AF-Rendering gegen Referenz prüfen.
+  IST: `cycleSpectrumMode` ändert nur `store.spectrumMode` + Label, kein AF-Diagramm.
+  SOLL: "Spec AF" (aktiv grün) zeigt AF-Spektrum — Y-Achse identisch zur RF-Ansicht,
+  Area-Chart um Träger zentriert, vertikales Grid, grüne Center-Linie (Träger),
+  zwei rote Filtergrenzen, synchron beim Tuning. ✅ 2026-08-29
+- [ ] **M4c.7.15b FIX:** AF-Spektrumanalysator-Komponente bauen:
+  - Toggle 3 Zustände; Button aktiv grün bei specRF/specAF.
+  - AF-Graph (Canvas/SVG) mit vertikalem Grid + grüner Center-Linie + roten Filtergrenzen.
+  - Sync mit `freqKhz`/`lowCut`/`highCut`/`viewLow/HighKhz` (reaktiv).
 
 #### E2E-Lückenanalyse (vor Bug-Fixes)
 
-- [ ] **M4c.7.7a ANALYSE:** Warum wurden viele Elemente nicht von E2E-Tests entdeckt?
-  Hypothese: Playwrght `locator()` sieht nur sichtbare Elemente im Viewport.
-  Scrollbare Inahlte in Tabs wurden nicht gescrollt → nicht erfasst.
+- [x] **M4c.7.7a ANALYSE:** Warum wurden viele Elemente nicht von E2E-Tests entdeckt?
+  Hypothese: Playwright `locator()` sieht nur sichtbare Elemente im Viewport.
+  Scrollbare Inhalte in Tabs wurden nicht gescrollt → nicht erfasst.
   Lösung: `page.evaluate()` für DOM-Snapshot ODER `scrollIntoView()` vor `locator()`.
-- [ ] **M4c.7.7b ANALYSE:** `dx-selcts-smetr.json` hat leere Arrays (alle `allOtions: []`) —
-  Live-Captre hat Band/Extension/Dropdowns nicht erfasst.
-  Lösung: Capture-Script fixt oder manuel DOP-Export vervollständigen.
+- [x] **M4c.7.7b ANALYSE:** `dx-selects-smeter.json` hat leere Arrays (alle `allOptions: []`) —
+  Live-Capture hat Band/Extension/Dropdowns nicht erfasst.
+  Lösung: Capture-Script fixt oder manuell DOM-Export vervollständigen. E2E-Tests
+  prüfen jetzt die befüllten Selects direkt (27 Extensions / 87 Bänder). ✅ 2026-08-29
 
 ### E2E-Test-Dateien (finaler Stand)
 
@@ -1966,7 +2106,7 @@ ui/e2e/
 └── wf0-tab.spec.ts                  # WF0 Tab Controls (8 Tests)
 ```
 
-**Gesamt: 65 Playwright-Tests, 112 Vitest-Tests — alle grün (vor M4c.7-Fixes).**
+**Gesamt: 85 Playwright-Tests, 112 Vitest-Tests — alle grün (Stand 2026-08-29, nach M4c.7-Fixes).**
 
 - [x] **T1** clangd-based C++ semantic MCP - done (M3.6, `lsp-mcp-server` MIT as `clangd_mcp`)
 - [x] **T2** Playwright MCP - done (M3.6, `@playwright/test` + `ui/e2e/smoke.spec.ts` green)

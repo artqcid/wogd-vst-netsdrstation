@@ -29,7 +29,7 @@ _See `log.md` for the chronological append-only changelog._
 - [`M4-ui-replication-analysis.md`](./M4-ui-replication-analysis.md) — Detailed analysis of KiwiSDR browser UI for 1:1 Vue replication
 - [`reference-matrix.md`](./reference-matrix.md) — Reference matrix: live KiwiSDR elements ↔ PluginView 1:1 mapping
 - [`M4b-bugs.md`](./archive/M4b-bugs.md) — M4 bug list & analysis (ARCHIV, Bugs in M4c gefixt)
-- [`M4c.7-bugs.md`](./M4c.7-bugs.md) — M4c.7 Bug-Manifest: 6 Bugs + E2E-Lückenanalyse + Extensions-Planung (stand 2026-08-29)
+- [`M4c.7-bugs.md`](./M4c.7-bugs.md) — M4c.7 Bug-Manifest: 14 Bugs + E2E-Lückenanalyse + Extensions-Planung (stand 2026-08-29; Bugs 1–6 gefixt, Bug 7–14 offen)
 - [`plan-history.md`](./archive/plan-history.md) — Archived historical status blocks from plan.md (M2/M3 era)
 
 ## Protocol & Reference

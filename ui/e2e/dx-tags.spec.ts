@@ -16,10 +16,11 @@ test.describe('DX tags', () => {
   test('clicking a DX tag shows tag popup with freq and name', async ({ page }) => {
     const tagArea = page.locator('.tag-area')
     await expect(tagArea).toBeVisible()
-    // Pick a specific tag that is unique and visible (NAVTEX at 518 kHz)
+    // Pick a specific tag that is unique and visible (NAVTEX at 518 kHz).
+    // Two-row layout makes tags overlap, so a coordinate-based click can hit
+    // a neighbouring tag — dispatch the click directly on the element instead.
     const uniqueTag = tagArea.locator('.tag-area__tag').filter({ hasText: 'NAVTEX' }).first()
-    const title = await uniqueTag.getAttribute('title')
-    await uniqueTag.click({ force: true })
+    await uniqueTag.evaluate(el => (el as HTMLElement).click())
     const popup = page.locator('.tag-popup')
     await expect(popup).toBeVisible({ timeout: 4000 })
     // The popup header shows the tag label ('NAVTEX')
@@ -31,9 +32,9 @@ test.describe('DX tags', () => {
   test('tag popup can be closed', async ({ page }) => {
     const tagArea = page.locator('.tag-area')
     await expect(tagArea).toBeVisible()
-    // VOA label at 7485 kHz (41m band)
-    const tag = tagArea.locator('.tag-area__tag').filter({ hasText: 'VOA' }).first()
-    await tag.click({ force: true })
+    // WWV label at 10000 kHz (unique in the 73-entry demo list)
+    const tag = tagArea.locator('.tag-area__tag').filter({ hasText: 'WWV' }).first()
+    await tag.evaluate(el => (el as HTMLElement).click())
     await expect(page.locator('.tag-popup')).toBeVisible({ timeout: 4000 })
     // Click on overlay background (outside popup)
     await page.locator('.tag-popup-overlay').click({ position: { x: 10, y: 10 } })

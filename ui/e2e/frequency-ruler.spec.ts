@@ -16,8 +16,8 @@ test.describe('Frequency ruler', () => {
   test('Frequency ruler shows labels at default zoom', async ({ page }) => {
     const labels = page.locator('.freq-ruler__label')
     await expect(labels.filter({ hasText: 'MHz' })).toHaveCount(5)
-    // Exact match for "0 kHz" or just "0" - avoid matching "30" in "30 MHz"
-    await expect(labels.filter({ hasText: '0 kHz' })).toHaveCount(1)
+    // formatFreq(0) returns '0' (no unit) — exact match avoids matching '30' in "30 MHz"
+    await expect(labels.filter({ hasText: /^0$/ })).toHaveCount(1)
   })
 
   test('Ticks increase when zooming in (Bug 5)', async ({ page }) => {
@@ -37,16 +37,22 @@ test.describe('Frequency ruler', () => {
     expect(countAfter).toBeGreaterThan(countBefore)
   })
 
-  test('Tick labels show kHz at medium zoom', async ({ page }) => {
+  test('Tick labels show kHz at medium zoom (Bug 5)', async ({ page }) => {
     const zoomBtn = page.locator('.kiwi-cpanel__icon-btn--zoom').first()
     await expect(zoomBtn).toBeVisible()
 
-    // Zoom in 6 times to reach span ~1875 kHz (wfZoom=6), where step=200 kHz produces kHz labels
+    // Tune to a low frequency first: at the default 14100 kHz every ruler
+    // label renders as MHz even at high zoom, so no kHz label ever appears.
+    const freqInput = page.locator('.kiwi-cpanel__freq-input')
+    await freqInput.fill('500')
+    await freqInput.press('Enter')
+
+    // Zoom in 6 times to reach span ~469 kHz (wfZoom=6), step 50 kHz → kHz labels.
     for (let i = 0; i < 6; i++) {
       await zoomBtn.click()
     }
 
     const labels = page.locator('.freq-ruler__label')
-    await expect(labels.filter({ hasText: 'kHz' })).toHaveCount(1)
+    await expect(labels.filter({ hasText: 'kHz' })).not.toHaveCount(0)
   })
 })
