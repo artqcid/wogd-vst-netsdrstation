@@ -15,6 +15,20 @@ workspace. It applies to all workspace agents: `ARCHITECT`,
 `DEV_JUNIOR_Openrouter`. The global agents `build` and `plan` are NOT
 workspace-specific and must never receive workspace-specific prompts or settings.
 
+### Navigation & Knowledge First (MANDATORY — always start here)
+
+Before every task (read/edit/build):
+
+1. **`doc/index.md` — always load first.** The LLM-Wiki catalog links to every
+   concept file. Navigate from here to find what you need (architecture, plan,
+   checklist, implementation plan, etc.).
+2. If the index points to a concept file, read or query it directly.
+3. **`query_code_wiki("<symbol>")`** via MCP for code-level symbol lookup.
+4. Only if both fail: `query_code_rag(..., format="compact")` + `get_rag_chunk("<id>")`.
+5. **`doc/code_wiki.md` must NEVER be loaded via `read()` — MCP query only.**
+
+The **MCP-First workflow** section below provides the full RAG tooling reference.
+
 ### Autopilot mode (no permission prompts)
 
 - **No permission prompts.** All tools are allowed (edit, bash, read, glob,
@@ -35,15 +49,6 @@ The workspace provides a local RAG + Code-Wiki MCP server (`netsdr_rag`,
 see `netsdr_mcp_server.py`). Tools: `index_project_code`, `query_code_rag`,
 `query_code_wiki`, `get_rag_chunk` (called with server prefix, e.g.
 `netsdr_rag_query_code_wiki`).
-
-1. **`doc/index.md`** — first place to look: find the relevant concept file
-   (architecture, plan, checklist, etc.).
-2. `doc/architecture.md` — detailed architecture knowledge (read directly).
-3. **`query_code_wiki("<symbol>")`** — signature, file, line number.
-4. **Only if knowledge is missing:** `query_code_rag(..., format="compact")`.
-5. **Only load the needed chunk:** `get_rag_chunk("<id>")`.
-6. Verify in the real code (path + line).
-7. **After a change:** `index_project_code` — wiki stays current.
 
 **MCP-FIRST (no exceptions):**
 - `doc/code_wiki.md` must NEVER be loaded via `read()` — query via MCP.
