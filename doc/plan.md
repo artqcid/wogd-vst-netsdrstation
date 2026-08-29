@@ -121,6 +121,31 @@ This is where NetSDRStation-specific functionality begins.
 - **Exit criteria:** picking a station connects to it and activates the
   receiver UI.
 
+### M5 — WF-WebSocket + dynamische DX-Tags (Architektur-Entscheidung 2026-08-29)
+
+**Entschieden:** DX-Tags werden dynamisch vom KiwiSDR-Server geladen (nicht statisch).
+
+**Hintergrund:** KiwiSDR überträgt DX-Labels über den **WF-WebSocket** (`/WF`-Pfad, Port `<host>:8074`) als `MSG dx_community=[json]`. Das ist ein separater zweiter WebSocket-Stream zusätzlich zum SND-Stream. In M4c.7 liefert `TagArea.vue` noch eine statische 73-Einträge-Liste als Platzhalter.
+
+**M5-Scope WF-Socket:**
+1. `source/network/kiwi_wf_client.cpp/.h` — neuer WF-WebSocket-Client (analog zu `kiwi_client.cpp`)
+   - Verbindet zu `ws://<host>:8074/WF` parallel zum SND-Socket
+   - Parst `MSG dx_community=[json]` → extrahiert Label, Frequenz, Farbe, `has_ext`-Flag
+   - Parst WF-Bilddaten (optionales Ziel: echtes Waterfall-Bild statt simuliertem)
+2. `source/network/kiwi_bridge.cpp` — neue Methode `pushDxTags(vector<DxTag>)`
+   - Serialisiert Tags als JSON-String → `window.setDxTags([...])` in der WebView
+3. `source/plugin_processor.cpp` — WF-Client starten nach SND-Connect, stoppen bei Disconnect
+4. `ui/src/store/kiwiStore.ts` — `dxTags: DxTag[]` State + `setDxTags()` Action
+5. `ui/src/components/TagArea.vue` — `tags`-Prop aus Store statt `DEMO_TAGS` (DEMO_TAGS als Fallback wenn Store leer)
+
+**Protokoll (aus KiwiSDR-Quellcode `dx/dx.cpp`):**
+```
+MSG dx_community=[{"f":14074,"lo":-150,"hi":150,"o":"3","n":"FT8","b":"#009900","e":"","a":""},...] 
+```
+Felder: `f`=Frequenz kHz, `n`=Label, `b`=Background-Farbe, `o`=Typ-Flag, `a`=Audio-Extension-Name.
+
+**Abhängigkeit:** M5.1 (Stationsauswahl) muss vor WF-Socket kommen — die Host/Port-Infos kommen aus dem Stationseintrag.
+
 ## Milestone 4x — Extensions (FFT, Spec RF, Spec AF)
 
 > Geplant als separate M-Phase nach M4c.7-Abschluss.

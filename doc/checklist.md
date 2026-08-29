@@ -1878,10 +1878,12 @@ implementation plans: `doc/M3-implementation-plan.md` (M3),
 
 #### Bug 2 — Spektrometer funktioniert nich
 
-- [ ] **M4c.7.2a ANALYSE:** Prüfen `Waterfall.vue` / `SpectrumRenderer.vue` — läuft Canvas-Rendering?
-  Ist `WF data` von KiwiSDR vorhanden? Oder nur simulierte Daten?
-  Referenz `explore-8074.json`: `id-wf-canvas` (1280x200), `id-spectrum-canvas` — echte Specrum-Daten.
-- [ ] **M4c.7.2b FIX:** Echten WF-Data-Strom vom Server dekodieren + Canvas rendern.
+- [x] **M4c.7.2a ANALYSE:** Prüfen `Waterfall.vue` / `SpectrumRenderer.vue` — läuft Canvas-Rendering?
+  Datenfluss-Kette vollständig vorhanden, aber nur aktiv bei bestehender KiwiSDR-Verbindung.
+  **Entscheidung:** Keine Verbindung → kein Spektrogramm ist **korrekt**. Kein Simulator. ✅ 2026-08-29
+- [ ] **M4c.7.2b FIX:** `Waterfall.vue` — "No signal"-Overlay wenn `bins.length === 0`
+  _(Nur UI-Information, kein Datenstrom. C++-Kette bleibt unverändert.)_
+  Echter WF-Stream vom KiwiSDR-Server: M5 (WF-WebSocket).
 
 #### Bug 3 — Frequenzband-Leiste inkorrekt
 
@@ -1894,12 +1896,17 @@ implementation plans: `doc/M3-implementation-plan.md` (M3),
 
 #### Bug 4 — DX-Tags fehlen / inkorrekt
 
-- [ ] **M4c.7.4a ANALYSE:** `TagArea.vue` / `DXTags.vue` gegen `explore-8074.json`.
+> **Architektur-Entscheidung (2026-08-29):** DX-Tags werden in M5 dynamisch
+> vom KiwiSDR-WF-WebSocket geladen (`MSG dx_community`). M4c.7 liefert die
+> statische 73-Einträge-Liste als vollständigen Platzhalter. Details: `doc/plan.md` §M5.
+
+- [x] **M4c.7.4a ANALYSE:** `TagArea.vue` / `DXTags.vue` gegen `explore-8074.json`.
   73 DX-Tag-Buttons mit `dx-has-ext` / `cl-dx-label-ext` Klassen.
   Zweireihig bei Überlappung. Vertikale Linien von Buttons zum Specrogramm-Rand.
-  Farbe korrekt? Referenz: `dx-selects-smetr.json`.
+  Farbe korrekt? Referenz: `dx-selects-smetr.json`. ✅ abgeschlossen 2026-08-29
 - [ ] **M4c.7.4b FIX:** DX-Tags vollständig rendern (73 statt 30 DEMO_TAGS).
   Zweireihiges Layout + Linien zum kHz-Lineal.
+  _(Statischer Platzhalter; dynamisches Laden via WF-Socket folgt in M5)_
 
 #### Bug 5 — kHz-Lineal skaliert nicht beim Zoom
 

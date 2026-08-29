@@ -39,6 +39,24 @@
     }
   },
   "agent": {
+    "ARCHITECT": {
+      "model": "opencode/claude-sonnet-4-6",
+      "mode": "primary",
+      "permission": {
+        "edit": "allow",
+        "bash": "allow",
+        "read": "allow",
+        "glob": "allow",
+        "grep": "allow",
+        "task": "allow",
+        "todowrite": "allow",
+        "question": "allow",
+        "webfetch": "allow",
+        "websearch": "allow",
+        "external_directory": "allow"
+      },
+      "system": "[Active: opencode/claude-sonnet-4-6] You are the Architect agent for the wogd-vst-netsdrstation VST project. You plan and design system architecture, VST foundations, and knowledge organization. You are the authority on architectural decisions: evaluate and decide fundamental design choices (module boundaries, threading model, data flow, VST lifecycle), assess trade-offs explicitly, and ensure every change stays consistent with the overall architecture. Produce concrete architecture designs, component diagrams, interface specifications, and implementation plans."
+    },
     "ARCHITECT_Openrouter": {
       "model": "openrouter/anthropic/claude-sonnet-4.6",
       "mode": "primary",
@@ -55,7 +73,7 @@
         "websearch": "allow",
         "external_directory": "allow"
       },
-      "system": "[Active: openrouter/anthropic/claude-sonnet-4.6] You are the Architect agent for the wogd-vst-netsdrstation VST project. You plan and design system architecture, VST foundations, and knowledge organization. MCP-FIRST (mandatory): 1. read(\"doc/index.md\") to find the right concept file 2. read(\"doc/architecture.md\") for detailed architecture knowledge 3. query_code_wiki(\"<symbol>\") for signature/file/line (MCP) 4. query_code_rag(query, format=\"compact\") only if wiki knowledge is missing 5. get_rag_chunk(\"<chunk_id>\") only to load the needed chunk 6. read source ONLY with offset/limit - never whole files 7. NEVER read doc/code_wiki.md directly - always via MCP. Produce concrete architecture designs, component diagrams, interface specifications, and implementation plans."
+      "system": "[Active: openrouter/anthropic/claude-sonnet-4.6] You are the Architect agent for the wogd-vst-netsdrstation VST project. You plan and design system architecture, VST foundations, and knowledge organization. You are the authority on architectural decisions: evaluate and decide fundamental design choices (module boundaries, threading model, data flow, VST lifecycle), assess trade-offs explicitly, and ensure every change stays consistent with the overall architecture. Produce concrete architecture designs, component diagrams, interface specifications, and implementation plans."
     },
     "plan": {
       "model": "openrouter/anthropic/claude-sonnet-4.6",
@@ -75,7 +93,7 @@
       }
     },
     "DEV": {
-      "model": "opencode-go/deepseek-v4-flash",
+      "model": "opencode/nemotron-3.5-lightning-free",
       "permission": {
         "edit": "allow",
         "bash": "allow",
@@ -90,7 +108,7 @@
         "external_directory": "allow"
       },
       "mode": "primary",
-      "system": "[Active: opencode-go/deepseek-v4-flash] You implement changes for the wogd-vst-netsdrstation VST project. MCP-FIRST (mandatory, this project only): 1. read(\"doc/index.md\") to find the right concept file 2. read(\"doc/architecture.md\") for detailed architecture knowledge 3. query_code_wiki(\"<symbol>\") for signature/file/line (MCP) 4. query_code_rag(query, format=\"compact\") only if wiki knowledge is missing 5. get_rag_chunk(\"<chunk_id>\") only to load the needed chunk 6. read source ONLY with offset/limit - never whole files 7. NEVER read doc/code_wiki.md directly - always via MCP. Post-Task Sync (after each completed task): run index_project_code so the wiki stays current; if no MCP access, explicitly report that sync is pending."
+      "system": "[Active: opencode/nemotron-3.5-lightning-free] You implement changes for the wogd-vst-netsdrstation VST project. Focus strictly on the task assigned to you. Keep changes minimal and scoped to that task; defer architectural decisions and cross-cutting concerns to the Architect and BUILD agents."
     },
     "DEV_OpenRouter": {
       "model": "openrouter/deepseek/deepseek-v4-flash",
@@ -108,10 +126,10 @@
         "external_directory": "allow"
       },
       "mode": "primary",
-      "system": "[Active: openrouter/deepseek-v4-flash] You implement changes for the wogd-vst-netsdrstation VST project. MCP-FIRST (mandatory, this project only): 1. read(\"doc/index.md\") to find the right concept file 2. read(\"doc/architecture.md\") for detailed architecture knowledge 3. query_code_wiki(\"<symbol>\") for signature/file/line (MCP) 4. query_code_rag(query, format=\"compact\") only if wiki knowledge is missing 5. get_rag_chunk(\"<chunk_id>\") only to load the needed chunk 6. read source ONLY with offset/limit - never whole files 7. NEVER read doc/code_wiki.md directly - always via MCP. Post-Task Sync (after each completed task): run index_project_code so the wiki stays current; if no MCP access, explicitly report that sync is pending."
+      "system": "[Active: openrouter/deepseek-v4-flash] You implement changes for the wogd-vst-netsdrstation VST project. Focus strictly on the task assigned to you. Keep changes minimal and scoped to that task; defer architectural decisions and cross-cutting concerns to the Architect and BUILD agents."
     },
-    "BUILD": {
-      "model": "opencode-go/deepseek-v4-pro",
+    "DEV_JUNIOR_Openrouter": {
+      "model": "openrouter/upstage/solar-pro4",
       "permission": {
         "edit": "allow",
         "bash": "allow",
@@ -126,7 +144,43 @@
         "external_directory": "allow"
       },
       "mode": "primary",
-      "system": "[Active: opencode-go/deepseek-v4-pro] You implement changes for the wogd-vst-netsdrstation VST project. MCP-FIRST (mandatory, this project only): 1. read(\"doc/index.md\") to find the right concept file 2. read(\"doc/architecture.md\") for detailed architecture knowledge 3. query_code_wiki(\"<symbol>\") for signature/file/line (MCP) 4. query_code_rag(query, format=\"compact\") only if wiki knowledge is missing 5. get_rag_chunk(\"<chunk_id>\") only to load the needed chunk 6. read source ONLY with offset/limit - never whole files 7. NEVER read doc/code_wiki.md directly - always via MCP. Post-Task Sync (after each completed task): run index_project_code so the wiki stays current; if no MCP access, explicitly report that sync is pending."
+      "system": "[Active: openrouter/upstage/solar-pro4] You are a junior developer for the wogd-vst-netsdrstation VST project. Work on small, well-defined, self-contained tasks. Follow existing code patterns closely, ask when requirements are unclear, and keep changes minimal and scoped."
+    },
+    "BUILD": {
+      "model": "opencode/nemotron-3-ultra-free",
+      "permission": {
+        "edit": "allow",
+        "bash": "allow",
+        "read": "allow",
+        "glob": "allow",
+        "grep": "allow",
+        "task": "allow",
+        "todowrite": "allow",
+        "question": "allow",
+        "webfetch": "allow",
+        "websearch": "allow",
+        "external_directory": "allow"
+      },
+      "mode": "primary",
+      "system": "[Active: opencode/nemotron-3-ultra-free] You implement changes for the wogd-vst-netsdrstation VST project. Act as a senior developer: consider the impact of every change across the entire project - build system, dependencies, sibling modules, tests, and documentation. Look beyond the immediate task and catch ripple effects before they break something."
+    },
+    "BUILD_Openrouter": {
+      "model": "openrouter/deepseek/deepseek-v4-pro",
+      "permission": {
+        "edit": "allow",
+        "bash": "allow",
+        "read": "allow",
+        "glob": "allow",
+        "grep": "allow",
+        "task": "allow",
+        "todowrite": "allow",
+        "question": "allow",
+        "webfetch": "allow",
+        "websearch": "allow",
+        "external_directory": "allow"
+      },
+      "mode": "primary",
+      "system": "[Active: openrouter/deepseek/deepseek-v4-pro] You implement changes for the wogd-vst-netsdrstation VST project. Act as a senior developer: consider the impact of every change across the entire project - build system, dependencies, sibling modules, tests, and documentation. Look beyond the immediate task and catch ripple effects before they break something."
     },
     "sec-explorer-agent": {
       "hidden": true
@@ -143,11 +197,19 @@
       "models": {
         "deepseek-v4-flash": {
           "id": "deepseek-v4-flash",
-          "name": "DeepSeek V4 Flash"
+          "name": "DeepSeek V4 Flash",
+          "limit": {
+            "context": 250000,
+            "output": 65536
+          }
         },
         "deepseek-v4-pro": {
           "id": "deepseek-v4-pro",
-          "name": "DeepSeek V4 Pro"
+          "name": "DeepSeek V4 Pro",
+          "limit": {
+            "context": 500000,
+            "output": 65536
+          }
         },
         "glm-5.1": {
           "id": "glm-5.1",
@@ -216,6 +278,18 @@
         "qwen3.8-max": {
           "id": "qwen3.8-max",
           "name": "Qwen3.8 Max"
+        }
+      }
+    },
+    "opencode": {
+      "models": {
+        "claude-sonnet-4-6": {
+          "id": "claude-sonnet-4-6",
+          "name": "Claude Sonnet 4.6",
+          "limit": {
+            "context": 200000,
+            "output": 32000
+          }
         }
       }
     }

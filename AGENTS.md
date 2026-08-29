@@ -7,6 +7,13 @@ All agent rules, instructions, and agent-facing documentation in this workspace
 (`.opencode/skills/**/SKILL.md`), agent system prompts, and any other
 agent-facing configuration.
 
+## Project Overview
+
+`wogd-vst-netsdrstation` is a native VST3/AU/CLAP audio plugin that streams SDR
+audio from KiwiSDR servers (WebSocket port 8073, IMA ADPCM) into a DAW.
+Three-thread model: GUI / DSP / network worker. C++20 + VST3 SDK + CMake.
+Full detail: `doc/architecture.md`.
+
 ## Project Main Notebook (NotebookLM devblogs)
 
 The main notebook for this project is **NetSDRStation-VST**.
@@ -26,15 +33,37 @@ All primary agents run in full autopilot mode at all times:
 - **No permission prompts.** All tools are allowed (edit, bash, read, glob,
   grep, task, todowrite, question, webfetch, websearch, external_directory).
 - **Work outside the workspace is always allowed** without asking.
-- **Before starting any task:** if the task involves sensitive or
-  risky actions (e.g., deleting data, modifying external systems, publishing
-  something, irreversible operations), ask for confirmation in the prompt
-  FIRST, before any task begins.
-- **Once a task has started, never ask for permissions again** - proceed
-  autonomously until the task is complete.
+- **Todo-first workflow (mandatory):** Before starting ANY work on a task,
+  the agent MUST:
+  1. Break the task into concrete, ordered steps.
+  2. Create a todo list via `todowrite` with each step marked `pending`.
+  3. Present the plan to the user in the response.
+  4. **Wait for user confirmation** before executing the first step.
+  5. Update todo status to `in_progress` / `completed` as work proceeds.
+- **Once the plan is confirmed and execution begins**, never ask for
+  permission again — proceed autonomously until the task is complete.
 
-This applies to all primary agents: `build`, `plan`, `DEV`, `DEV_OpenRouter`,
-`Build_Openrouter`.
+This applies to all workspace-specific primary agents: `ARCHITECT`,
+`ARCHITECT_Openrouter`, `BUILD`, `BUILD_Openrouter`, `DEV`, `DEV_OpenRouter`,
+`DEV_JUNIOR_Openrouter`.
+The global agents `build` and `plan` are NOT workspace-specific and must never
+receive workspace-specific prompts or settings.
+
+## Role & Delegation Model
+
+Primary agents form a responsibility hierarchy:
+
+- **ARCHITECT / ARCHITECT_Openrouter** — decides and validates architectural
+  questions.
+- **BUILD / BUILD_Openrouter** — senior dev; considers every change project-wide.
+- **DEV / DEV_OpenRouter** — implements the assigned task, stays scoped.
+- **DEV_JUNIOR_Openrouter** — small, well-defined, self-contained tasks.
+
+Delegation:
+
+- Escalate architectural questions upward: DEV → BUILD → ARCHITECT.
+- Delegate small, focused implementation/search tasks to subagents
+  (`general`, `explore`); subagents never build/test (see Subagent Rules).
 
 ## Subagent Rules (Build & Test Ownership)
 
@@ -48,17 +77,19 @@ This applies to all primary agents: `build`, `plan`, `DEV`, `DEV_OpenRouter`,
 
 ## Subagent Rules (MCP Access)
 
-- **Subagents have NO MCP access.** The `netsdr_rag`, `clangd_mcp`, and
-  `notebooklm_devblogs` MCP servers are only available to the primary agent.
-- **Before delegating to a subagent**, the primary agent MUST:
-  1. Run all needed `query_code_wiki` / `query_code_rag` / `get_rag_chunk`
-     calls itself.
-  2. Include the relevant symbol locations (file path + line number),
-     type signatures, and code snippets directly in the subagent prompt.
+- **Subagents have MCP access to `netsdr_rag`** (RAG + Code-Wiki tools:
+  `query_code_wiki`, `query_code_rag`, `get_rag_chunk`). They may use these
+  directly — the primary agent no longer needs to pre-fetch context.
+- **Subagents have access to GitHub MCP read-only tools** (`github_search_code`,
+  `github_get_file_contents`, `github_list_commits`, `github_search_repositories`,
+  etc.) for analyzing code on GitHub. Write tools (create PR, push, branch, issue)
+  remain primary-only.
+- **`clangd_mcp` and `notebooklm_devblogs` remain primary-only** — subagents
+  must not access these servers.
 - **After a subagent finishes**, the primary agent runs `index_project_code`
   to keep the wiki current (subagents cannot do this themselves).
-- Subagents that need code context must receive it verbatim in their prompt —
-  they must never be told "use the RAG" or "query the wiki".
+- Subagents must still be given small, focused tasks; the primary agent always
+  verifies the result (code review + build + test).
 
 ## MCP-First Workflow (RAG / Code-Wiki)
 
@@ -94,6 +125,20 @@ see `netsdr_mcp_server.py`). Tools: `index_project_code`, `query_code_rag`,
 - Run `pwsh doc/lint.ps1` to check for orphan pages, stale claims,
   duplicate entries and contradictions.
 - If not possible (no MCP access): explicitly report that sync is pending.
+
+## Definition of Done
+
+A task is complete only when ALL of the following hold:
+
+1. Compiles: `cmake --preset win-msvc`, then
+   `cmake --build build/win-msvc --config Debug` (and `Release`).
+2. Tests green: `ctest --test-dir build/win-msvc -C Debug --output-on-failure`.
+3. `index_project_code` ran (wiki current).
+4. `pwsh doc/lint.ps1` ran without new issues.
+5. `doc/log.md` appended with a changelog entry (newest first).
+
+Release builds need the UI target first (`--target netsdrstation_ui`); full
+build/debug/hot-reload workflow: `doc/workspace-workflow.md`.
 
 ## Wiki Lint Workflow (Phase 4 — automatic, runs on every Post-Task Sync)
 

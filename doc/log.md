@@ -3,7 +3,60 @@
 _Append-only, newest first. Parseable with `grep "^## "`. Entries use
 `**Creation**`, `**Update**` or `**Deprecation**` prefix + linked concept file._
 
+## 2026-08-29 — Agent-Infrastruktur überarbeitet (opencode.json + AGENTS.md)
+
+**Update:** [`AGENTS.md`](./AGENTS.md) — Project Overview, Role & Delegation
+Model und Definition of Done ergänzt; Subagent-MCP-Regeln angepasst (netsdr_rag
++ GitHub read-only für Subagents); Todo-first-Workflow für alle Primary Agents;
+Workspace-spezifische Agents klar von globalen (`build`/`plan`) getrennt.
+
+**Update:** [`opencode.json`](../opencode.json) — Agenten-Definitionen bereinigt:
+System-Prompts auf Identität+Rolle reduziert (gemeinsame Regeln zentral in
+AGENTS.md); neue Agents `ARCHITECT`, `BUILD_Openrouter`, `DEV_JUNIOR_Openrouter`;
+Rollen-Prompts ergänzt (ARCHITECT=Entscheidungen, BUILD=Senior/projektweit,
+DEV=Task-Fokus, DEV_JUNIOR=kleine Tasks); Modell-Wechsel BUILD →
+`opencode/nemotron-3-ultra-free`, DEV → `opencode/nemotron-3.5-lightning-free`; Context-Limits
+pro Modell gesetzt (deepseek flash 250K / pro 500K, sonnet-4-6 200K, solar-pro4 200K).
+
+**Deprecation:** [`WORKSPACE_AGENT_PROMPT.md`](../WORKSPACE_AGENT_PROMPT.md) — als
+deprecated markiert; Inhalt lebt jetzt in AGENTS.md.
+
+## 2026-08-29 — Korrektur Bug 2 Fix-Plan: kein Simulator
+
+**Entscheidung:** "Keine Verbindung → kein Spektrogramm" ist korrekt, kein Bug.
+Der zuvor geplante Dev-Mode-Simulator und C++-Fallback-Simulator werden nicht umgesetzt.
+Bug 2 M4c.7-Fix-Scope: nur ein "No signal"-Overlay in `Waterfall.vue` wenn `bins.length === 0`.
+Echter WF-Datenstrom (WF-WebSocket, `MSG dx_community`) kommt in M5.
+
+**Update:** [`doc/M4c.7-bugs.md`](./M4c.7-bugs.md) — Bug 2 Fix-Plan vollständig neu geschrieben.
+**Update:** [`doc/checklist.md`](./checklist.md) — M4c.7.2a als analysiert markiert, 2b Scope korrigiert.
+
+## 2026-08-29 — Architektur-Entscheidung: DX-Tags dynamisch via WF-Socket (M5)
+
+**Entscheidung:** DX-Tags werden in M5 dynamisch vom KiwiSDR-WF-WebSocket geladen,
+nicht statisch hinterlegt. KiwiSDR sendet `MSG dx_community=[json]` über einen
+separaten WebSocket-Stream (`/WF`-Pfad). M4c.7 liefert weiterhin die statische
+73-Einträge-Liste als Platzhalter.
+
+**Update:** [`doc/M4c.7-bugs.md`](./M4c.7-bugs.md) — Bug 4 Analyse + Fix-Plan um Architektur-Notiz erweitert.
+**Update:** [`doc/plan.md`](./plan.md) — M5-Abschnitt um WF-Socket-Teilfeature ergänzt (Protokoll, Scope, Abhängigkeiten).
+**Update:** [`doc/checklist.md`](./checklist.md) — M4c.7.4a als analysiert markiert, Scope-Hinweis ergänzt.
+
 ---
+
+## 2026-08-29 — M4c.7 Bug-Manifest vollständig analysiert
+
+**Task:** Analyse aller 6 Bugs in M4c.7-bugs.md + Restrukturierung als Implementation Plan.
+
+**Ergebnisse:**
+- Bug 1 (P1-Button): P1 = "Spectrum Peak Hold 1" — kein Readme-Toggle. Button funktionslos (kein @click). Fix: Store-State specPeak1, Handler, Peak-Overlay in Waterfall.
+- Bug 2 (Wasserfall): Datenfluss-Kette vollständig vorhanden aber inaktiv ohne KiwiSDR-Verbindung. Fix: Dev-Mode-Simulator in pluginService.ts + C++ Debug-Fallback.
+- Bug 3 (BandScaleBar): Kein width in CSS → rendert Punkte statt Blöcke. BandDef braucht startFreq/ndFreq. Vollständige Band-Liste (26 Blöcke) erarbeitet. Band-Select-Dropdown (87 Optionen) als ands.ts.
+- Bug 4 (DX-Tags): 30 DEMO_TAGS → 73 echte Tags. Zweireihiges Layout: height: 44px + Kollisions-Detektion.
+- Bug 5 (FrequencyRuler): stepKhz Minimum bei 10 kHz → zoom 10–14 hat fast keine Ticks. Fix: 4 Stufen ergänzen bis 0.1 kHz (100 Hz).
+- Bug 6 (PluginView): 8 Sub-Bugs analysiert mit konkreten Zeilen. RF-Tab fehlt komplett. Band/Ext-Select leer. P1/P2 ohne Handler. Spectrum ist Span statt Button.
+
+**Dateien geändert:** doc/M4c.7-bugs.md (vollständig restrukturiert — IST + Analyse + Fix-Plan pro Bug)
 
 ## 2026-08-29 — LLM-Wiki refactoring design doc archived
 
