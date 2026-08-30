@@ -34,6 +34,19 @@ _Append-only, newest first. Parseable with `grep "^## "`. Entries use
 
 **Status:** 142/142 Vitest ✅, 104/105 E2E ✅, vue-tsc clean. **Bugs 1–17 implementiert** 🎉
 
+## 2026-08-30 — Release-Build-Fehler behoben (Type-Check im CMake-UI-Target)
+
+**Update:** [`main.ts`](../ui/src/main.ts) — `window.__vueStore`-Declaration auf explizites Interface mit `setParam: (name: ParamId, value: number) => void` umgestellt (Import `ParamId` aus bridge-validators). Vorherige Versuche schlugen fehl:
+- `setParam: (name: string, ...)` → TS2322 (Store `setParam` akzeptiert nur `ParamId`-Union, string nicht zuweisbar)
+- `ReturnType<typeof useKiwiStore>` → TS7022 zirkuläre Typ-Referenz (Store referenziert sich im eigenen Initializer) + Folgefehler TS2339 (statusText/statusState)
+- `[key: string]: unknown`-Index-Signatur im Interface → TS2322 ("Index signature missing in _StoreWithState")
+
+**Update:** [`CursorBar.vue`](../ui/src/components/CursorBar.vue) — `<script setup>` auf `<script setup lang="ts">` konvertiert (Props/Emits/State/Handler typisiert, `PointerEvent`-Annotations in Inline-Handlern). Vorher: TS7016 (Modul implizit `any` → kein Typdeclaration-Export ohne `lang="ts"`).
+
+**Gleaning:** Das CMake-UI-Target (`netsdrstation_ui`) führt `type-check` (vue-tsc) als Custom-Build-Step aus — strikter als das reine `vue-tsc --noEmit` im UI-Ordner (fehlte in der UI-Local-Verifikation). Release-/Debug-Build inkl. UI-Target ist Pflicht vor Commit.
+
+**Status:** Release + Debug Build ✅, ctest 1/1 ✅, 142/142 Vitest ✅, 104/105 E2E ✅, vue-tsc clean.
+
 ## 2026-08-29 — M4c.7 Bugs 14+15 implementiert: Spectrum AF + DRM Panel
 
 **Update:** [`M4c.7-bugs.md`](./M4c.7-bugs.md) — Bugs 14 (Spec AF) + 15 (DRM Panel, Mode-Index-Korrektur) implementiert.

@@ -1,23 +1,23 @@
-<script setup>
+<script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { ENV_BL, ENV_ATT, ENV_H1, ENV_H2, ENV_SLOPE, ENV_ADJ, freqToPx } from '@/components/frequencyRulerLogic'
 
-const props = defineProps({
-  viewLowKhz: { type: Number, required: true },
-  viewHighKhz: { type: Number, required: true },
-  cursorKhz: { type: Number, required: true },
-  lowCutHz: { type: Number, required: true },
-  highCutHz: { type: Number, required: true },
-})
+const props = defineProps<{
+  viewLowKhz: number
+  viewHighKhz: number
+  cursorKhz: number
+  lowCutHz: number
+  highCutHz: number
+}>()
 
-const emit = defineEmits([
-  'tune',
-  'update:lowCut',
-  'update:highCut',
-])
+const emit = defineEmits<{
+  (e: 'tune', freqKhz: number): void
+  (e: 'update:lowCut', hz: number): void
+  (e: 'update:highCut', hz: number): void
+}>()
 
 const rulerWidthPx = ref(0)
-const rootEl = ref(null)
+const rootEl = ref<HTMLDivElement | null>(null)
 
 const spanKhz = computed(() => props.viewHighKhz - props.viewLowKhz)
 
@@ -55,16 +55,27 @@ function updateWidth() {
   }
 }
 
-let dragState = null
+type DragZone = 'center' | 'lo' | 'hi'
 
-function startDrag(e, zone, startFreqKhz, startLoHz, startHiHz) {
+interface DragState {
+  zone: DragZone
+  startX: number
+  startFreqKhz: number
+  startLoHz: number
+  startHiHz: number
+  freqPerPx: number
+}
+
+let dragState: DragState | null = null
+
+function startDrag(e: PointerEvent, zone: DragZone, startFreqKhz: number, startLoHz: number, startHiHz: number) {
   const freqPerPx = spanKhz.value / rulerWidthPx.value
   dragState = { zone, startX: e.clientX, startFreqKhz, startLoHz, startHiHz, freqPerPx }
   document.addEventListener('pointermove', onPointerMove)
   document.addEventListener('pointerup', onPointerUp)
 }
 
-function onPointerMove(e) {
+function onPointerMove(e: PointerEvent) {
   if (!dragState) return
   const dx = e.clientX - dragState.startX
   const { zone, startFreqKhz, startLoHz, startHiHz, freqPerPx } = dragState
@@ -85,7 +96,7 @@ function onPointerUp() {
   document.removeEventListener('pointerup', onPointerUp)
 }
 
-function classifyZone(x) {
+function classifyZone(x: number): DragZone {
   if (rulerWidthPx.value === 0) return 'center'
   const loStart = drawFrom.value + ENV_ADJ
   const loEnd = drawFrom.value + ENV_SLOPE + ENV_ADJ
@@ -96,8 +107,9 @@ function classifyZone(x) {
   return 'center'
 }
 
-function onRootPointerDown(e) {
-  const el = e.currentTarget
+function onRootPointerDown(e: PointerEvent) {
+  const el = e.currentTarget as HTMLElement | null
+  if (!el) return
   const rect = el.getBoundingClientRect()
   const x = e.clientX - rect.left
   const zone = classifyZone(x)
@@ -162,7 +174,7 @@ onUnmounted(() => {
         left: `${drawFrom + ENV_ADJ}px`,
         width: `${ENV_SLOPE}px`,
       }"
-      @pointerdown.prevent.stop="(e) => startDrag(e, 'lo', props.cursorKhz + props.lowCutHz / 1000, props.lowCutHz, props.highCutHz)"
+      @pointerdown.prevent.stop="(e: PointerEvent) => startDrag(e, 'lo', props.cursorKhz + props.lowCutHz / 1000, props.lowCutHz, props.highCutHz)"
     />
 
     <div
@@ -173,7 +185,7 @@ onUnmounted(() => {
         left: `${drawTo - ENV_SLOPE - ENV_ADJ}px`,
         width: `${ENV_SLOPE}px`,
       }"
-      @pointerdown.prevent.stop="(e) => startDrag(e, 'hi', props.cursorKhz + props.highCutHz / 1000, props.lowCutHz, props.highCutHz)"
+      @pointerdown.prevent.stop="(e: PointerEvent) => startDrag(e, 'hi', props.cursorKhz + props.highCutHz / 1000, props.lowCutHz, props.highCutHz)"
     />
 
     <div
@@ -185,7 +197,7 @@ onUnmounted(() => {
           ? `${drawTo - ENV_SLOPE - ENV_ADJ - (drawFrom + ENV_SLOPE + ENV_ADJ)}px`
           : `${rulerWidthPx - 2 * (ENV_BL - ENV_ATT)}px`,
       }"
-      @pointerdown.prevent.stop="(e) => startDrag(e, 'center', props.cursorKhz, props.lowCutHz, props.highCutHz)"
+      @pointerdown.prevent.stop="(e: PointerEvent) => startDrag(e, 'center', props.cursorKhz, props.lowCutHz, props.highCutHz)"
     />
   </div>
 </template>

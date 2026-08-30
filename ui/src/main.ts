@@ -5,6 +5,7 @@ import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import App from './App.vue'
 import { useKiwiStore } from './store/kiwiStore'
+import type { ParamId } from '@/generated/bridge-validators'
 
 declare global {
   interface Window {
@@ -13,8 +14,8 @@ declare global {
       panOffsetKhz: number
       lowCut: number
       highCut: number
-      setParam: (name: string, value: number) => void
-      [key: string]: unknown
+      status: string
+      setParam: (name: ParamId, value: number) => void
     }
   }
 }
