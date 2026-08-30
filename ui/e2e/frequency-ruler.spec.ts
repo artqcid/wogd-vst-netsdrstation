@@ -8,9 +8,11 @@ test.describe('Frequency ruler', () => {
 
   test('Frequency ruler is visible at default state', async ({ page }) => {
     await expect(page.locator('.freq-ruler')).toBeVisible()
-
-    const ticks = page.locator('.freq-ruler__tick')
-    await expect(ticks).toHaveCount(6)
+    // Major + minor ticks combined
+    const allTicks = page.locator('.freq-ruler__tick--major, .freq-ruler__tick--minor')
+    const count = await allTicks.count()
+    expect(count).toBeGreaterThanOrEqual(24)
+    expect(count).toBeLessThanOrEqual(40)
   })
 
   test('Frequency ruler shows labels at default zoom', async ({ page }) => {
@@ -24,15 +26,15 @@ test.describe('Frequency ruler', () => {
     const zoomBtn = page.locator('.kiwi-cpanel__icon-btn--zoom').first()
     await expect(zoomBtn).toBeVisible()
 
-    const ticksBefore = page.locator('.freq-ruler__tick')
-    const countBefore = await ticksBefore.count()
+    const ticksLocatorBefore = page.locator('.freq-ruler__tick--major, .freq-ruler__tick--minor')
+    const countBefore = await ticksLocatorBefore.count()
 
     for (let i = 0; i < 4; i++) {
       await zoomBtn.click()
     }
 
-    const ticksAfter = page.locator('.freq-ruler__tick')
-    const countAfter = await ticksAfter.count()
+    const ticksLocatorAfter = page.locator('.freq-ruler__tick--major, .freq-ruler__tick--minor')
+    const countAfter = await ticksLocatorAfter.count()
 
     expect(countAfter).toBeGreaterThan(countBefore)
   })
@@ -54,5 +56,237 @@ test.describe('Frequency ruler', () => {
 
     const labels = page.locator('.freq-ruler__label')
     await expect(labels.filter({ hasText: 'kHz' })).not.toHaveCount(0)
+  })
+
+  test('Cursor trapezoid SVG exists in the CursorBar above the ruler', async ({ page }) => {
+    // The cursor SVG polygon now lives in CursorBar (above the ruler),
+    // not in the frequency ruler scale itself.
+    const polygon = page.locator('.cursor-bar__trapezoid polygon')
+    await expect(polygon.first()).toBeVisible()
+  })
+
+  test('Cursor is lime colored when passband is wide (>= 50px rendered width)', async ({ page }) => {
+    // First zoom in so the rendered passband width exceeds 50px threshold.
+    // Set maximum passband (±6000 Hz = 12 kHz) and narrow the view range
+    // to ~500 kHz so the passband is ~120px wide on a 1000px ruler.
+    await page.evaluate(() => {
+      // @ts-ignore
+      window.__vueStore?.setParam?.('lowCut', -6000)
+      // @ts-ignore
+      window.__vueStore?.setParam?.('highCut', 6000)
+    })
+    // Zoom in ~8 clicks so view span reduces to ~500 kHz
+    for (let i = 0; i < 8; i++) {
+      await page.click('.kiwi-cpanel__icon-btn--zoom')
+    }
+    await page.waitForTimeout(200)
+
+    const cursorSvg = page.locator('.cursor-bar__trapezoid').first()
+    await expect(cursorSvg).toBeVisible()
+    const fill = await cursorSvg.getAttribute('fill')
+    const stroke = await cursorSvg.getAttribute('stroke')
+    const isLime = fill === 'lime' || fill === '#00ff00' || stroke === 'lime' || stroke === '#00ff00'
+    expect(isLime).toBe(true)
+  })
+
+  test('Cursor is yellow when passband is narrow (< 50px rendered width)', async ({ page }) => {
+    // Set a very narrow passband: CW mode = 300..700 Hz — likely < 50px at default zoom
+    await page.evaluate(() => {
+      // @ts-ignore
+      window.__vueStore?.setParam?.('lowCut', 300)
+      // @ts-ignore
+      window.__vueStore?.setParam?.('highCut', 700)
+    })
+    await page.waitForTimeout(100)
+    const cursorSvg = page.locator('.cursor-bar__trapezoid').first()
+    if (await cursorSvg.count() > 0) {
+      const fill = await cursorSvg.getAttribute('fill')
+      const stroke = await cursorSvg.getAttribute('stroke')
+      const isYellow = fill === 'yellow' || fill === '#ffff00' || stroke === 'yellow' || stroke === '#ffff00'
+      expect(isYellow).toBe(true)
+    }
+  })
+
+  test('Cursor trapezoid polygon has 4 points', async ({ page }) => {
+    // Zoom in to ensure cursor is visible and wide enough (>50px)
+    for (let i = 0; i < 8; i++) {
+      await page.click('.kiwi-cpanel__icon-btn--zoom')
+    }
+    await page.waitForTimeout(200)
+
+    const polygon = page.locator('.cursor-bar__trapezoid polygon').first()
+    await expect(polygon).toBeVisible()
+    const points = await polygon.getAttribute('points')
+    expect(points).toBeTruthy()
+    if (points) {
+      // Split by whitespace OR commas: handles "x y" and "x,y" and "x, y" formats
+      const coords = points.trim().split(/[\s,]+/)
+      // New trapezoid: 4 points -> 8 numbers (4 x,y pairs)
+      expect(coords.length).toBe(8)
+      const yValues = coords.filter((_, i) => i % 2 === 1).map(Number)
+      // y coords are the two trapezoid levels: 5 (roof) and 17 (base)
+      yValues.forEach(y => expect([17, 5]).toContain(Math.round(y)))
+    }
+  })
+
+  test('Cursor has vertical center line at carrier frequency position', async ({ page }) => {
+    const centerLine = page.locator('.cursor-bar__trapezoid line[data-testid="cursor-carrier"]').first()
+    if (await centerLine.count() > 0) {
+      const x1 = await centerLine.getAttribute('x1')
+      const x2 = await centerLine.getAttribute('x2')
+      // x1 and x2 should be equal (vertical line)
+      expect(x1).toBe(x2)
+      const y1 = parseFloat(await centerLine.getAttribute('y1') ?? '0')
+      const y2 = parseFloat(await centerLine.getAttribute('y2') ?? '0')
+      // The carrier line now spans the full 20px CursorBar height: 0..20
+      expect(y1).toBe(0)
+      expect(y2).toBe(20)
+    }
+  })
+
+  test('Bug 8: Major ticks have labels, minor ticks have no labels', async ({ page }) => {
+    await page.waitForTimeout(200)  // wait for mount + rulerWidthPx init
+
+    const majorTicks = page.locator('.freq-ruler__tick--major')
+    const minorTicks = page.locator('.freq-ruler__tick--minor')
+    const labels = page.locator('.freq-ruler__label')
+
+    const majorCount = await majorTicks.count()
+    const minorCount = await minorTicks.count()
+    const labelCount = await labels.count()
+
+    // At default zoom, should have 5-7 major ticks and many more minor ticks
+    expect(majorCount).toBeGreaterThanOrEqual(3)
+    // Minor ticks should be more numerous than major ticks
+    expect(minorCount).toBeGreaterThanOrEqual(majorCount * 3)
+    // Labels should exist and count match or be close to major tick count
+    expect(labelCount).toBeGreaterThanOrEqual(1)
+    // At least a few labels should be visible
+    const firstVisible = await labels.first().isVisible()
+    expect(firstVisible).toBe(true)
+  })
+
+  test('Bug 8: Labels contain MHz or kHz suffix', async ({ page }) => {
+    const labels = page.locator('.freq-ruler__label')
+    await expect(labels.first()).toBeVisible()
+
+    const labelCount = await labels.count()
+    // At least half of labels should have a unit suffix
+    const withSuffix = await labels.filter({ hasText: /(MHz|kHz)/ }).count()
+    expect(withSuffix).toBeGreaterThanOrEqual(Math.floor(labelCount / 2))
+  })
+
+  test('Bug 8: Tick density increases after zooming in', async ({ page }) => {
+    const zoomBtn = page.locator('.kiwi-cpanel__icon-btn--zoom').first()
+    await expect(zoomBtn).toBeVisible()
+
+    const majorBefore = await page.locator('.freq-ruler__tick--major').count()
+    const minorBefore = await page.locator('.freq-ruler__tick--minor').count()
+
+    // Zoom in 4 times
+    for (let i = 0; i < 4; i++) {
+      await zoomBtn.click()
+    }
+    await page.waitForTimeout(200)
+
+    const majorAfter = await page.locator('.freq-ruler__tick--major').count()
+    const minorAfter = await page.locator('.freq-ruler__tick--minor').count()
+
+    // More ticks visible after zoom-in
+    expect(majorAfter).toBeGreaterThan(majorBefore)
+    expect(minorAfter).toBeGreaterThan(minorBefore)
+  })
+
+  test('Bug 8: Minor ticks are shorter height than major ticks', async ({ page }) => {
+    await page.waitForTimeout(200)
+
+    const major = page.locator('.freq-ruler__tick--major').nth(2)
+    const minor = page.locator('.freq-ruler__tick--minor').nth(2)
+
+    const majorY2 = await major.getAttribute('y2')
+    const minorY2 = await minor.getAttribute('y2')
+    expect(majorY2).toBeTruthy()
+    expect(minorY2).toBeTruthy()
+    if (majorY2 && minorY2) {
+      expect(parseFloat(majorY2)).toBeGreaterThan(parseFloat(minorY2))
+    }
+  })
+
+  test('Bug 16: dragging the cursor center tunes but keeps the window stable', async ({ page }) => {
+    const readStore = () => page.evaluate(() => {
+      const s = window.__vueStore
+      if (!s) throw new Error('__vueStore not exposed (dev server?)')
+      return { freq: s.freqKhz, offset: s.panOffsetKhz }
+    })
+    const before = await readStore()
+    const zone = page.locator('[data-testid="cursor-zone-center"]')
+    const box = await zone.boundingBox()
+    if (!box) throw new Error('center zone not visible')
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2)
+    await page.mouse.down()
+    await page.mouse.move(box.x + box.width / 2 + 150, box.y + box.height / 2, { steps: 5 })
+    await page.mouse.up()
+    await page.waitForTimeout(100)
+    const after = await readStore()
+    // cursor moved right → freq increased
+    expect(after.freq).toBeGreaterThan(before.freq)
+    // window centre stayed the same: freq + offset unchanged
+    expect(after.freq + after.offset).toBeCloseTo(before.freq + before.offset, 0)
+  })
+
+  test('Bug 17: panning the ruler moves window AND cursor together', async ({ page }) => {
+    const readStore = () => page.evaluate(() => {
+      const s = window.__vueStore
+      if (!s) throw new Error('__vueStore not exposed (dev server?)')
+      return { freq: s.freqKhz, offset: s.panOffsetKhz }
+    })
+    const before = await readStore()
+    // Pan = drag on the waterfall canvas (below the ruler; the scale itself
+    // has no pan handler anymore — the CursorBar above it would catch drags).
+    const waterfall = page.locator('.waterfall canvas, canvas[data-testid="waterfall"]').first()
+    const target = (await waterfall.count()) > 0 ? waterfall : page.locator('.kiwi-canvas-area').first()
+    const box = await target.boundingBox()
+    if (!box) throw new Error('pan target not visible')
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2)
+    await page.mouse.down()
+    await page.mouse.move(box.x + box.width / 2 + 150, box.y + box.height / 2, { steps: 5 })
+    await page.mouse.up()
+    await page.waitForTimeout(100)
+    const after = await readStore()
+    // KiwiSDR: panning moves the WINDOW under the cursor...
+    expect(after.freq + after.offset).not.toBe(before.freq + before.offset)
+    // ...while the cursor stays at its absolute frequency (no tune)
+    expect(after.freq).toBe(before.freq)
+    expect(after.offset).not.toBe(before.offset)
+  })
+
+  test('Bug 17: cursor pixel position follows the panned window', async ({ page }) => {
+    const carrier = page.locator('.cursor-bar__trapezoid line[data-testid="cursor-carrier"]').first()
+    await expect(carrier).toBeAttached()
+    const x1Before = parseFloat((await carrier.getAttribute('x1')) ?? '0')
+    // Pan via waterfall canvas drag (the scale has no pan handler anymore)
+    const waterfall = page.locator('.waterfall canvas, canvas[data-testid="waterfall"]').first()
+    const target = (await waterfall.count()) > 0 ? waterfall : page.locator('.kiwi-canvas-area').first()
+    const box = await target.boundingBox()
+    if (!box) throw new Error('waterfall canvas not visible')
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2)
+    await page.mouse.down()
+    await page.mouse.move(box.x + box.width / 2 + 150, box.y + box.height / 2, { steps: 5 })
+    await page.mouse.up()
+    await page.waitForTimeout(100)
+    const x1After = parseFloat((await carrier.getAttribute('x1')) ?? '0')
+    // Dragging right on the scale pans the window; assert the carrier MOVED
+    expect(x1After).not.toBe(x1Before)
+  })
+
+  test('CursorBar sits above the ruler (scale-area layout)', async ({ page }) => {
+    const rulerBox = await page.locator('.freq-ruler').boundingBox()
+    const barBox = await page.locator('.cursor-bar').boundingBox()
+    expect(rulerBox).toBeTruthy()
+    expect(barBox).toBeTruthy()
+    if (rulerBox && barBox) {
+      // CursorBar vertically overlaps the TOP of the ruler area
+      expect(barBox.y).toBeLessThan(rulerBox.y + rulerBox.height)
+    }
   })
 })

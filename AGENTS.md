@@ -29,7 +29,7 @@ Before every task (read/edit/build):
 
 The **MCP-First workflow** section below provides the full RAG tooling reference.
 
-### Autopilot mode (no permission prompts)
+### Todo-first workflow + Autopilot (gated by explicit plan approval)
 
 - **No permission prompts.** All tools are allowed (edit, bash, read, glob,
   grep, list, task, todowrite, question, webfetch, websearch, skill, external_directory).
@@ -38,10 +38,17 @@ The **MCP-First workflow** section below provides the full RAG tooling reference
   1. Break the task into concrete, ordered steps.
   2. Create a todo list via `todowrite` with each step marked `pending`.
   3. Present the plan to the user in the response.
-  4. **Wait for user confirmation** before executing the first step.
+  4. **STOP. Wait for explicit user confirmation** ("go", "ok", "ja", "yes",
+     "do it", or similar) before executing the first step. No confirmation →
+     no execution. Never infer approval from an imperative like "continue",
+     "weiter", "go ahead with it" is approval, but a bare imperative ("weiter
+     in der umsetzung") is NOT approval of a plan — if a plan is presented, the
+     agent still waits for confirmation.
   5. Update todo status to `in_progress` / `completed` as work proceeds.
-- **Once the plan is confirmed and execution begins**, never ask for
-  permission again — proceed autonomously until the task is complete.
+- **Autopilot applies ONLY AFTER the todo list is confirmed.** Once the user
+  has explicitly approved the plan, execution is autonomous: never ask for
+  permission again — proceed until the task is complete. Before that approval,
+  autopilot is NOT in effect.
 
 ### MCP-First workflow (RAG / Code-Wiki)
 
@@ -58,10 +65,28 @@ see `netsdr_mcp_server.py`). Tools: `index_project_code`, `query_code_rag`,
 
 ### Subagent rules
 
+**Autonomy (important):** The todo-first / wait-for-approval workflow applies
+ONLY to the primary agent. Subagents do **NOT** wait for approval — the
+primary's delegation prompt IS their "go". A subagent executes its single task
+autonomously from start to finish and then returns its report. The primary
+agent is responsible for waiting for the user's plan approval BEFORE spawning
+subagents; once approved, spawning subagents needs no further permission.
+
 **Delegation:**
 - Escalate architectural questions upward: DEV → BUILD → ARCHITECT.
 - Delegate small, focused implementation/search tasks to subagents
   (`general`, `explore`); subagents never build/test (see below).
+
+**Task size & context limits (MANDATORY — subagents have small context windows):**
+- Give each subagent ONE small, single-step task only (e.g. fix one bug, change
+  one file, one focused concern). Never bundle multiple bugs, multiple files, or
+  multi-step plans into a single subagent prompt.
+- Break large work into a CHAIN of small subagent tasks, not one big task.
+- After each subagent returns, the primary agent REVIEWS the result and verifies
+  it (reads the diff / runs the relevant check) BEFORE delegating the next step.
+- A subagent prompt must contain: the single concrete goal, the exact file(s),
+  the specific inputs/constraints, and the required return report. Keep it short
+  — assume the subagent can only hold one file's worth of context.
 
 **Build & test ownership:**
 - **Subagents must NEVER build or run tests.** This is always the job of the
@@ -89,12 +114,20 @@ see `netsdr_mcp_server.py`). Tools: `index_project_code`, `query_code_rag`,
 
 A task is complete only when ALL of the following hold:
 
-1. Compiles: `cmake --preset win-msvc`, then
+1. **Process proof (mandatory, non-negotiable):** the primary agent's final
+   report MUST contain (a) the plan-approval quote or paraphrase from the user
+   (the explicit "go"/"ok"/"ja"/"yes" message), and (b) for every implemented
+   step, the `task_id` of the subagent that did the work. If implementation was
+   done by the primary instead of a delegated subagent, the task is **not** done
+   — redo it via delegation. The only exceptions to mandatory delegation are:
+   documentation edits under `doc/` and config edits under `.opencode/`,
+   `~/.config/opencode/`, and `opencode.json`.
+2. Compiles: `cmake --preset win-msvc`, then
    `cmake --build build/win-msvc --config Debug` (and `Release`).
-2. Tests green: `ctest --test-dir build/win-msvc -C Debug --output-on-failure`.
-3. `index_project_code` ran (wiki current).
-4. `pwsh doc/lint.ps1` ran without new issues.
-5. `doc/log.md` appended with a changelog entry (newest first).
+3. Tests green: `ctest --test-dir build/win-msvc -C Debug --output-on-failure`.
+4. `index_project_code` ran (wiki current).
+5. `pwsh doc/lint.ps1` ran without new issues.
+6. `doc/log.md` appended with a changelog entry (newest first).
 
 Release builds need the UI target first (`--target netsdrstation_ui`); full
 build/debug/hot-reload workflow: `doc/workspace-workflow.md`.

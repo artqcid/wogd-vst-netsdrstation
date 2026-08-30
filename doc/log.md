@@ -3,6 +3,101 @@
 _Append-only, newest first. Parseable with `grep "^## "`. Entries use
 `**Creation**`, `**Update**` or `**Deprecation**` prefix + linked concept file._
 
+## 2026-08-30 — M4c.7 Bugs 16+17 implementiert: CursorBar + Pan/Cursor-Separation
+
+**Update:** [`M4c.7-bugs.md`](./M4c.7-bugs.md) — Bugs 16 (Cursor liegt auf Frequenzleiste statt eigener Leiste) + 17 (Cursor-Edges lassen sich nicht anfassen) implementiert.
+
+**Creation:** [`CursorBar.vue`](../ui/src/components/CursorBar.vue) — eigene 20px-Leiste über der Scale:
+- 3 Zonen (lo/hi/center) als separate DIVs mit `pointer-events: all`
+- Trapezoid-SVG + Carrier-Line + `freqToPx`-basiertes `carrierX` (reaktiv)
+- Drag-State-Machine via `pointerdown/move/up` auf `document`
+- `emit('tune' | 'update:lowCut' | 'update:highCut')`
+
+**Update:** [`FrequencyRuler.vue`](../ui/src/components/FrequencyRuler.vue) — auf Scale-only reduziert: Cursor-SVG + Drag-Logik entfernt, Tick-Berechnung (Major/Minor) + Wheel-Zoom behalten.
+
+**Creation:** [`cursorPanLogic.ts`](../ui/src/components/cursorPanLogic.ts) — Pan/Cursor-Separation:
+- `viewCenterKhz = freqKhz + panOffsetKhz`
+- `cursorDrag`: freqKhz ändert, panOffset kompensiert → Fenstermitte bleibt stabil
+- `panWindow`: freqKhz bleibt (Cursor an absoluter Frequenz), panOffset ändert → Fenster wandert unter dem Cursor durch (KiwiSDR-Akzeptanzkriterium 4)
+
+**Update:** [`PluginView.vue`](../ui/src/views/PluginView.vue) — CursorBar über FrequencyRuler im `scale-area`; `onFreqRulerTune` nutzt `cursorDrag` (Fenster stabil); `onCanvasMouseDown`/`onMouseMove`/`onPan` nutzen `panWindow`; `loKhz`/`hiKhz` aus `viewCenterKhz`.
+
+**Update:** [`kiwiStore.ts`](../ui/src/store/kiwiStore.ts) — `panOffsetKhz` State ergänzt.
+
+**Update:** [`main.ts`](../ui/src/main.ts) — `window.__vueStore` für E2E-Tests exponiert (DEV-only, gleiche Pinia-Instanz).
+
+**Debug-Funde (Wiki-Gleaning):**
+- Doppelte `createPinia()` in main.ts → `__vueStore` und App-Store waren verschiedene Instanzen (E2E-Tests sahen veraltete Werte)
+- `onFreqRulerTune` setzte nur freqKhz ohne `cursorDrag`-Kompensation → Fenster wanderte beim Cursor-Drag mit (Bug 16)
+- `panWindow`-Semantik war invertiert (freq wanderte, offset blieb) → Cursor-Pixel folgte dem Pan nicht (Bug 17); korrigiert nach KiwiSDR-Akzeptanzkriterium 4
+- E2E-Pan-Tests draggten auf `.freq-ruler__scale`, aber die Scale hat keinen Pan-Handler mehr → auf Waterfall-Canvas umgestellt
+
+**Status:** 142/142 Vitest ✅, 104/105 E2E ✅, vue-tsc clean. **Bugs 1–17 implementiert** 🎉
+
+## 2026-08-29 — M4c.7 Bugs 14+15 implementiert: Spectrum AF + DRM Panel
+
+**Update:** [`M4c.7-bugs.md`](./M4c.7-bugs.md) — Bugs 14 (Spec AF) + 15 (DRM Panel, Mode-Index-Korrektur) implementiert.
+
+**Creation:** [`SpectrumAf.vue`](../ui/src/components/SpectrumAf.vue) — Canvas-basierter AF-Spektrumanalysator:
+- 200px Höhe, Canvas-Breite = Container - 100px (50px Margin links/rechts)
+- dBm Y-Achse (-10..-110) mit 256-Farb-Colormap (wie SpectrumRf)
+- Horizontale Grid-Linien alle 10 dB, dB-Beschriftungen rechts
+- **Vertikales Grid** bei 1 kHz Audio-Frequenzschritten
+- **Grüne Center-Linie** (lime, 3px) bei `canvas.width/2` (DC/Träger)
+- **Rote Rand-Marker** (red, 3px) links/rechts (Nyquist edges)
+- Halbtransparentes Passband-Overlay um Träger zentriert
+
+**Creation:** [`DrmPanel.vue`](../ui/src/components/DrmPanel.vue) — DRM Schedule/Services + Decoder-Panel:
+- Top-Overlay: 3-spaltiges Schedule-Layout (Status-Checkboxen links, Stationsliste mit Zeitleiste mitte, UTC/Local-Zeit + Legende rechts)
+- Decoder-Panel: Header (Dream 2.2.1), Content (Links), Footer (Stop/Monitor IQ/Test 1/Test 2 + LPF)
+- Sichtbar bei `store.mode === 8` (korrigierter DRM-Mode-Index)
+
+**Korrektur:** [`PluginView.vue`](../ui/src/views/PluginView.vue) — DRM-Mode-Index von 12 auf **8** korrigiert (laut KiwiSDR `modes_lc`).
+
+**Status:** 126/126 Vitest ✅, 100/101 E2E ✅, vue-tsc clean. **Bugs 1–15 implementiert** 🎉
+
+## 2026-08-29 — M4c.7 Bugs 12+13 implementiert: HeaderBar + Spectrum RF
+
+**Update:** [`M4c.7-bugs.md`](./M4c.7-bugs.md) — Bugs 12 (HeaderBar) + 13 (Spectrum RF) implementiert.
+
+**Creation:** [`HeaderBar.vue`](../ui/src/components/HeaderBar.vue) — KiwiSDR-konforme Topbar:
+- 67px Höhe, 4-Spalten-Grid-Layout (L/ML/MR/R)
+- Logo + Stationstitel + Antenne (L), Owner-Info (ML), Callsign (MR), UTC/Local-Zeit + TZ + "Powered by OpenWebRX" (R)
+- Chevron-Toggle-SVG (43×12px) für Expand/Collapse des Panorama-Bildbereichs
+- Expandierbarer RX_PHOTO_FILE-Bereich mit max-height-Animation
+
+**Creation:** [`SpectrumRf.vue`](../ui/src/components/SpectrumRf.vue) — Canvas-basierter RF-Spektrumanalysator:
+- Canvas 2D, 200px Höhe, volle Breite
+- dBm Y-Achse (-10..-110) mit 256-Farb-Colormap (dunkelblau→cyan→grün→gelb→rot)
+- Farbbänder alle 10 dB mit weißen dB-Beschriftungen rechts
+- Horizontale Grid-Linien (1px, lightGray) an jeder 10-dB-Grenze
+- Passband-Overlay auf separatem transparentem Canvas (rgba(150,150,150,0.25))
+- Datenquelle: `store.waterfallBins` (gleiches FFT-Signal wie Wasserfall)
+- Bedingtes Rendering via `store.spectrumMode === 'specRF'` in PluginView.vue
+
+**Update:** [`PluginView.vue`](../ui/src/views/PluginView.vue) — Header durch `<HeaderBar />` ersetzt, StationInput in Connection-Bar ausgelagert, SpectrumRf parallel zum Waterfall bedingt eingeblendet.
+
+**Update:** [`audioPanel.test.ts`](../ui/tests/audioPanel.test.ts) — Toggle-Indizes an neue AudioPanel-Reihenfolge angepasst (Compression + De-emphasis ergänzt).
+
+**Status:** 126/126 Vitest ✅, 100/101 E2E ✅, vue-tsc clean. Bugs 1–13 implementiert, 14+15 offen.
+
+## 2026-08-29 — M4c.7 + M4c.8: Post-Task-Sync (286–295)
+
+**Update:** [`M4c.7-bugs.md`](./M4c.7-bugs.md) — Bugs 7–11 completed, Bugs 12–15 open.
+
+**Subagent-tasks history (from ARCHITECT summary):**
+- Bug 7 (Cursor trapezoid): 13/13 E2E green. Zustandsübergang frequenzbasiert (`passband_visible()`), grün/lime/gelb anhand Pixelbreite ≥50px, drei Drag-Zonen (lo/hi/center).
+- Bug 8 (Frequency scale ticks): 13/13 E2E green. SVG `<line>` major/minor ticks mit Klassen `.freq-ruler__tick--major/minor`, Labels als `<text>.freq-ruler__label`, Minor-Subdivision 4:1.
+- Bug 9 (Band/Tag area): 6/6 E2E green. TagArea verticale Verbindungslinien (1px schwarz `.tag-area__line`), BandScaleBar `text-align:center`. Forschung in `doc/kiwsdr-research-bug9.md`.
+- Bug 10 (Audio tab): Scrollbar 320px max-height + overflow-y:auto; Pan-Slider (local ref); De-emphasis AM/FM dropdowns + Compression Toggle.
+- Bug 11 (AGC tab): Forschung abgeschlossen — 7 Parameter (agc, hang, manGain, thresh, threshCW, slope, decay), HTML-Struktur, SET-Befehle.
+- Bug 12 (Header area): Forschung abgeschlossen — 67px Höhe, 4-Spalten-Layout, Chevron-Collapse (PNG 43×12px), Panorama-Bild `RX_PHOTO_FILE`.
+- Bug 13 (Spec RF): Forschung abgeschlossen — Canvas 2D (200px Höhe), Y-Achse dBm -10..-110, Colormap-Bänder alle 10 dB, Passband-Overlay auf separatem Canvas.
+- Bug 14 (Spec AF): Forschung noch ausstehend.
+- Bug 15: Noch nicht analysiert.
+
+**Update:** [`index.md`](./index.md) — `kiwsdr-research-bug9.md` hinzugefügt; Bug-Status auf 1–11 gefixt aktualisiert.
+
 ## 2026-08-29 — M4c.7 Bug 7 präzisiert: drei Cursor-Interaktions-Zonen
 
 **Update:** [`M4c.7-bugs.md`](./M4c.7-bugs.md) §Bug 7 — Interaktions-Logik des

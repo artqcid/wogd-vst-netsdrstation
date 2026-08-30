@@ -68,13 +68,13 @@ describe('AudioPanel', () => {
     const spy = vi.spyOn(pluginService, 'setParameter')
     const wrapper = mountPanel()
 
-    // order: Mute, AGC On, AGC Hang, Squelch On, NB, NR
-    await wrapper.findAll('.k-toggle')[3].trigger('click') // Squelch On
+    // order: Mute, AGC On, AGC Hang, Compression, Squelch On, NB, NR
+    await wrapper.findAll('.k-toggle')[4].trigger('click') // Squelch On
     expect(spy).toHaveBeenCalledWith('squelchOn', 1)
 
-    // second range input is the squelch threshold
+    // third range input is the squelch threshold (after Volume, Pan)
     const ranges = wrapper.findAll('input[type="range"]')
-    await ranges[1].setValue('0.8')
+    await ranges[2].setValue('0.8')
     expect(store.squelchThr).toBe(0.8)
     expect(spy).toHaveBeenCalledWith('squelchThr', 0.8)
   })
@@ -84,10 +84,10 @@ describe('AudioPanel', () => {
     const wrapper = mountPanel()
 
     const toggles = wrapper.findAll('.k-toggle')
-    await toggles[4].trigger('click') // NB
+    await toggles[5].trigger('click') // NB (after Mute, AGC On, AGC Hang, Compression, Squelch On)
     expect(spy).toHaveBeenCalledWith('nbOn', 1)
 
-    await toggles[5].trigger('click') // NR
+    await toggles[6].trigger('click') // NR
     expect(spy).toHaveBeenCalledWith('nrOn', 1)
   })
 })

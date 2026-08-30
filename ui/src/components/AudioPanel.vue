@@ -1,5 +1,6 @@
 <template>
   <div class="audio-panel" data-testid="audio-panel">
+    <div class="audio-panel__scroll">
     <!-- Volume + mute -->
     <div class="audio-panel__row">
       <KSlider
@@ -24,6 +25,47 @@
       <KNumberInput :model-value="store.agcManGain" :min="-50" :max="50" :step="1" unit="dB" label="ManGain" @update:model-value="onParam('agcManGain', $event)" />
     </div>
 
+    <!-- Pan -->
+    <div class="audio-panel__row">
+      <KSlider
+        :model-value="panLocal"
+        :min="-1"
+        :max="1"
+        :step="0.01"
+        label="Pan"
+        @update:model-value="onPanChange"
+      />
+    </div>
+
+    <!-- De-emphasis -->
+    <div class="audio-panel__row">
+      <select
+        :value="deempAm"
+        class="audio-panel__select"
+        @change="deempAm = ($event.target as HTMLSelectElement).value"
+      >
+        <option value="off">off</option>
+        <option value="75">75µS</option>
+        <option value="50">50µS</option>
+      </select>
+      <span class="audio-panel__label">De-emphasis AM</span>
+      <select
+        :value="deempFm"
+        class="audio-panel__select"
+        @change="deempFm = ($event.target as HTMLSelectElement).value"
+      >
+        <option value="off">off</option>
+        <option value="on">on</option>
+        <option value="+LF">+LF</option>
+      </select>
+      <span class="audio-panel__label">De-emphasis FM</span>
+    </div>
+
+    <!-- Compression -->
+    <div class="audio-panel__row">
+      <KToggle :model-value="compOn" label="Compression" @update:model-value="compOn = $event" />
+    </div>
+
     <!-- Squelch -->
     <div class="audio-panel__section">
       <span class="audio-panel__section-title">Squelch</span>
@@ -38,6 +80,7 @@
       <KSlider :model-value="store.nbThresh" :min="0" :max="1" :step="0.01" label="NB Thresh" @update:model-value="onParam('nbThresh', $event)" />
       <KToggle :model-value="store.nrOn" label="NR" @update:model-value="onParamBool('nrOn', $event)" />
     </div>
+    </div>
   </div>
 </template>
 
@@ -47,8 +90,13 @@ import KToggle from '@/components/KToggle.vue'
 import KNumberInput from '@/components/KNumberInput.vue'
 import { useKiwiStore } from '@/store/kiwiStore'
 import type { ParamId } from '@/generated/bridge-validators'
+import { ref } from 'vue'
 
 const store = useKiwiStore()
+const panLocal = ref(0)
+const deempAm = ref('off')
+const deempFm = ref('off')
+const compOn = ref(false)
 
 function onParam(id: ParamId, value: number) {
   store.setParam(id, value)
@@ -56,6 +104,10 @@ function onParam(id: ParamId, value: number) {
 
 function onParamBool(id: ParamId, value: boolean) {
   store.setParam(id, value ? 1 : 0)
+}
+
+function onPanChange(val: number) {
+  panLocal.value = val
 }
 </script>
 
@@ -83,5 +135,25 @@ function onParamBool(id: ParamId, value: boolean) {
   text-transform: uppercase;
   letter-spacing: 1px;
   min-width: 70px;
+}
+
+.audio-panel__scroll {
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.audio-panel__select {
+  background: #444;
+  color: #ddd;
+  border: 1px solid #666;
+  font-size: 10px;
+  padding: 2px 4px;
+  border-radius: 3px;
+}
+
+.audio-panel__label {
+  font-size: 10px;
+  color: #ccc;
+  white-space: nowrap;
 }
 </style>

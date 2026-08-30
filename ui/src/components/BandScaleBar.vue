@@ -151,6 +151,10 @@ function freqWidthPercent(startMhz: number, endMhz: number): number {
   border: 1px solid rgba(0,0,0,0.15);
   line-height: 14px;
   user-select: none;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .band-scale__block:hover { filter: brightness(1.15); }

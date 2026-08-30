@@ -1,46 +1,17 @@
 <template>
   <div class="kiwi-root">
-    <!-- A. TOP HEADER BAR (~55px, #EAEAEA) -->
-    <header class="kiwi-header">
-      <div class="kiwi-header__left">
-        <!-- Kiwi bird logo (inline SVG, green circle) -->
-        <svg class="kiwi-header__logo" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-          <circle cx="20" cy="20" r="19" fill="#4CAF50" stroke="#2e7d32" stroke-width="1.5"/>
-          <ellipse cx="21" cy="23" rx="11" ry="8" fill="#2e7d32"/>
-          <circle cx="29" cy="17" r="5" fill="#2e7d32"/>
-          <line x1="33" y1="15" x2="40" y2="14" stroke="#2e7d32" stroke-width="2.5" stroke-linecap="round"/>
-          <circle cx="31" cy="16" r="1.5" fill="white"/>
-        </svg>
-        <div class="kiwi-header__title-stack">
-          <div class="kiwi-header__title">NetSDRStation</div>
-          <div class="kiwi-header__sub">{{ store.station || 'no station' }}</div>
-          <div class="kiwi-header__sub">Antenna: KiwiSDR broadband</div>
-        </div>
-      </div>
+    <!-- A. HEADER BAR (67px, KiwiSDR-style) -->
+    <HeaderBar />
 
-      <div class="kiwi-header__center">
-        <div class="kiwi-header__center-name">NetSDRStation — KiwiSDR Receiver</div>
-        <div class="kiwi-header__center-status">{{ statusText }}</div>
-        <StationInput
-          :station="store.station"
-          :status="store.status"
-          @connect="onStation"
-          @disconnect="store.disconnect()"
-        />
-      </div>
-
-      <div class="kiwi-header__right">
-        <div class="kiwi-header__callsign-row">
-          <span class="kiwi-header__label">Your name or callsign:</span>
-          <input type="text" class="kiwi-header__callsign-input" placeholder="callsign" />
-        </div>
-        <div class="kiwi-header__time-stack">
-          <span class="kiwi-header__time-utc">{{ utcTime }}</span>
-          <span class="kiwi-header__time-local">{{ localTime }}</span>
-          <span class="kiwi-header__timezone">{{ tzName }}</span>
-        </div>
-      </div>
-    </header>
+    <!-- A2. Connection bar -->
+    <div class="kiwi-connection-bar">
+      <StationInput
+        :station="store.station"
+        :status="store.status"
+        @connect="onStation"
+        @disconnect="store.disconnect()"
+      />
+    </div>
 
     <!-- B. BAND SCALE STRIP (~20px) -->
     <BandScaleBar
@@ -59,19 +30,31 @@
 
     <!-- MAIN WORKSPACE: frequency ruler + waterfall + floating panel -->
     <main class="kiwi-main">
-      <!-- Frequency ruler at top edge of canvas area -->
-      <FrequencyRuler
-        :view-low-khz="loKhz"
-        :view-high-khz="hiKhz"
-        :cursor-khz="store.freqKhz"
-        :low-cut-hz="store.lowCut"
-        :high-cut-hz="store.highCut"
-        :zoom-level="store.wfZoom"
-        @tune="onFreqRulerTune"
-        @low-cut="onFreqRulerLowCut"
-        @high-cut="onFreqRulerHighCut"
-        @zoom="onWfZoom"
-      />
+      <!-- Frequency ruler + cursor bar (KiwiSDR: cursor on its own 20px bar above the 47px scale) -->
+      <div class="scale-area" style="position: relative">
+        <CursorBar
+          :view-low-khz="loKhz"
+          :view-high-khz="hiKhz"
+          :cursor-khz="store.freqKhz"
+          :low-cut-hz="store.lowCut"
+          :high-cut-hz="store.highCut"
+          @tune="onFreqRulerTune"
+          @update:low-cut="onFreqRulerLowCut"
+          @update:high-cut="onFreqRulerHighCut"
+        />
+        <FrequencyRuler
+          :view-low-khz="loKhz"
+          :view-high-khz="hiKhz"
+          :cursor-khz="store.freqKhz"
+          :low-cut-hz="store.lowCut"
+          :high-cut-hz="store.highCut"
+          :zoom-level="store.wfZoom"
+          @tune="onFreqRulerTune"
+          @low-cut="onFreqRulerLowCut"
+          @high-cut="onFreqRulerHighCut"
+          @zoom="onWfZoom"
+        />
+      </div>
 
       <!-- Waterfall canvas (fills remaining space) -->
       <div class="kiwi-canvas-area" @mousedown="onCanvasMouseDown" ref="canvasArea">
@@ -79,6 +62,7 @@
         <button class="kiwi-play-btn" aria-label="Start audio" @click="onToggleAudio()">▶</button>
 
         <Waterfall
+          v-if="store.spectrumMode === 'waterfall'"
           :bins="store.waterfallBins"
           :color-map="store.colorMap"
           :cursor-khz="store.freqKhz"
@@ -88,6 +72,25 @@
           :high-cut-hz="store.highCut"
           @zoom="onWfZoom"
         />
+        <SpectrumRf
+          v-if="store.spectrumMode === 'specRF'"
+          :bins="store.waterfallBins"
+          :passband-low-hz="store.lowCut"
+          :passband-high-hz="store.highCut"
+          :span-khz="spanKhz"
+          :centre-khz="store.freqKhz"
+        />
+        <SpectrumAf
+          v-if="store.spectrumMode === 'specAF'"
+          :bins="store.waterfallBins"
+          :passband-low-hz="store.lowCut"
+          :passband-high-hz="store.highCut"
+          :span-khz="spanKhz"
+          :centre-khz="store.freqKhz"
+        />
+
+        <!-- DRM Panel (schedule overlay + decoder panel) -->
+        <DrmPanel v-if="store.mode === 8" />
 
         <!-- Floating control panel — position absolute, bottom-right -->
         <aside class="kiwi-cpanel" aria-label="Control panel">
@@ -402,13 +405,19 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onBeforeUnmount, nextTick } from 'vue'
+import { ref, computed, onMounted, nextTick } from 'vue'
 import { storeToRefs } from 'pinia'
+import HeaderBar from '@/components/HeaderBar.vue'
 import StationInput from '@/components/StationInput.vue'
 import BandScaleBar from '@/components/BandScaleBar.vue'
 import TagArea from '@/components/TagArea.vue'
 import FrequencyRuler from '@/components/FrequencyRuler.vue'
 import Waterfall from '@/components/Waterfall.vue'
+import SpectrumRf from '@/components/SpectrumRf.vue'
+import SpectrumAf from '@/components/SpectrumAf.vue'
+import CursorBar from '@/components/CursorBar.vue'
+import { viewCenterKhz, cursorDrag, panWindow } from '@/components/cursorPanLogic'
+import DrmPanel from '@/components/DrmPanel.vue'
 import { useKiwiStore } from '@/store/kiwiStore'
 import { pluginService } from '@/services/pluginService'
 import type { ParamId } from '@/generated/bridge-validators'
@@ -423,8 +432,9 @@ const spanKhz = computed(() => {
   const z = typeof store.wfZoom === 'number' ? store.wfZoom : 0
   return Math.max(0.01, maxSpan / Math.pow(2, z))
 })
-const loKhz = computed(() => store.freqKhz - spanKhz.value / 2)
-const hiKhz = computed(() => store.freqKhz + spanKhz.value / 2)
+const viewCenter = computed(() => viewCenterKhz(store.freqKhz, store.panOffsetKhz))
+const loKhz = computed(() => viewCenter.value - spanKhz.value / 2)
+const hiKhz = computed(() => viewCenter.value + spanKhz.value / 2)
 const loMhz = computed(() => loKhz.value / 1000)
 const hiMhz = computed(() => hiKhz.value / 1000)
 
@@ -435,20 +445,6 @@ const activeTab = ref<string>('WF0')
 // Canvas width for pan calculations
 const canvasWidth = ref(0)
 const canvasArea = ref<HTMLElement | null>(null)
-
-// Time display
-const utcTime = ref('')
-const localTime = ref('')
-const tzName = ref('')
-let timeTimer: ReturnType<typeof setInterval>
-
-function updateTime() {
-  const now = new Date()
-  const pad = (n: number) => String(n).padStart(2, '0')
-  utcTime.value = `${pad(now.getUTCHours())}:${pad(now.getUTCMinutes())}:${pad(now.getUTCSeconds())} UTC`
-  localTime.value = now.toLocaleTimeString()
-  tzName.value = Intl.DateTimeFormat().resolvedOptions().timeZone
-}
 
 // Sub-tabs definition
 const subTabs = [
@@ -484,7 +480,7 @@ function cycleSpectrumMode() {
 const panelModes = [
   { idx: 0,  label: 'AM' },
   { idx: 13, label: 'SAM' },
-  { idx: 12, label: 'DRM' },
+  { idx: 8,  label: 'DRM' },
   { idx: 5,  label: 'LSB' },
   { idx: 3,  label: 'USB' },
   { idx: 7,  label: 'CW' },
@@ -573,9 +569,17 @@ function onTagTune(freqKhz: number) {
   store.setParam('freqKhz', Math.max(0.001, Math.min(30000, freqKhz)))
 }
 
-// FrequencyRuler: Draggen des Cursors
+// CursorBar/Cursor-Drag: Fenstermitte stabil halten (KiwiSDR: Cursor-Drag
+// ändert freqKhz, panOffsetKhz kompensiert → Fenster bleibt stehen)
 function onFreqRulerTune(freqKhz: number) {
-  store.setParam('freqKhz', Math.max(0.001, Math.min(30000, freqKhz)))
+  const clamped = Math.max(0.001, Math.min(30000, freqKhz))
+  const { freqKhz: newFreq, panOffsetKhz } = cursorDrag(
+    store.freqKhz,
+    store.panOffsetKhz,
+    clamped - store.freqKhz,
+  )
+  store.setParam('freqKhz', newFreq)
+  store.panOffsetKhz = panOffsetKhz
 }
 
 function onFreqRulerLowCut(hz: number) {
@@ -606,7 +610,9 @@ function onWfZoom(delta: number, anchorFrac: number) {
 // Pan-Event von BandScaleBar
 function onPan(dir: number) {
   const shift = spanKhz.value * 0.5 * dir
-  store.setParam('freqKhz', Math.max(0.001, Math.min(30000, store.freqKhz + shift)))
+  const { freqKhz, panOffsetKhz } = panWindow(store.freqKhz, store.panOffsetKhz, shift)
+  store.setParam('freqKhz', freqKhz)
+  store.panOffsetKhz = panOffsetKhz
 }
 
 // Pan-Event von Wasserfall-Feld: Mausklick + horizontales Ziehen verschiebt Frequenz
@@ -621,14 +627,14 @@ function onCanvasMouseDown(e: MouseEvent) {
   })
 
   const startX = e.clientX
-  const startFreq = store.freqKhz
   const span = spanKhz.value
 
   function onMouseMove(ev: MouseEvent) {
     const deltaPx = ev.clientX - startX
     const deltaKhz = -(deltaPx / canvasWidth.value) * span
-    const newFreq = Math.max(0.001, Math.min(30000, startFreq + deltaKhz))
-    store.setParam('freqKhz', newFreq)
+    const { freqKhz, panOffsetKhz } = panWindow(store.freqKhz, store.panOffsetKhz, deltaKhz)
+    store.setParam('freqKhz', freqKhz)
+    store.panOffsetKhz = panOffsetKhz
     canvas.style.cursor = 'grabbing'
   }
 
@@ -644,9 +650,6 @@ function onCanvasMouseDown(e: MouseEvent) {
 }
 
 onMounted(() => {
-  updateTime()
-  timeTimer = setInterval(updateTime, 1000)
-
   pluginService.onMessage(message => {
     if (message.type === 'param') store.applyParam(message.data.id, message.data.value)
     if (message.type === 'status') store.setStatus(message.data)
@@ -656,9 +659,7 @@ onMounted(() => {
   pluginService.getParameters()
 })
 
-onBeforeUnmount(() => {
-  clearInterval(timeTimer)
-})
+// No cleanup needed — time display moved to HeaderBar.vue
 </script>
 
 <style scoped>
@@ -674,119 +675,16 @@ onBeforeUnmount(() => {
   overflow: hidden;
 }
 
-/* ===== A. HEADER BAR ===== */
-.kiwi-header {
+/* ===== A2. CONNECTION BAR ===== */
+.kiwi-connection-bar {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: center;
   flex-shrink: 0;
-  min-height: 55px;
   padding: 4px 10px;
-  background: var(--kiwi-topbar-bg);
-  color: var(--kiwi-topbar-text);
-  gap: 10px;
-}
-
-.kiwi-header__left {
-  display: flex;
-  align-items: center;
+  background: #222;
+  border-bottom: 1px solid #444;
   gap: 8px;
-  flex-shrink: 0;
-}
-
-.kiwi-header__logo {
-  width: 40px;
-  height: 40px;
-  flex-shrink: 0;
-}
-
-.kiwi-header__title-stack {
-  display: flex;
-  flex-direction: column;
-  line-height: 1.3;
-}
-
-.kiwi-header__title {
-  font-size: var(--kiwi-font-xl);
-  font-weight: bold;
-  color: var(--kiwi-topbar-text);
-}
-
-.kiwi-header__sub {
-  font-size: var(--kiwi-font-sm);
-  color: var(--kiwi-topbar-sub);
-}
-
-.kiwi-header__center {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  font-size: var(--kiwi-font-sm);
-  color: var(--kiwi-topbar-sub);
-  text-align: center;
-  min-width: 0;
-}
-
-.kiwi-header__center-name {
-  font-weight: bold;
-  font-size: var(--kiwi-font-md);
-  color: var(--kiwi-topbar-text);
-}
-
-.kiwi-header__center-status {
-  font-size: var(--kiwi-font-sm);
-  color: var(--kiwi-topbar-sub);
-}
-
-.kiwi-header__right {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-shrink: 0;
-}
-
-.kiwi-header__callsign-row {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 2px;
-}
-
-.kiwi-header__label {
-  font-size: var(--kiwi-font-sm);
-  color: var(--kiwi-topbar-sub);
-}
-
-.kiwi-header__callsign-input {
-  background: white;
-  border: 1px solid #ccc;
-  padding: 2px 6px;
-  font-size: var(--kiwi-font-md);
-  width: 130px;
-  color: #333;
-}
-
-.kiwi-header__time-stack {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-}
-
-.kiwi-header__time-utc {
-  font-size: 13px;
-  font-weight: bold;
-  color: var(--kiwi-text-muted);
-}
-
-.kiwi-header__time-local {
-  font-size: 10px;
-  color: var(--kiwi-text-muted);
-}
-
-.kiwi-header__timezone {
-  font-size: 8px;
-  color: var(--kiwi-text-muted);
 }
 
 /* ===== B. BAND SCALE ===== */

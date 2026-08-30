@@ -29,6 +29,85 @@ all milestones; per-item test points are listed in `doc/checklist.md`._
   network, or real KiwiSDR servers (mock everything external).
 - **Permissive tooling only** (see `doc/framework-licensing.md`).
 
+## 1a. UI Visual Parity — Research-First Rule (mandatory for ALL UI tasks)
+
+Every UI component that must visually match the KiwiSDR reference **requires
+visual research BEFORE any implementation or test writing**. This rule applies
+to all M4/M5 UI tasks without exception.
+
+### What "visual research" means
+
+1. **Fetch the KiwiSDR source code** from `https://github.com/jks-prv/KiwiSDR`
+   — specifically `web/openwebrx/openwebrx.js`, `web/kiwi/waterfall.js`, and
+   any CSS files. Find the exact draw calls, event handlers, and constants for
+   the component being implemented.
+2. **Inspect the live KiwiSDR instance** at `http://kiwisdr.areg.org.au:8073/`
+   (WebUI port 8073 — NOT 8072 which is the API port). Capture the DOM, CSS,
+   and visual state for each component state (e.g. cursor yellow vs. lime).
+3. **Document the findings** as a verbatim "Research-Ergebnis" block in the
+   corresponding bug/task entry in `doc/M4c.7-bugs.md` (or the relevant
+   milestone doc). Include: exact geometry (coordinates, pixel values),
+   exact colors (hex), exact interaction zones (pixel widths), exact state
+   transition conditions (with code references).
+
+### Research deliverable (required before any implementation)
+
+A structured spec block in the bug doc containing:
+- Source file + line number for every draw call / event handler
+- Exact pixel coordinates and dimensions
+- Exact colors (hex, not names)
+- Exact interaction zone widths (px)
+- Exact state transition condition (quoted from source)
+
+### Why this rule exists
+
+Without prior visual research, agents write tests that verify the (wrong)
+implementation instead of the (correct) KiwiSDR reference behavior. This
+was the root cause of Bug 7: the cursor shape (trapezoid with outward-slanting
+flanks), color switch condition (50px pixel width threshold, NOT zoom level),
+and hit zones were all wrong because no source-code research was done first.
+
+## 1b. UI E2E Tests — Visual Assertion Rules (mandatory)
+
+E2E tests for UI components with visual parity requirements MUST follow
+test-first (CCD blue): write the test against the KiwiSDR SOLL-state FIRST,
+then implement until the test is green.
+
+### Mandatory assertions for visual components
+
+Every E2E test for a visual UI component MUST include at minimum:
+
+1. **Color assertion:** verify the correct color is rendered (e.g. `lime` vs
+   `yellow`) under each state condition. Use `page.evaluate()` to read canvas
+   pixel colors, or `toHaveCSS()` for CSS-based components.
+2. **Shape/geometry assertion:** verify the rendered shape matches the
+   KiwiSDR reference geometry. For canvas-drawn components: sample key pixels
+   (corners, center, flanks) and assert expected colors. For SVG: assert
+   `d`/`points` attribute values.
+3. **Interaction assertion:** for each drag zone, simulate `dragTo()` and
+   assert the correct parameter changes (e.g. dragging left flank changes
+   only `lowCut`, not `freqKhz`).
+4. **State transition assertion:** assert the visual state (color/shape)
+   changes at the correct trigger condition (e.g. passband width crossing
+   the 50px threshold), not at an approximate or wrong condition.
+
+### What is NOT sufficient
+
+- `toBeVisible()` alone — does not verify visual correctness.
+- `toHaveText()` on a label — does not verify the shape behind it.
+- Unit tests on logic functions — do not verify rendering.
+- Tests written AFTER implementation — verify the implementation, not the spec.
+
+### Baseline screenshot workflow
+
+For complex components (frequency ruler cursor, waterfall, band scale):
+1. Capture a reference screenshot of the live KiwiSDR instance (stored in
+   `ui/e2e/reference/kiwisdr-visual/`).
+2. Write a Playwright `toHaveScreenshot()` test comparing the plugin render
+   to the reference (with a tolerance for color/font differences).
+3. The test FAILS until the implementation matches. This is correct — it is
+   the CCD blue state.
+
 ## 2. Test levels & tooling
 
 | Level | Tool | License | Scope |

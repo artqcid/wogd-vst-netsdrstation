@@ -77,7 +77,7 @@
           "id": "deepseek-v4-pro",
           "name": "DeepSeek V4 Pro",
           "limit": {
-            "context": 500000,
+            "context": 250000,
             "output": 65536
           }
         },

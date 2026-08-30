@@ -14,6 +14,16 @@
       :title="`${tag.label} — ${tag.freqKhz} kHz`"
       @click.stop="onTagClick(tag, $event)"
     >{{ tag.label }}</span>
+    <span
+      v-for="tag in visibleTags"
+      :key="tag.label + tag.freqKhz + '-line'"
+      class="tag-area__line"
+      :style="{
+        left: freqToPercent(tag.freqKhz) + '%',
+        top: tag.row === 0 ? '20px' : '42px',
+        height: tag.row === 0 ? '22px' : '2px',
+      }"
+    ></span>
 
     <TagPopup
       :visible="popupVisible"
@@ -189,6 +199,14 @@ function freqToPercent(freqKhz: number): number {
 }
 
 .tag-area__tag--ext { border-color: #FFD700; border-style: dashed; }
+
+.tag-area__line {
+  position: absolute;
+  width: 1px;
+  background: black;
+  pointer-events: none;
+  z-index: 0;
+}
 
 .tag-area__tag:hover { filter: brightness(1.1); z-index: 1; }
 </style>

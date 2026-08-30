@@ -29,11 +29,12 @@ _See `log.md` for the chronological append-only changelog._
 - [`M4-ui-replication-analysis.md`](./M4-ui-replication-analysis.md) — Detailed analysis of KiwiSDR browser UI for 1:1 Vue replication
 - [`reference-matrix.md`](./reference-matrix.md) — Reference matrix: live KiwiSDR elements ↔ PluginView 1:1 mapping
 - [`M4b-bugs.md`](./archive/M4b-bugs.md) — M4 bug list & analysis (ARCHIV, Bugs in M4c gefixt)
-- [`M4c.7-bugs.md`](./M4c.7-bugs.md) — M4c.7 Bug-Manifest: 15 Bugs + E2E-Lückenanalyse + Extensions-Planung (stand 2026-08-29; Bugs 1–7 gefixt, Bug 8–15 offen)
+- [`M4c.7-bugs.md`](./M4c.7-bugs.md) — M4c.7 Bug-Manifest: 15 Bugs + E2E-Lückenanalyse + Extensions-Planung (stand 2026-08-29; Bugs 1–14 gefixt, Bug 15 offen; Bugs 7–14 implementiert)
 - [`plan-history.md`](./archive/plan-history.md) — Archived historical status blocks from plan.md (M2/M3 era)
 
 ## Protocol & Reference
 - [`kiwisdr-protocol-reference.md`](./kiwisdr-protocol-reference.md) — Full KiwiSDR protocol: handshake, SND frames, keepalive, command reference
+- [`kiwsdr-research-bug9.md`](./kiwsdr-research-bug9.md) — KiwiSDR source excerpts for Bug 9 (band/tag connection lines, label centering)
 
 ## Operations & Quality
 - [`test-strategy.md`](./test-strategy.md) — Test strategy: automated first, CCD yellow/green, coverage targets

@@ -38,6 +38,7 @@ export const useKiwiStore = defineStore('kiwi', {
     connected: false,
     status: 'Idle',
     freqKhz: 14100.0,
+    panOffsetKhz: 0, // view window centre = freqKhz + panOffsetKhz (KiwiSDR cursor/pan separation)
     mode: 0, // 0=AM ... 17=QAM (KiwiSDR numeric mode index)
     lowCut: -4900,
     highCut: 4900,

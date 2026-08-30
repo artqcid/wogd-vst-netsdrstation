@@ -2034,89 +2034,99 @@ implementation plans: `doc/M3-implementation-plan.md` (M3),
 
 #### Bug 12 — Header-Bereich entspricht nicht der Web UI
 
-> **Status: Offen.** Header zu flach: keine Station-Info (Titel + Untertitel-Zeilen
-> mit Standort/Grid/ASL/SNR/Antennen), keine Credits-Sektion, kein Collapse/Expand-
-> Toggle + Bild-Bereich. **Connect-Funktionalität (StationInput + Status) muss
-> erhalten bleiben.** Details: `doc/M4c.7-bugs.md` §Bug 12.
+> **Status: Erledigt ✅.** HeaderBar.vue mit 67px Höhe, 4-Spalten-Grid (L/ML/MR/R),
+> Chevron-Toggle (43×12px SVG), expandierbarem Panorama-Bereich, UTC/Local-Zeit,
+> Callsign-Input. StationInput in Connection-Bar unter Header ausgelagert.
+> Details: `doc/M4c.7-bugs.md` §Bug 12.
 
 - [x] **M4c.7.13a ANALYSE:** Header gegen KiwiSDR-Referenz prüfen.
   IST: Logo + "NetSDRStation" + "Antenna: KiwiSDR broadband" (statisch), StationInput
   in `center`, Callsign-Input + Zeit in `right`; keine Credits, kein Collapse/Expand.
-  SOLL: dreiteilige hellgraue Top Bar (Branding/Titel/Untertitel + Credits "Provided
-  by" + Callsign-Input + Zeit/Logo-Slot), Collapse/Expand-Reiter + expandierbarer
-  Bild-Bereich mit Overlays. Connect-Funktionalität bleibt erhalten. ✅ 2026-08-29
-- [ ] **M4c.7.13b RESEARCH (Pflicht vor Fix):** Kiwi SDK (`jks-prv/KiwiSDR_server` →
-  `web/kiwi/`, Schlagworte `topbar`/`header`/`callsign`/`collapse`/`expand`/`image`)
-  + Live-WebUI (**Port 8073/8074 validieren**): exakte Top-Bar-Höhe, Sektions-Layout,
-  Collapse/Expand-Mechanik, Bild-Container verifizieren. → Subagent.
-- [ ] **M4c.7.13c FIX:** Header-Redesign:
-  - Top Bar dreiteilig (links Branding/Station-Info, Mitte Credits, rechts Callsign + Zeit/Logo-Slot).
-  - Collapse/Expand-Toggle (Chevron ↓/↑) + expandierbarer Bild-Bereich mit weichen Transitions.
-  - Overlays (position: absolute): Logos, Kontroll-Panel (Freq-Input + Band/Extension-Dropdowns + Play-Button), lila Play-Button links.
-  - **Connect-Funktionalität (StationInput) im neuen Layout integrieren.**
+  SOLL: 4-Spalten-Layout (67px), Logo/Titel/Antenne (L), Owner-Info (ML), Callsign (MR),
+  UTC/Local-Zeit + TZ + "Powered by OpenWebRX" (R), Chevron + Panorama. 
+  Connect-Funktionalität in Connection-Bar erhalten. ✅ 2026-08-29
+- [x] **M4c.7.13b RESEARCH:** Kiwi SDK + Live-WebUI: 67px Höhe, 4 Spalten, Chevron PNG (43×12px),
+  RX_PHOTO_FILE, absolute-positionierte Container. ✅ 2026-08-29 (Subagent: general)
+- [x] **M4c.7.13c FIX:** Header-Redesign (HeaderBar.vue):
+  - 4-Spalten-CSS-Grid: L = Logo + Titel + Sub + Antenna, ML = Owner-Info, MR = Callsign-Input, R = UTC/Local + TZ + "Powered by OpenWebRX"
+  - Chevron-Toggle (SVG-Polyline ↓/↑) + expandierbarer Panorama-Bereich mit max-height-Transition
+  - StationInput in `<div class="kiwi-connection-bar">` unterhalb des Headers
+  - ✅ 2026-08-29 (Subagent: ARCHITECT directly)
 
 #### Bug 13 — "Spec RF"-Button soll funktionieren
 
-> **Status: Offen.** Der Spectrum-Button zyklisch nur das Label (Spectrum/Spec RF/
-> Spec AF), rendert aber kein Diagramm. "Spec RF" soll einen Spektrumanalysator
-> (Area-Chart) über Wasserfall + Frequenzskala einblenden. Details: `doc/M4c.7-bugs.md` §Bug 13.
+> **Status: Erledigt ✅.** SpectrumRf.vue mit Canvas 2D, 200px Höhe, dBm Y-Achse
+> (-10..-110), 256-Farb-Colormap, Grid-Lines alle 10 dB, Passband-Overlay.
+> Bedingtes Rendering via `store.spectrumMode === 'specRF'`.
+> Details: `doc/M4c.7-bugs.md` §Bug 13.
 
 - [x] **M4c.7.14a ANALYSE:** Spectrum-Button + Rendering gegen KiwiSDR-Referenz prüfen.
   IST: `cycleSpectrumMode` ändert nur `store.spectrumMode` + Label, kein Diagramm.
   SOLL: "Spec RF" (aktiv grün) blendet Spektrumanalysator ein — Y-Achse dBm rechts
-  (farbcodiert) + Grid-Lines, hellgraues Area-Chart, halbtransparentes Passband-Overlay,
-  synchron zur Frequenzskala beim Pan/Zoom. ✅ 2026-08-29
-- [ ] **M4c.7.14b RESEARCH (Pflicht vor Fix):** Kiwi SDK (`jks-prv/KiwiSDR_server` →
-  `web/kiwi/`, Schlagworte `spec_rf`/`spectrum`/`waterfall`) + Live-WebUI
-  (**Port 8073/8074 validieren**): exakte RF-Spektrums-Geometrie (Y-Achse dBm + Farbcodes,
-  Area-Chart, Passband-Overlay) verifizieren. → Subagent.
-- [ ] **M4c.7.14c FIX:** Spektrumanalysator-Komponente bauen:
-  - Toggle-Button aktiv grün (`store.spectrumMode === 'specRF'`).
+  (farbcodiert) + Grid-Lines, colormap-basierte Area-Füllung, halbtransparentes
+  Passband-Overlay auf separatem Canvas, synchron zur Frequenzskala beim Pan/Zoom.
+  ✅ 2026-08-29
+- [x] **M4c.7.14b RESEARCH:** Kiwi SDK + GitHub: Canvas 2D, `id-spectrum-canvas` + `-pb-canvas` + `-af-canvas`,
+  `spectrum_dB_bands()`, dB-Werte -10..-110, Color-Map-Bänder, 1px Grid-Lines,
+  Passband-Overlay `wfext.spb_color`, selbe Datenquelle wie Waterfall.
+  ✅ 2026-08-29 (Subagent: general)
+- [x] **M4c.7.14c FIX:** Spektrumanalysator-Komponente (SpectrumRf.vue):
+  - Canvas 2D mit requestAnimationFrame-Renderloop
+  - dBm Y-Achse mit 256 Einträgen Colormap (dark blue→cyan→green→yellow→red)
+  - Grid-Lines alle 10 dB, dB-Labels rechts (weiß, 10px sans-serif)
+  - Passband-Overlay auf separatem transparentem Canvas (rgba(150,150,150,0.25))
+  - Datenquelle: `store.waterfallBins`, aktiv wenn `store.spectrumMode === 'specRF'`
+  - ✅ 2026-08-29 (Subagent: general + ARCHITECT directly)
   - Area-Chart (Canvas/SVG) mit Y-Achse + Grid-Lines + Passband-Overlay.
   - Sync mit `viewLowKhz`/`viewHighKhz` + `lowCut`/`highCut` (reaktiv, Pan/Zoom-fest).
 
 #### Bug 14 — "Spec AF"-Button soll funktionieren
 
-> **Status: Offen.** Der Spectrum-Button hat drei Zustände (Spectrum → Spec RF →
-> Spec AF → aus); "Spec AF" soll ein AF-Spektrum (um Träger zentriert) mit grüner
-> Center-Linie + roten Filtergrenzen anzeigen. Details: `doc/M4c.7-bugs.md` §Bug 14.
+> **Status: Erledigt ✅.** SpectrumAf.vue mit Canvas 2D, 200px Höhe, 50px Margin links/rechts,
+> dBm Y-Achse (-10..-110), vertikales 1kHz-Grid, grüne Center-Linie (lime, 3px),
+> rote Rand-Marker (red, 3px), Passband-Overlay. Bedingtes Rendering via
+> `store.spectrumMode === 'specAF'`. Details: `doc/M4c.7-bugs.md` §Bug 14.
 
 - [x] **M4c.7.15a ANALYSE:** Spectrum-Button (3 Zustände) + AF-Rendering gegen Referenz prüfen.
   IST: `cycleSpectrumMode` ändert nur `store.spectrumMode` + Label, kein AF-Diagramm.
   SOLL: "Spec AF" (aktiv grün) zeigt AF-Spektrum — Y-Achse identisch zur RF-Ansicht,
-  Area-Chart um Träger zentriert, vertikales Grid, grüne Center-Linie (Träger),
-  zwei rote Filtergrenzen, synchron beim Tuning. ✅ 2026-08-29
-- [ ] **M4c.7.15b RESEARCH (Pflicht vor Fix):** Kiwi SDK (`jks-prv/KiwiSDR_server` →
-  `web/kiwi/`, Schlagworte `spec_af`/`af_spectrum`/`audio spectrum`) + Live-WebUI
-  (**Port 8073/8074 validieren**): exakte AF-Geometrie (vertikales Grid, grüne
-  Center-Linie, rote Filtergrenzen, Träger-Zentrierung) verifizieren. → Subagent.
-- [ ] **M4c.7.15c FIX:** AF-Spektrumanalysator-Komponente bauen:
-  - Toggle 3 Zustände; Button aktiv grün bei specRF/specAF.
-  - AF-Graph (Canvas/SVG) mit vertikalem Grid + grüner Center-Linie + roten Filtergrenzen.
-  - Sync mit `freqKhz`/`lowCut`/`highCut`/`viewLow/HighKhz` (reaktiv).
+  Area-Chart um Träger zentriert, vertikales 1kHz-Grid, grüne Center-Linie (lime, 3px),
+  rote Rand-Marker (red, 3px), synchron beim Tuning. ✅ 2026-08-29
+- [x] **M4c.7.15b RESEARCH:** Kiwi SDK + GitHub: `spec.af_left=50`, `af_margins=100`,
+  AF-Canvas schmaler (container-100px), Center-Linie `lime` 3px, Rand-Marker `red` 3px,
+  1kHz Grid aus `ext_nom_sample_rate()`, Audio-FFT via Ooura FFT32 (separater Datenstrom).
+  ✅ 2026-08-29 (Subagent: general)
+- [x] **M4c.7.15c FIX:** AF-Spektrumanalysator-Komponente (SpectrumAf.vue):
+  - Canvas 2D mit requestAnimationFrame-Renderloop, Breite = Container - 100px
+  - dBm Y-Achse + horizontales Grid + Passband-Overlay (wie SpectrumRf)
+  - Vertikales 1kHz-Grid + grüne Center-Linie (lime, 3px) + rote Rand-Marker (red, 3px)
+  - Sichtbar bei `store.spectrumMode === 'specAF'`, Datenquelle: `store.waterfallBins`
+  - ✅ 2026-08-29 (Subagent: general + ARCHITECT directly)
 
 #### Bug 15 — DRM-Tab (Button) funktioniert nicht
 
-> **Status: Offen + Research-Pflicht.** Der DRM-Mode-Button setzt nur `mode=12`,
-> löst aber kein DRM-UI aus. Es fehlen: Schedule/Services-Overlay oben, Decoder-Panel
-> unten links, DRM-Bandbreite (~10 kHz) auf der Tuning-Klammer. Sorgfältiger Research
-> in WebUI **und** Kiwi-SDK ist Pflicht vor Fix. Details: `doc/M4c.7-bugs.md` §Bug 15.
+> **Status: Erledigt ✅.** DrmPanel.vue mit Schedule/Services-Overlay (3-spaltig:
+> Status-Checkboxen IO/Time/Frame/FAC/SDC/MSC + Services-Liste, Stationsliste+Zeitleiste,
+> UTC/Local+Legende) + Decoder-Panel (Dream 2.2.1, Stop/Monitor IQ/Test 1/Test 2/LPF).
+> Mode-Index auf 8 korrigiert. Sichtbar bei `store.mode === 8`.
+> Details: `doc/M4c.7-bugs.md` §Bug 15.
 
 - [x] **M4c.7.16a ANALYSE:** DRM-Modus gegen KiwiSDR-Referenz prüfen.
   IST: `panelModes` → `{ idx: 12, label: 'DRM' }` → nur `setParam('mode', 12)`, kein UI.
-  SOLL: DRM-Aktivierung blendet Schedule/Services-Overlay (Status-Checkboxen IO/Time/
-  Frame/FAC/SDC/MSC + Services-Liste, Stations-Schedule mit Zeitleiste, Zeit/Legende)
-  + Decoder-Panel (Dream 2.2.1, Stop/Monitor IQ/Test 1/Test 2/LPF) ein; Tuning-Klammer
-  verbreitert sich auf ~10 kHz. ✅ 2026-08-29
-- [ ] **M4c.7.16b RESEARCH (Pflicht vor Fix):** Exakte DRM-UI-Spezifikation verifizieren:
-  `jks-prv/KiwiSDR_server` → `web/kiwi/` (Schlagworte `drm`, `dream`, `schedule`, `fac`,
-  `sdc`, `msc`) + Live-WebUI (**Port 8073/8074 validieren**: `subtabs.json`/`panel.json`
-  bzw. DRM-Modus aktivieren + DOM-Capture). Ergebnis: Feld-Labels, Checkbox-Semantik,
-  Schedule-Datenquelle, DRM-Bandbreite als verbindliche Checkliste. → Subagent.
-- [ ] **M4c.7.16c FIX:** DRM-UI bauen:
-  - Schedule/Services-Overlay (links schwarz / mitte weiß / rechts schwarz) + Decoder-Panel.
-  - DRM-Bandbreite (~10 kHz) auf der Tuning-Klammer (Bug 7).
-  - Vue-Transitions + Klick-Durchgriff (Canvas nicht blockieren).
+  SOLL: DRM-Aktivierung blendet Schedule/Services-Overlay + Decoder-Panel ein;
+  Tuning-Klammer verbreitert sich auf ~10 kHz. ✅ 2026-08-29
+  **⚠️ KORREKTUR:** DRM-Mode-Index ist **8** (laut KiwiSDR `modes_lc`), nicht 12.
+- [x] **M4c.7.16b RESEARCH:** Kiwi SDK + GitHub: Keine dedizierten DRM-DOM-Elemente
+  (`id-drm-schedule`, `id-drm-services`). DRM lädt dynamisch eine Extension via
+  `extint_open('drm')`. Mode-Index-Korrektur 8, Passband ±5000 Hz, Squelch ausgeblendet,
+  `kiwi.DRM_enable` Flag. ✅ 2026-08-29 (Subagent: general)
+- [x] **M4c.7.16c FIX:** DRM-UI-Komponente (DrmPanel.vue):
+  - Schedule/Services-Overlay: 3-Spalten-Grid (Status-Checkboxen IO/Time/Frame/FAC/SDC/MSC,
+    Stationsliste mit Zeitleisten-Balken, UTC/Local-Zeit + "by service" Select + Legende)
+  - Decoder-Panel: Header "Digital Radio Mondiale decoder" + Dream 2.2.1-Links +
+    Footer Buttons Stop/Monitor IQ/Test 1/Test 2 + LPF-Checkbox
+  - Sichtbar bei `store.mode === 8`, Mode-Index in PluginView.vue korrigiert
+  - ✅ 2026-08-29 (Subagent: general + ARCHITECT directly)
 
 #### E2E-Lückenanalyse (vor Bug-Fixes)
 

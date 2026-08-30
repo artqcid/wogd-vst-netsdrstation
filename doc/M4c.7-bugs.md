@@ -72,13 +72,15 @@ Nach jedem Fix: `reference-matrix.md` aktualisieren (❌ → ✅), E2E-Test schr
 | [Bug 6](#bug-6--bedienpanel-61-68) | PluginView.vue | Hoch | Gross | ✅ |
 | [Bug 7](#bug-7--frequenz-cursor-entspricht-nicht-der-kiwisdr-web-ui) | FrequencyRuler.vue | Hoch | Gross | ✅ |
 | [Bug 8](#bug-8--frequenzband-skala-verhält-sich-nicht-wie-die-web-ui) | FrequencyRuler.vue | Hoch | Mittel | ⬜ |
-| [Bug 9](#bug-9--band--stationsleiste-verhält-sich-nicht-wie-die-web-ui) | BandScaleBar.vue / TagArea.vue | Hoch | Gross | ⬜ |
-| [Bug 10](#bug-10--audio-tab-fehlen-parameter--scrollbar) | PluginView.vue | Hoch | Gross | ⬜ |
-| [Bug 11](#bug-11--agc-tab-beinhaltet-eventuell-nicht-alle-parameter) | PluginView.vue | Hoch | Mittel | ⬜ |
-| [Bug 12](#bug-12--header-bereich-entspricht-nicht-der-web-ui) | PluginView.vue | Hoch | Gross | ⬜ |
-| [Bug 13](#bug-13--spec-rf-button-soll-funktionieren) | PluginView.vue / Waterfall.vue | Hoch | Gross | ⬜ |
-| [Bug 14](#bug-14--spec-af-button-soll-funktionieren) | PluginView.vue / Waterfall.vue | Hoch | Gross | ⬜ |
-| [Bug 15](#bug-15--drm-tab-button-funktioniert-nicht) | PluginView.vue | Hoch | Gross | ⬜ |
+| [Bug 9](#bug-9--band--stationsleiste-verhält-sich-nicht-wie-die-web-ui) | BandScaleBar.vue / TagArea.vue | Hoch | Gross | ✅ |
+| [Bug 10](#bug-10--audio-tab-fehlen-parameter--scrollbar) | PluginView.vue | Hoch | Gross | ✅ |
+| [Bug 11](#bug-11--agc-tab-beinhaltet-eventuell-nicht-alle-parameter) | PluginView.vue | Hoch | Mittel | ✅ |
+| [Bug 12](#bug-12--header-bereich-entspricht-nicht-der-web-ui) | PluginView.vue → HeaderBar.vue | Hoch | Gross | ✅ |
+| [Bug 13](#bug-13--spec-rf-button-soll-funktionieren) | PluginView.vue / SpectrumRf.vue | Hoch | Gross | ✅ |
+| [Bug 14](#bug-14--spec-af-button-soll-funktionieren) | PluginView.vue / SpectrumAf.vue | Hoch | Gross | ✅ |
+| [Bug 15](#bug-15--drm-tab-button-funktioniert-nicht) | PluginView.vue / DrmPanel.vue | Hoch | Gross | ✅ |
+| [Bug 16](#bug-16--cursor-liegt-auf-der-frequenzleiste-statt-eigener-leiste) | FrequencyRuler.vue → CursorBar.vue | Hoch | Gross | ⬜ |
+| [Bug 17](#bug-17--cursor-edges-lassen-sich-nicht-anfassen--ändern) | FrequencyRuler.vue → CursorBar.vue | Hoch | Gross | ⬜ |
 
 ---
 
@@ -1077,116 +1079,146 @@ außerhalb → **gelb** (nur auf der Skala, `#ffff00`, openwebrx.js:664).
 `am {-4900,+4900}` · `usb {+300,+2700}` · `lsb {-2700,-300}` · `cw {+300,+700}` ·
 `nbfm {-6000,+6000}` · `iq/drm {-5000,+5000}`.
 
+### Quellenwahrheit (Research-Ergebnis 2 — openwebrx.js, demod_envelope_draw())
+
+**KORREKTUR gegenüber früherem Research-Ergebnis:** Die Zustandsunterscheidung
+ist NICHT frequenzbasiert (`passband_visible()`). Sie ist **pixel-basiert**:
+wenn die gezeichnete Passband-Breite auf dem Scale-Canvas `>= 50px` → **lime**
+(Flanken draggable); wenn `< 50px` → **yellow** (nur Ganzkursor-Move).
+`passband_visible()` steuert nur ob der Cursor überhaupt gezeichnet wird
+(Carrier im sichtbaren Bin-Bereich), nicht die Farbe.
+
+#### Exakte Geometrie (demod_envelope_draw, openwebrx.js)
+
+Konstanten (lokal in der Funktion):
+```
+env_bounding_line_w = 5   // Breite des vertikalen Fußes links/rechts
+env_att_w           = 5   // Breite der schrägen Flanke
+env_h1              = 17  // y-Baseline (Fuß unten)
+env_h2              = 5   // y-Kante oben (Passband-Kante)
+env_lineplus        = 1   // Überlappung der Mittellinie
+env_line_click_area = 8   // Klick-Breite der Mittelline (px)
+env_slop            = 15  // (derzeit unused in draw)
+env_adj             = 20  // Hit-Zone-Überlapp für pb_adj_lo/hi
+env_slope           = env_bounding_line_w + env_att_w = 10
+```
+
+Vor dem Zeichnen wird die Passband-Box um den Slope erweitert:
+```
+from_px -= env_slope  (= -10)
+to_px   += env_slope  (= +10)
+```
+
+SVG-Polygon-Pfad (6 Punkte, im Uhrzeigersinn):
+```
+(from_px,            env_h1)   ← linker Fuß unten
+(from_px + 5,        env_h1)   ← 5px horizontal (bounding_line_w)
+(from_px + 10,       env_h2)   ← schräg nach INNEN-OBEN (Flanke steigt zur Mitte hin)
+(to_px   - 10,       env_h2)   ← obere Leiste (Passband-Dach)
+(to_px   - 5,        env_h1)   ← schräg nach INNEN-UNTEN (rechte Flanke)
+(to_px,              env_h1)   ← rechter Fuß unten
+```
+
+**Die Flanken steigen von außen (Basis, y=17) nach innen-oben (y=5) → Trapez mit
+BREITERER BASIS und SCHMALEM DACH. Die Basisseite ist breiter als die Dachseite.**
+
+Stil:
+```
+lineWidth = 3
+fill  mit globalAlpha = 0.3  (transparenter Fill)
+stroke mit globalAlpha = 1.0 (solide Linie)
+```
+
+Mittellinie (Trägerfrequenz, wenn `line`-Argument vorhanden):
+```
+(line_px, env_h1 + 1 = 18) → (line_px, env_h2 - 1 = 4)   vertikal, stroke
+```
+
+#### Farb-Logik (pixel-basiert, NICHT frequenzbasiert)
+
+```javascript
+// Immer lime als Default
+strokeStyle = fillStyle = 'lime'   // #00ff00
+
+// NACH der from_px/to_px-Erweiterung:
+allow_pb_adj = (to_px - from_px) >= 50   // inkl. env_slope-Erweiterung
+
+if (!allow_pb_adj)
+    strokeStyle = fillStyle = 'yellow'   // #ffff00
+```
+
+→ Schwelle ist **50px** der gesamten gezeichneten Breite (inkl. ±10px Erweiterung).
+→ Bei `yellow`: Flanken-Drag **deaktiviert**, nur Ganzkursor-Move aktiv.
+→ Bei `lime`: Flanken-Drag aktiv.
+
+#### Hit-Zonen (demod_envelope_where_clicked, openwebrx.js)
+
+```
+pb_adj_lo.left  = from_px - env_slope - env_adj  = from_px - 30
+pb_adj_lo.width = env_slope + 2*env_adj           = 50px
+
+pb_adj_hi.left  = to_px - env_adj                 = to_px - 20
+pb_adj_hi.width = env_slope + 2*env_adj           = 50px
+
+pb_adj_cf.left  = from_px + env_adj               = from_px + 20
+pb_adj_cf.width = max(0, to_px - from_px - 2*env_adj)
+
+pb_adj_car.left = line_px - env_line_click_area/2 = line_px - 4
+pb_adj_car.width = env_line_click_area             = 8px
+```
+
+Priorität beim Klick (allow_pb_adj = true):
+1. `beginning` (lo-Flanke) → low_cut resize
+2. `ending` (hi-Flanke)    → high_cut resize
+3. `whole_envelope`        → Ganzkursor-Move (Trägerfrequenz)
+4. außerhalb               → Pan (Frequenzfenster)
+
+#### Zustandsübergang: wann wird der Cursor überhaupt gezeichnet?
+
+`passband_visible()` prüft ob die Passband-**Mitte** (Frequenzbin) im sichtbaren
+Zoom-Fenster liegt. Wenn ja → Cursor auf Scale-Canvas gezeichnet. Wenn nein →
+Cursor nicht gezeichnet (kein Arrow/Pfeil im Original für den off-screen-Fall
+innerhalb der Scale — der gelbe Zustand tritt auf wenn der Cursor sichtbar ist
+aber die Passband-Breite < 50px).
+
 ### Fix-Plan Bug 7
 
-**Ziel:** Den Cursor als zoom-abhängige **Passband-Repräsentation** neu bauen —
-idealerweise als **absolut positioniertes, interaktives SVG-Overlay** (oder
-dedizierte Canvas-Schicht) exakt über der Frequenzskala.
+**Status:** ⬜ Offen — Implementierung ausstehend.
 
-**Schritt 1 — Zustandsübergang über `passband_visible()` statt Pixel-Breite/`zoomLevel`:**
+**Ziel:** `FrequencyRuler.vue` + `frequencyRulerLogic.ts` exakt nach obiger
+Quellenwahrheit neu implementieren. Kein HTML-Div-Overlay — **SVG oder Canvas**.
 
-```ts
-// KORREKTUR (Research): der Zustand hängt NICHT von einer 30px-Schwelle ab,
-// sondern davon, ob die Passband-Mitte im sichtbaren Frequenzfenster liegt.
-const isZoomedIn = computed(() =>
-  store.freqKhz >= props.viewLowKhz && store.freqKhz <= props.viewHighKhz
-)
-// isZoomedIn  → grün (expandierte Filter-Repräsentation)
-// !isZoomedIn → gelb (kollabierte T-/Trapez-Form)
-```
+#### Implementierungs-Checkliste (für ausführenden Subagenten)
 
-`zoomLevel`/Pixel-Breite bleiben nur indirekt relevant (sie bestimmen den Span und
-damit `viewLow/HighKhz`); die **Entscheidung** trifft die Frequenz-Position
-(`freq_passband_center()`-Äquivalent = `cursorKhz`).
+**A — Geometrie (SVG `<polygon>` oder Canvas-Path):**
+- [ ] SVG-Viewbox: Breite = Ruler-Breite, Höhe = 22px (env_h1+5)
+- [ ] `fromPx` / `toPx` = Frequenz→Pixel-Mapping (Props: lowCutHz, highCutHz, viewLowKhz, viewHighKhz, rulerWidthPx)
+- [ ] Vor Zeichnen: `drawFrom = fromPx - 10`, `drawTo = toPx + 10`
+- [ ] Polygon-Punkte: `(drawFrom,0+17), (drawFrom+5,17), (drawFrom+10,5), (drawTo-10,5), (drawTo-5,17), (drawTo,17)` (y-Werte: env_h1=17, env_h2=5)
+- [ ] Fill: Farbe mit opacity 0.3
+- [ ] Stroke: Farbe, lineWidth äquivalent (SVG `stroke-width="3"`)
+- [ ] Mittellinie: `x1=linePx, y1=18, x2=linePx, y2=4` (`<line>`)
 
-**Schritt 2 — Zustand "Zoomed-Out" (gelb, kollabiert):**
+**B — Farb-Logik:**
+- [ ] `allowPbAdj = (drawTo - drawFrom) >= 50`
+- [ ] `color = allowPbAdj ? 'lime' : 'yellow'`
 
-- **Visual:** feste ikonische Trapez-/T-Form: obere horizontale Leiste, zwei nach
-  außen abfallende Linien, Mittel-Tick. Farbe `#FFFF00` / `#FFD700`.
-- **Interaktivität:**
-  - Linke/rechte Flanke **deaktiviert** (kein Bandbreiten-Resize).
-  - Gesamte gelbe Form per Klick+Ziehen horizontal verschiebbar → Trägerfrequenz
-    (`center_carrier_frequency`) ändert sich.
+**C — Event-Handling (pointer events auf SVG-Elementen):**
+- [ ] `<polygon>` trägt `@pointerdown` mit Zone-Erkennung per x-Koordinate:
+  - x in `[drawFrom-20, drawFrom+30]` → Zone `'lo'`
+  - x in `[drawTo-30, drawTo+20]` → Zone `'hi'`
+  - x in `[drawFrom+20, drawTo-20]` → Zone `'center'`
+- [ ] Bei `yellow` (allowPbAdj=false): nur Zone `'center'` aktiv
+- [ ] `onPointerMove`: deltaX → deltaKhz → emit `tune` / `low-cut` / `high-cut`
+- [ ] Clamp: lowCut ∈ [-6000, highCutHz - 4], highCut ∈ [lowCutHz + 4, 6000]
 
-**Schritt 3 — Zustand "Zoomed-In" (grün, expandiert):**
-
-- **Visual:** echte Filter-Repräsentation:
-  - obere horizontale Leiste = exakte Passbandbreite,
-  - vertikale Linie exakt in der Mitte = Trägerfrequenz,
-  - schräge Flanken links/rechts = Filter-Roll-off bis Baseline.
-  - Farbe `#00FF00`.
-- **Interaktivität:**
-  - **Center-Drag:** Mitte ziehen → gesamtes Passband verschieben (Trägerfrequenz).
-  - **Edge-Resize:** linke/rechte schräge Flanke als Draggriff (`cursor: ew-resize`).
-  - **Limits:** links ändert `low_cut`, rechts ändert `high_cut`; Bandbreite darf
-    `MAX_BANDWIDTH` nicht überschreiten und `MIN_BANDWIDTH` nicht unterschreiten
-    (Flanken dürfen sich nicht kreuzen).
-
-**Schritt 4 — Rendering als SVG-Overlay statt HTML-Divs:**
-
-```html
-<svg class="freq-ruler__cursor-svg" ...>
-  <!-- gelb: T-/Trapez-Form -->
-  <!-- grün: Leiste + Mittellinie + schräge Flanken -->
-</svg>
-```
-
-- SVG erlaubt schräge Flanken (`<polygon>`/`<path>`) und präzises Hit-Testing
-  (separate `<path>`-Elemente für Mitte / linke Flanke / rechte Flanke mit
-  eigenen `pointerdown`-Handlern).
-- Maus-/Touch-Events rechnen den Offset über das aktuelle Hz-per-Pixel-Verhältnis
-  zurück in Frequenz (wie im Original: Mitte → `SET freq`, Flanke → `SET low_cut`/`high_cut`).
-
-**Schritt 5 — Event-Handling nach KiwiSDR-Muster:**
-
-```ts
-function onPointerDown(e, zone: 'center' | 'lo' | 'hi') { /* ... */ }
-function onPointerMove(e) {
-  const deltaKhz = (e.clientX - startX) / pxPerKhz
-  if (zone === 'center') emit('tune', startFreq + deltaKhz)
-  else if (zone === 'lo')  emit('low-cut', clamp(startLo + deltaKhz * 1000, ...))
-  else if (zone === 'hi')  emit('high-cut', clamp(startHi + deltaKhz * 1000, ...))
-}
-```
-
-**Schritt 6 — Drei Interaktions-Zonen (Hit-Testing):**
-
-Die Drag-Wirkung hängt davon ab, **wo** der User klickt und hält:
-
-1. **Auf dem Cursor** (Klammer/Flanken selbst): `pointerdown` auf der linken Flanke
-   startet `low-cut`-Resize, auf der rechten Flanke `high-cut`-Resize
-   (`cursor: ew-resize`). Nur im "zoomed-in"-Zustand aktiv (gelbe Form hat keine
-   draggable Flanken).
-2. **Unterhalb des Cursors** (in der Frequenzband-Anzeige / Band-Skala): `pointerdown`
-   in diesem Bereich startet **Cursor-Move** — der gesamte Cursor (Trägerfrequenz)
-   folgt der Maus horizontal (`emit('tune', ...)`).
-3. **Spektrometer-Feld** (Wasserfall/Spektrum-Bereich): `pointerdown` hier startet
-   **Pan** — Frequenzanzeige **inkl. Spektrometer** wird verschoben (nicht nur der
-   Cursor; der gesamte sichtbare Frequenzbereich `viewLow/HighKhz` wandert).
-
-```ts
-type DragZone = 'lo-flanke' | 'hi-flanke' | 'cursor-move' | 'pan'
-
-function hitTest(x: number, y: number): DragZone {
-  if (onCursorFlanke(x, y, 'lo')) return 'lo-flanke'
-  if (onCursorFlanke(x, y, 'hi')) return 'hi-flanke'
-  if (inBandScaleBelowCursor(y))    return 'cursor-move'
-  return 'pan'                       // Spektrometer-/Wasserfall-Bereich
-}
-```
-
-**Akzeptanzkriterium:**
-- Passbandbreite < 30px → gelbe Trapez-/T-Form, **kein** Edge-Resize, Cursor per Klick+Halten unterhalb verschiebbar.
-- Passbandbreite ≥ 30px → grüne Form mit Mittellinie + schrägen Flanken; Klick auf Flanke resized `low_cut`/`high_cut` unter `MIN_BANDWIDTH`/`MAX_BANDWIDTH`.
-- Klick+Halten **unterhalb** des Cursors (Frequenzband) bewegt den Cursor.
-- Klick+Halten **im Spektrometer-Feld** panniert Frequenzanzeige inkl. Spektrometer.
-
-**E2E-Test:** `ui/e2e/frequency-ruler.spec.ts` — erweitern:
-- Zoomed-Out: Cursor hat gelbe Form, Flanken nicht draggable (`ew-resize` nicht aktiv), Drag unterhalb des Cursors ändert `freqKhz`.
-- Zoomed-In: Cursor grün, Flanken draggable, `low_cut`/`high_cut` ändern sich beim Ziehen, kreuzen nie.
-- Drag im Spektrometer-Feld panniert (`viewLow/HighKhz` wandern), nicht nur der Cursor.
-
----
+**D — E2E-Tests (ZUERST schreiben, dann implementieren):**
+- [ ] Test: Passband ≥ 50px → SVG fill ist `lime`
+- [ ] Test: Passband < 50px → SVG fill ist `yellow`
+- [ ] Test: Drag auf lo-Flanke → `lowCut` ändert sich, `freqKhz` bleibt
+- [ ] Test: Drag auf hi-Flanke → `highCut` ändert sich, `freqKhz` bleibt
+- [ ] Test: Drag auf center → `freqKhz` ändert sich, Bandbreite bleibt
+- [ ] Test: `lowCut` kann `highCut - 4Hz` nicht überschreiten
 
 ## Bug 8 — Frequenzband-Skala verhält sich nicht wie die Web UI
 
@@ -1236,6 +1268,98 @@ gezeichnet.
    exakte Bucket-Werte, Major/Minor-Tick-Verhältnis (5× oder 10×), Label-Format-Logik.
 2. **Live-WebUI (Port 8073/8074 validieren):** Frequenzskala bei mehreren Zoomstufen
    prüfen; exakte Tick-Dichte, Grid-Abstände und Label-Formatierung verifizieren.
+
+### Research-Ergebnis Bug 8 (2026-08-29, agent:general)
+
+**Quelle:** `web/openwebrx/openwebrx.js` — Funktionen `mk_freq_scale()` (lines ~1719–1835),
+`get_scale_mark_spacing()` (lines ~1686–1715), `scale_px_from_freq()` (line ~1514).
+
+**KORREKTUR gegenüber Fix-Plan:** Es gibt KEINEN hardkodierten `zoom_step`-Array.
+Die Schritt-Auswahl ist rein pixel-basiert über die Tabelle `scale_markers_levels`.
+
+#### `scale_markers_levels` Tabelle (vollständig, openwebrx.js ~1549–1613)
+
+| hz_per_large_marker | estimated_text_width | pre_divide | decimals | Suffix |
+|---|---|---|---|---|
+| 10 000 000 | 70 | 1 000 000 | 0 | MHz |
+|  5 000 000 | 70 | 1 000 000 | 0 | MHz |
+|  1 000 000 | 70 | 1 000 000 | 0 | MHz |
+|    500 000 | 70 | 1 000 000 | 1 | MHz |
+|    100 000 | 70 | 1 000 000 | 1 | MHz |
+|     50 000 | 70 | 1 000 000 | 2 | MHz |
+|     10 000 | 70 | 1 000 000 | 2 | MHz |
+|      5 000 | 70 | 1 000 000 | 3 | MHz |
+|      1 000 | 70 | 1 000 000 | 3 | MHz |
+
+#### Schritt-Auswahl (`get_scale_mark_spacing()`)
+
+- Iteriert über `scale_markers_levels` von grob nach fein.
+- Wählt das erste Level bei dem `pxSmall >= scale_min_space_btwn_small_markers (7px)`.
+- `ratio = 5` (Default: 4 Minor-Ticks zwischen je 2 Major-Ticks).
+- Sonderfall: wenn `pxSmall/2 >= 7px` UND `hz_per_large_marker` beginnt NICHT mit "5" → `ratio = 10`.
+- `smallbw = hz_per_large_marker / ratio`
+- `scale_min_space_btwn_texts = 50px` (Mindestabstand zwischen Labels).
+
+#### Pixel-Mapping
+
+```javascript
+function scale_px_from_freq(f, range) {
+  return Math.round(((f - range.start) / range.bw) * canvas_container.clientWidth);
+}
+```
+
+#### Tick-Dimensionen
+
+| Element | Höhe (px) | lineWidth | Label |
+|---|---|---|---|
+| Major-Tick (large marker) | 11 | 3.5 | ja |
+| Minor-Tick (small marker) | 8  | 2   | nein |
+| Label y-Position | 32 (= 22+10) | — | `bold 12px sans-serif` |
+| Scale-Canvas Höhe | 47 | — | — |
+| Scale-Canvas Zeichenbereich | ab y=22 | — | — |
+
+#### Label-Format (`ftext()` in `mk_freq_scale()`)
+
+```javascript
+if (f < 1e6) {
+  pre_divide /= 1000   // → kHz
+  decimals = 0         // immer Integer-kHz
+} else {
+  // MHz mit decimals aus Tabelle
+}
+text_to_draw = format_frequency(format + (f < 1e6 ? 'kHz' : 'MHz'), f, pre_divide, decimals)
+```
+
+- `< 1 MHz` → Integer-kHz (z. B. `175 kHz`, `7100 kHz`)
+- `≥ 1 MHz` → MHz mit Dezimalstellen aus Tabelle (z. B. `7.100 MHz`, `14.08 MHz`)
+
+#### Rendering-Loop (`mk_freq_scale()`)
+
+```
+clearRect(0, 22, width, height-22)
+marker_hz = ceil(range.start / smallbw) * smallbw
+for each marker_hz <= range.end:
+  x = scale_px_from_freq(marker_hz, range)
+  if (marker_hz % hz_per_large_marker == 0):
+    lineWidth=3.5, lineTo(x, 22+11), draw label at (x, 32)
+  else:
+    lineWidth=2, lineTo(x, 22+8)
+  marker_hz += smallbw
+```
+
+#### Aktualisierter Fix-Plan (aus Research)
+
+Die Implementierung soll `mk_freq_scale()` 1:1 nachbauen:
+1. `scale_markers_levels`-Tabelle als TypeScript-Konstante.
+2. `getScaleMarkSpacing(rangeHz, canvasWidthPx)` → `{ smallbwHz, ratio, params }`.
+3. Canvas-2D Rendering-Loop (oder SVG `<line>` + `<text>` in Vue).
+4. Label-Format: `<1MHz → Integer-kHz`, `≥1MHz → MHz mit Dezimalstellen`.
+5. Major=11px/3.5lw, Minor=8px/2lw, Label y=32 relativ zur Scale-Canvas-Oberkante.
+
+**E2E-Tests (SOLL, vor Implementierung):**
+- Default-Zoom: Major-Ticks vorhanden mit kHz/MHz-Labels, Minor-Ticks ohne Label.
+- Nach Zoom-in: Tick-Dichte steigt, kein Label-Overlap (Abstand ≥ 50px).
+- Format: `7100 kHz` für < 1MHz, `14.080 MHz` für ≥ 1 MHz.
 
 ### Fix-Plan Bug 8
 
@@ -1379,6 +1503,94 @@ vertikaler Verbindungslinie zur Frequenzachse + Kollisions-Layout-Algorithmus.
    prüfen; Referenz (`explore-8074.json` dx-label/band-Elemente) verifizieren.
    Exaktes Ebenen-Verhalten beim Raus-/Hineinzoomen dokumentieren.
 
+### Research-Ergebnis Bug 9 (2026-08-29, agent:general)
+
+**Quelle:** `web/openwebrx/openwebrx.js` — Funktionen `mk_bands_scale()` (lines 7885–7965),
+`dx_label_render_cb()` (lines 8722–9155), `optimize_eibi_label_layout()` (lines 8811–8858).
+CSS: `kiwi.css` (lines 109–126).
+
+#### BandScaleBar — Rendering (openwebrx.js `mk_bands_scale()`)
+
+**Methode:** Canvas 2D (`band_ctx`) — `fillRect()` mit globalAlpha=0.2.
+
+**Layout-Konstanten:**
+| Konstante | Wert | Beschreibung |
+|---|---|---|
+| `band_canvas_h` | 30 | Band-Canvas Gesamthöhe |
+| `band_scale_h` | 20 | Band-Scale-Balkenhöhe |
+| `band_scale_top` | 5 | Y-Offset des Balkens |
+| `band_scale_text_top` | 5 | Y-Offset des Label-Texts |
+
+**Label-Zentrierung:**
+```
+tx = x + w/2   // horizontale Mitte des Band-Blocks
+txt = b2.longName  // langer Name (z. B. "120 Meter")
+mt = band_ctx.measureText(txt)
+if (w >= mt.width + 4): txt = longName
+else: txt = b1.name (shortName)
+if (w >= mt.width + 4): txt = shortName
+else: txt = null  // zu schmal, kein Text
+band_ctx.fillText(txt, tx - mt.width/2, ty)
+```
+
+**Farben:** Aus `dx_config.json` → `band_svc[].color`, NICHT hardcoded. Aktuelle Vue-Implementierung (BandScaleBar.vue) hat die Farben als Konstanten im Code (Broadcast=#4fc3f7, Amateur=#ef5350, LW/MW=#FF9800).
+
+#### TagArea — Rendering (openwebrx.js `dx_label_render_cb()`)
+
+**Methode:** DOM-`div`-Elemente, KEIN Canvas.
+
+**CSS-Struktur** (kiwi.css lines 109–126):
+```css
+.cl-dx-label {
+  font-size: 11px; padding: 3px; border: 1px solid black;
+  border-radius: 3px; cursor: pointer; position: absolute; z-index: 120;
+}
+.cl-dx-line {
+  width: 1px; position: absolute; background-color: black; z-index: 110;
+}
+```
+
+**Layout-Konstanten:**
+| Konstante | Wert | Beschreibung |
+|---|---|---|
+| `dx_container_h` | 80 | DX-Container-Gesamthöhe |
+| `dx_label_top` | 5 | Y-Offset der Label-Reihen |
+| `dx_line_h` | 75 | Linienhöhe = Container - LabelTop |
+| `gap` | 35 (non-EiBi), 40 (EiBi) | Vertikaler Abstand zwischen Reihen |
+
+**Zweireihiges Layout:**
+```
+top = dx_label_top + (gap * (dx_idx & 1))
+// Gerader Index → Reihe 0 (top=5)
+// Ungerader Index → Reihe 1 (top=40)
+```
+
+**Verbindungslinie:**
+```
+el_line.style.height = px(dx_container_h - top)
+// Linie vom Label (top) bis zum Frequenzachsen-Bereich
+```
+
+**Kollisionserkennung:** Es gibt KEINE explizite Kollisionserkennung. Das Layout verlässt sich auf den alternierenden Reihen-Versatz (gap=35px). Nur im EiBi-Modus gibt es `optimize_eibi_label_layout()` für gleiche Frequenzen (horizontale Spreadung mit spacing=6px).
+
+#### Vergleich IST ↔ SOLL
+
+| Aspekt | IST (aktuell) | SOLL (KiwiSDR) | Priorität |
+|---|---|---|---|
+| Band-Rendering | HTML-`span` mit CSS-Stil | Canvas `fillRect()` (O(1) pro Band) | Mittel — DOM vs Canvas ist Implementierungsdetail; Verhalten zählt |
+| Label-Zentrierung | `left`/`width` in % | Canvas `measureText` + zentriert | Hoch — aktuell zentriert via `padding`, nicht garantiert präzise |
+| Tag-Verbindungslinien | Fehlen ganz | 1px schwarze vertikale Linie | Hoch — Bug 9 zentral |
+| Tag-Layout | 2 Reihen mit `MIN_GAP_PCT = 3` | 2 Reihen mit `gap=35px`, index-parity | Mittel — ähnlich, aber andere Gap-Definition |
+| Kollisionserkennung | `MIN_GAP_PCT = 3` (häufig überlappend) | Keine — nur Reihen-Alternierung | Niedrig — beide unzureichend |
+| Tag-Farben | Farbe aus Store | Farbe aus `dx_type[color_idx].color` | Mittel |
+
+#### Fix-Plan (vorläufig)
+
+1. **Connection Lines in TagArea**: vertikale `<div>` mit `class="tag-area__line"`, 1px breit, schwarz, Höhe vom Tag bis zur Achsenbasis.
+2. **BandScaleBar Label-Zentrierung**: `text-align: center` + kein Padding-Versatz; alternativ Canvas.
+3. **Tag-Layout**: Anpassung der Reihen-Logik auf index-parity-Basis (aktuell: `MIN_GAP_PCT` → eher auf feste px).
+4. **Farben**: Behalten (sind bereits korrekt).
+
 ### Fix-Plan Bug 9
 
 **Ziel:** Beide Leisten als **dynamische** Overlays bauen, die kontinuierlich mit
@@ -1482,6 +1694,77 @@ daraus **nicht als Fakt belegbar**. Vor der Implementierung ist ein Research nö
 3. **Ergebnis:** Die Parameterliste in dieser Analyse als **verbindliche Checkliste**
    (jedes Element → ParamId + Range + Default) verfeinern, bevor gebaut wird.
 
+### Research-Ergebnis Bug 10 (2026-08-29, agent:general)
+
+**Quelle:** `web/openwebrx/openwebrx.js` — Audio-Panel DOM-Aufbau in den Funktionen
+für Squelch, Noise Blanker, Noise Filter, Compression, De-emphasis, Test Pulse.
+
+#### Audio-Parameter (vollständige Liste)
+
+| Kategorie | Parameter-Name | Typ | Range | Default | SET-Kommando |
+|---|---|---|---|---|---|
+| Volume | Volume | Slider | 0–200 | 50 | `SET volume=X` |
+| Squelch | Enable | Toggle | on/off | on | `SET squelch=X` |
+| Squelch | Threshold | Slider | 0–99 (NBFM), 0–40 (andere) | 0 | `SET squelch=X param=Y` |
+| Squelch | Tail (Ausschwinger) | Dropdown | 0/.2/.5/1/2 sec | 0 | implizit via SET squelch |
+| Squelch | Pre-record | Dropdown | 0/1/2/5/10 sec | 0 | — |
+| Pan | Pan | Slider | -1.0 – +1.0 (step 0.01) | 0 | `SET pan=X` |
+| NB (Noise Blanker) | Algorithmus | Dropdown | off/std/Wild | off | `SET nb algo=X` |
+| NB (std) | Gate | Slider | 100–5000 µs | 100 | `SET nb type=1 param=X pval=Y en=Z` |
+| NB (std) | Threshold | Slider | 0–100% | 50 | dito |
+| NB (Wild) | Threshold | Slider | 0.05–3.0 | 0.95 | dito |
+| NB (Wild) | Taps | Slider | 6–40 | 10 | dito |
+| NB | Impulse Samples | Slider | 3–41 | 7 | dito |
+| NB | Test Pulse Gain | Slider | -90–0 dB | 0 | dito |
+| NB | Test Pulse Width | Slider | 1–30 samples | 1 | dito |
+| Compression | Enable | Button | on/off | off | `SET compression=X` |
+| De-emphasis | AM/FM | Dropdown | off/75µS/50µS | off | `SET de_emp=X nfm=Y` |
+| De-emphasis | NBFM | Dropdown | off/on/+LF | off | dito |
+
+#### HTML-Struktur des Audio-Tabs
+
+Der Audio-Tab besteht aus diesen Sektionen (Reihenfolge von oben nach unten):
+
+1. **Noise row:** NB-Dropdown + "More"-Button, NF-Dropdown + "More"-Button
+2. **Volume row:** Volume-Slider + De-emphasis-Dropdowns 
+3. **Pan row:** Pan-Slider + Compression-Button (nur wenn Panner verfügbar)
+4. **Squelch row:** Squelch-Icon+toggle + Slider + Wertanzeige + Tail-Dropdown + Pre-record-Dropdown
+5. **PB row:** PB-default-Button + Channel-Null-Dropdown + Overload-Mute-Dropdown
+6. **Passband-Slider:** 4× Slider (low/high/center/width) je 20% Breite
+7. **Expandierte Sektionen (More-Buttons):** NB-More, NF-More, Test-More
+
+**Scrollbar:** Das Panel hat `overflow-y: auto` (kein fixes `max-height` — der Container
+ist flex und scrollt wenn Inhalte überlaufen). Die Klassische KiwiSDR-Implementierung
+nutzt `w3-hide`/`w3-show` für die "More"-Sektionen.
+
+#### Wichtigste CSS-Klassen
+- `.class-slider` — Slider-Container
+- `.w3-hide` / `.w3-show` — Expandierbare Sektionen
+- `<select>` mit CSS `#444` Background für Dropdowns
+
+#### Relevante SET-Kommandos (für Parameter-Bridge)
+```
+SET squelch=X param=Y
+SET nb algo=X           — "off"/"std"/"Wild"
+SET nb type=X param=X pval=X en=X
+SET nr algo=X           — "off"/"wdsp"/"LMS"/"spec"
+SET nr type=X param=X pval=X en=X
+SET de_emp=X nfm=X
+SET compression=X
+SET ovld_mute=X
+SET sam_pll=X
+```
+
+#### Korrektur zum Fix-Plan
+
+Der Fix-Plan beschreibt eine visuell abgeleitete Parameterliste, die teilweise falsch ist:
+- **PB-center und PB-width sind KEINE eigenen SET-Parameter** — sie werden aus low/high
+  berechnet (center = (low+high)/2, width = high-low). Die Slider im Original sind
+  readonly/nur-Anzeige.
+- **Es gibt KEINE "Test pulse gain/width"-Parameter als sichtbare Slider** im normalen
+  Audio-Tab — sie erscheinen erst nach Klick auf "More" unter Noise Blanker Test.
+- **Compression** ist ein einfacher Toggle-Button, kein Slider.
+
 ### Fix-Plan Bug 10
 
 **Schritt 0 — Research (Pflicht):** obige Research-Aufgabe abschließen; die
@@ -1576,6 +1859,58 @@ daraus **nicht als Fakt belegbar**. Vor der Implementierung ist ein Research nö
 3. **Ergebnis:** verbindliche Parameterliste (ParamId + Range + Default + Einheit)
    als Checkliste verfeinern, bevor gebaut wird.
 
+### Research-Ergebnis Bug 11 (2026-08-29, agent:general)
+
+**Quelle:** `web/openwebrx/openwebrx.js` — AGC-Panel (`id-optbar-agc`, lines 11532–11567),
+Set-Funktion `set_agc()` (lines 12944–12953), Defaults (lines 12979–12985).
+
+#### AGC-Parameter (vollständige Liste)
+
+| ID | Typ | Range | Default | Label | SET |
+|----|-----|-------|---------|-------|-----|
+| `agc` | Toggle-Button | 0/1 | 1 | "AGC" | `SET agc=X` |
+| `hang` | Toggle-Button | 0/1 | 0 | "Hang" | `SET hang=X` |
+| `manGain` | Slider | 0–120 | 50 | "Manual gain" (dB) | `SET manGain=X` |
+| `thresh` | Slider | –130–0 | –100 | "Threshold" (dBm) | `SET thresh=X` |
+| `threshCW` | Slider | –130–0 | –130 | "Thresh CW" (dBm) | `SET threshCW=X` |
+| `slope` | Slider | 0–10 | 6 | "Slope" (dB) | `SET slope=X` |
+| `decay` | Slider | 20–5000 | 1000 | "Decay" (msec) | `SET decay=X` |
+
+#### HTML-Struktur des AGC-Tabs
+
+```
+Button-Reihe (oben):
+  [AGC]      [Hang]      [Defaults]                      [help]
+  id-button-agc  id-button-hang  w3-yellow           w3-green w3-btn-right
+
+Slider-Reihen (jeweils 24/52/24 Prozent-Spalte):
+  Label (24%)      | Slider (52%)          | Wert (24%)
+  "Manual gain"    | id-input-man-gain     | X dB
+  "Threshold"      | id-input-threshold    | X dBm
+  "Thresh CW"      | id-input-threshCW     | X dBm
+  "Slope"          | id-input-slope        | X dB
+  "Decay"          | id-input-decay        | X msec
+```
+
+#### SET-Kommando (ein einziger Befehl mit allen Parametern)
+```
+SET agc=<0|1> hang=<0|1> thresh=<value> slope=<value> decay=<value> manGain=<value>
+```
+
+Bei CW-Modus wird `threshCW` statt `thresh` gesendet.
+
+#### Default-Reset
+```javascript
+default_agc = 1, default_hang = 0, default_manGain = 50,
+default_thresh = -100, default_threshCW = -130,
+default_slope = 6, default_decay = 1000
+```
+
+#### Korrektur zur Analyse
+- Der AGC-Tab ist **ein eigener Tab** (5. Position in `tab_s: ['last','Off','Stat','User','AGC','Audio','WF','RF']`).
+- Im aktuellen `AudioPanel.vue` ist AGC als `div.audio-panel__section` eingebaut — das ist falsch.
+- AGC gehört in eine eigene Komponente `AgcPanel.vue` oder als separater Tab-Inhalt in `PluginView.vue`.
+
 ### Fix-Plan Bug 11
 
 **Schritt 0 — Research (Pflicht):** obige Research-Aufgabe abschließen.
@@ -1657,6 +1992,74 @@ expandierbarer Bild-Container mit absolut positionierten Overlays.
 2. **Live-WebUI (Port 8073/8074 validieren):** Header-Topbar prüfen; Referenz
    `header-topbar.json` + `explore-8074.json` (`id-topbar-*`) verifizieren. Exakte
    Höhe, Titel-/Untertitel-Format, Credits-Links und Bild-Bereich aufnehmen.
+
+### Research-Ergebnis Bug 12 (2026-08-29, agent:general)
+
+**Quelle:** `web/openwebrx/openwebrx.js` — Topbar (`id-topbar`, lines ~50–80 für Höhe,
+Zeit-Anzeige `time_display_setup()`, `toggle_rx_photo()` für Expand/Collapse).
+CSS: `kiwi.css` — `id-time-display-*`, `.cl-topbar-item`.
+
+#### Topbar-Struktur
+
+| Container | Inhalt |
+|---|---|
+| `id-topbar-L-container` | Logo (kiwi-with-headphones.51x67.png) + Stationstitel (fett) + Untertitel (Standort/Grid/ASL/SNR) + Antenne |
+| `id-topbar-ML-container` | Owner-Info (Provided by + Links) |
+| `id-topbar-MR-container` | User Ident (Callsign) |
+| `id-topbar-R-container` | UTC + Local Zeit + Timezone + "Powered by OpenWebRX" Logo |
+
+**Gesamthöhe:** `owrx.top_bar_nom_height = 67px` (nominal).
+
+**Layout:** NICHT Flexbox — Breiten werden dynamisch per JS gesetzt (`minWidth`),
+weil absolute-positionierte Kinder 0 Breite für Flexbox ergeben.
+
+#### Collapse/Expand (Chevron)
+
+Zwei Bilder (43×12px) in `id-topbar-arrow`:
+- `openwebrx-bottom-arrow-show.png` (Expand-Pfeil)
+- `openwebrx-bottom-arrow-hide.png` (Collapse-Pfeil)
+
+Position: `left = info.x2 + 16px` (direkt nach L-Container).
+Klick ruft `toggle_rx_photo()` auf → toggle `id-top-photo-clip` maxHeight.
+
+#### Expandierbarer Bild-Bereich
+
+```
+id-top-photo-clip
+  ├── id-top-photo-spacer (Höhe = top_bar_cur_height, immer sichtbar)
+  ├── id-top-photo
+  │   └── img id="id-top-photo-img" (src aus cfg RX_PHOTO_FILE)
+  ├── id-rx-photo-title
+  └── id-rx-photo-desc
+```
+
+Animation: `animate_to()` mit accel=0.93, 1000ms.
+Auto-close nach 3 Sekunden (außer Debug/Mobile).
+
+#### Zeit-Anzeige (id-topbar-R-container)
+
+```
+[ 12:34    UTC  ]     [ Powered by ]
+[ 14:34    Local ]     [ OpenWebRX Logo ]
+[ Europe/Berlin  ]     
+```
+
+Updates alle 5–10 Sekunden via Server-Command `time_display`.
+
+#### Wichtige CSS-Klassen
+```css
+.cl-topbar-item { position: absolute; }  /* alle vier Container */
+.id-time-display-UTC, .id-time-display-local { font-size: 14pt; font-weight: bold; color: #909090; }
+.cl-time-display-text-suffix { color: #909090; margin-left: 0.5em; }
+.id-time-display-tzname { font-size: 8pt; color: #909090; }
+```
+
+#### Korrektur zum Fix-Plan
+
+- Die Topbar ist **67px** hoch, nicht ~55px wie in der Analyse geschätzt.
+- Es gibt **vier** Spalten, nicht drei (ML + MR sind getrennt).
+- Der Bild-Bereich wird **vom Server konfiguriert** (`RX_PHOTO_FILE`), nicht statisch.
+- Der Chevron ist **kein CSS-Dreieck**, sondern ein PNG-Bild (43×12px).
 
 ### Fix-Plan Bug 12
 
@@ -1848,6 +2251,60 @@ blendet das Diagramm wieder aus.
 2. **Live-WebUI (Port 8073/8074 validieren):** "Spec AF"-Modus im Browser aktivieren;
    Referenz-DOM prüfen. Exakte AF-Overlays + Tuning-Sync-Verhalten verifizieren.
 
+### Research-Ergebnis Bug 14 (2026-08-29, agent:general)
+
+**Quelle:** `jks-prv/KiwiSDR` master — `web/openwebrx/openwebrx.js` + CSS.
+
+#### AF-Canvas-Positionierung
+
+- `spec.af_left = 50`, `spec.af_margins = 100` (2 × 50px)
+- AF-Canvas-Breite = `waterfall_width - 100` (schmaler als RF, zentriert mit 50px Abstand links/rechts)
+- Position `absolute` im `id-spectrum-container`, `left: 50px`
+
+#### AF-Marker (aus `spectrum_update()`)
+
+| Marker | Farbe | Breite | Position |
+|--------|-------|--------|----------|
+| **Center-Linie** | `lime` (leuchtend grün) | 3px | `canvas.width / 2` (DC/Träger) |
+| **Linke Kante** | `red` | 3px | `x=0` (DC/low freq edge) |
+| **Rechte Kante** | `red` | 3px | `canvas.width - 3` (Nyquist edge) |
+| **Vertikales Grid** | `lightGray` | 1px | Alle 1000 Hz |
+
+**Code für AF-Marker (`openwebrx.js:4618-4633`):**
+```javascript
+if (spec.source == spec.AF) {
+   var sr = ext_nom_sample_rate();
+   var frac = sr % 1000;
+   var sp = (sr - frac) - 1000;
+   for (i = 1000 + frac/2; i <= sp + frac/2; i += 1000) {
+      x = Math.round(spec.canvas.width * i/sr);
+      spec.af_ctx.fillRect(x,0, 1,sh);
+   }
+   spec.af_ctx.fillStyle = 'lime';
+   spec.af_ctx.fillRect(Math.round(spec.canvas.width/2)-1,0, 3,sh);
+   spec.af_ctx.fillStyle = 'red';
+   spec.af_ctx.fillRect(0,0, 3,sh);
+   spec.af_ctx.fillRect(spec.canvas.width-3,0, 3,sh);
+}
+```
+
+#### AF-Datenquelle
+
+- Getrennte Ooura-FFT32 auf Audio-Datenstrom (`wf_audio_FFT()`), 512/1024/2048 Punkte
+- Ergebnisse werden an `waterfall_queue` mit `audioFFT:1`-Flag gepusht
+- In M4c.7: Nutzung von `waterfallBins` als Ersatz (KiwiSDR verwendet selbe Datenquelle wie Waterfall)
+
+#### Update-Rate
+
+- Sowohl RF als auch AF: **10 Hz** (alle 100ms)
+
+#### Frequenz-Mapping beim Klicken (`spec.AF`-Fall)
+```javascript
+var norm = cx/waterfall_width - 0.5;
+norm *= (waterfall_width + spec.af_margins)/waterfall_width;
+f_kHz = norm * audio_input_rate / 1000;
+```
+
 ### Fix-Plan Bug 14
 
 **Schritt 1 — Toggle (drei Zustände) aktiv grün:**
@@ -1905,6 +2362,11 @@ ggf. neue `ui/src/components/DrmSchedule.vue`, `DrmDecoderPanel.vue`
 Services-Overlay oben, kein Decoder-Panel, keine DRM-Bandbreiten-Anpassung der
 Tuning-Klammer.
 
+**⚠️ KORREKTUR (2026-08-29, Research):** Der KiwiSDR-Mode-Index für DRM ist **8**
+(0-basiert), nicht 12. Siehe `kiwi.js` `modes_lc`: `['am','amn','usb','lsb','cw',
+'cwn','nbfm','iq','drm','usn','lsn','sam','sau','sal','sas','qam','nnfm','amw']`;
+`kiwi.modes_idx['drm'] = 8`.
+
 **Problem (Paritäts-Abweichung):**
 
 1. **Kein Top-Overlay (DRM Schedule & Services).** Bei aktivem DRM-Modus überlagert
@@ -1915,7 +2377,7 @@ Tuning-Klammer.
    "Digital Radio Mondiale decoder"-Panel fehlt (Header + Content mit Hyperlinks +
    Footer-Aktionsleiste Stop/Monitor IQ/Test 1/Test 2 + LPF-Checkbox).
 3. **Keine DRM-Bandbreite auf der Tuning-Klammer.** Die grüne Klammer (Bug 7) müsste
-   sich auf die typische DRM-Bandbreite (~10 kHz) verbreitern.
+   sich auf die typische DRM-Bandbreite (~10 kHz ±5000 Hz) verbreitern.
 
 **Referenz (KiwiSDR Web UI, visuell erfasst aus Screenshots):** DRM-Aktivierung
 löst weitreichende UI-Änderungen aus — ein Schedule/Services-Overlay oben und ein
@@ -1938,65 +2400,189 @@ Implementierung ist ein **sorgfältiger Research** in WebUI **und** Kiwi-SDK nö
 3. **Ergebnis:** verbindliche UI-Spezifikation (Feld-Labels, Checkbox-Liste,
    Schedule-Struktur, Zeitleisten-Semantik, DRM-Bandbreite) als Checkliste verfeinern.
 
-### Fix-Plan Bug 15
+### Research-Ergebnis Bug 15 (2026-08-29, agent:general)
 
-**Schritt 0 — Research (Pflicht):** obige Research-Aufgabe abschließen.
+**Quelle:** `jks-prv/KiwiSDR` master — `web/openwebrx/openwebrx.js` + `web/kiwi/kiwi.js`.
 
-**Schritt 1 — DRM-Modus als Store-State:**
+#### Mode-Index-Korrektur
 
-```ts
-// store.mode === 12 (DRM) steuert die Sichtbarkeit der DRM-Overlays
-const isDrmActive = computed(() => store.mode === 12)
-```
+- `kiwi.modes_idx['drm'] = 8` (0-basiert), **nicht 12**
+- `kiwi.js` `modes_lc`: Position 8 = 'drm'
+- `store.mode === 8` ist DRM, nicht 12
+- Passband-Fallback: `drm: { lo: -5000, hi: 5000 }` = ±5 kHz (10 kHz Bandbreite)
 
-**Schritt 2 — Top-Overlay (DRM Schedule & Services):**
+#### Keine dedizierten DRM-DOM-Elemente
 
-```html
-<template v-if="isDrmActive">
-  <DrmSchedule />
-</template>
-```
+KiwiSDR hat **keine** statischen DRM-DOM-Elemente wie `id-drm-schedule` oder
+`id-drm-services`. Stattdessen:
 
-- **Links (schwarz):** Checkbox-Reihe IO/Time/Frame/FAC/SDC/MSC + "Services:"-Liste (1–4).
-- **Mitte (weiß):** scrollbare Stationsliste mit blauem Info-Icon links, Zeitleiste
-  rechts (grüne/rosafarbene Balken), rote vertikale "jetzt"-Linie, graue Trennlinien.
-- **Rechts (schwarz):** UTC/Local-Zeit, Dropdown ("by service"), Legenden-Buttons
-  "verified" (grün) / "not verified" (rosa).
+1. DRM-Button-Klick → `ext_set_mode('drm', null, {open_ext: true})`
+2. → Lädt **DRM-Extension** via `extint_open('drm')`
+3. → Extension erzeugt dynamisch UI in `id-ext-controls-container`
+4. DRM-UI wird via `toggle_panel("ext-controls")` ein/ausgeblendet
 
-**Schritt 3 — DRM Decoder-Kontroll-Panel (unten links):**
+#### DRM-spezifische Verhalten
 
-```html
-<DrmDecoderPanel v-if="isDrmActive" />
-```
+- **Squelch ausgeblendet:** `w3_hide2('id-squelch', cur_mode=='drm')`
+- **Button deaktivierbar:** `kiwi.DRM_enable` Flag
+- **Mode-Vererbung blockiert:** `if(init_mode==='drm') init_mode='am'`
+- **Extension-Konflikt:** Keine anderen Extensions im DRM-Modus
+- **Tastaturkürzel:** `'d' → ext_set_mode('drm', null, {open_ext:true})`
 
-- Header (dunkelgrau, Titel cyan, "help" grün + "X" rechts).
-- Content: Text + Hyperlinks ("DRM decoder is based on Dream 2.2.1",
-  "Schedule information courtesy of drmrx.org"), vertikale Scrollbar.
-- Footer: Buttons Stop (rot) / Monitor IQ (magenta) / Test 1 + Test 2 (cyan) + "LPF"-Checkbox.
+#### DRM-Bandbreite
 
-**Schritt 4 — DRM-Bandbreite auf der Tuning-Klammer:**
+- Passband `lo: -5000, hi: 5000` = ±5 kHz (10 kHz total)
+- Gleiche Klasse wie AM (`usePBCenter = false`)
+- Fallback identisch zu AM (`am: { lo: -4900, hi: 4900 }`)
 
-- Beim DRM-Modus setzt der Passband-Cursor (Bug 7) die Bandbreite auf ~10 kHz
-  (`low_cut`/`high_cut` entsprechend), deutlich breiter als AM/SSB.
+#### Bedeutung für M4c.7-Implementierung
 
-**Schritt 5 — Vue-Transitions + Klick-Durchgriff:**
+Das DRM-Schedule/Services-Overlay + Decoder-Panel kann **nicht** durch einfache
+statische Vue-Komponenten abgebildet werden. Es müsste entweder:
+- Eine vollständige DRM-Extension-Architektur nachgebaut werden (M5-Thema), oder
+- Ein vereinfachtes statisches DRM-Panel mit den bekannten UI-Elementen (Checkboxen,
+  Schedule-Tabelle, Decoder-Links, Buttons) als Platzhalter.
 
-- Top-Panel + Decoder-Panel mit Vue-`<transition>` weich ein-/ausblenden.
-- Overlays dürfen das darunterliegende Canvas nicht funktional blockieren
-  (Klick außerhalb → Overlay schließen bzw. Event durchreichen).
-
-**Akzeptanzkriterium:**
-- DRM-Button blendet Schedule/Services-Overlay + Decoder-Panel weich ein/aus.
-- Tuning-Klammer verbreitert sich auf ~10 kHz im DRM-Modus.
-- Alle Labels/Checkboxen/Buttons gemäß (per Research verifizierter) Spezifikation.
-
-**E2E-Test:** `ui/e2e/mode-select.spec.ts` / neues `drm.spec.ts`:
-- DRM-Button → Schedule-Overlay + Decoder-Panel sichtbar.
-- Tuning-Klammer breiter (~10 kHz); Overlays schließen bei erneutem DRM-Klick.
+**Empfehlung:** Für M4c.7 ein statisches `DrmPanel.vue` bauen, das die bekannten
+UI-Elemente aus Screenshots abbildet (ohne Live-Daten-Bindung). Die echte
+DRM-Extension ist ein M5-Thema. Zusätzlich: Mode-Index in `PluginView.vue` von
+12 auf 8 korrigieren.
 
 ---
 
-## E2E-Lückenanalyse
+## Bug 16 — Cursor liegt auf der Frequenzleiste statt eigener Leiste
+
+**Betroffene Dateien:** `FrequencyRuler.vue` (Cursor-SVG + Scale-Ticks in einem Component),
+neu: `CursorBar.vue` (separate Cursor-Leiste)
+
+### Analyse (2026-08-29, Research via KiwiSDR GitHub)
+
+#### IST (unser Code)
+Der Frequenz-Cursor (SVG-Trapezoid) liegt **innerhalb** von `FrequencyRuler.vue`:
+- `.freq-ruler` ist **22px** hoch
+- Das Cursor-SVG hat `position: absolute; top:0; left:0; height:22px` — **im selben DOM-Container** wie die Scale-Ticks
+- Das Cursor-Polygon hat `pointer-events: all` und `@pointerdown.prevent="onCursorPointerDown"`
+- Die Scale `.freq-ruler__scale` hat `@mousedown.prevent="onScaleMouseDown"`
+
+**Problem:** `pointerdown` und `mousedown` sind **unterschiedliche Event-Typen**. Ein `@pointerdown.prevent` auf dem Polygon verhindert NICHT, dass `@mousedown` auf dem Scale-DIV feuert. Dadurch:
+- Klick auf Cursor → Cursor-Drag STARTET → gleichzeitig Scale-Pan STARTET → beide kämpfen
+- Cursor ist sehr schmal (gelb = collapsed) → Klicks fallen leicht daneben auf die Scale
+- Zudem: Cursor und Scale teilen sich dieselbe Zeile → optisch keine Trennung
+
+#### SOLL (KiwiSDR Referenz, aus openwebrx.css + openwebrx.js verifiziert)
+
+KiwiSDR hat **drei separate Layer** in einem **47px hohen** `#id-scale-container`:
+
+```
+#id-scale-container (position: relative; height: 47px)
+  ├── #id-scale-canvas (position: absolute; z-index: 100; height: 47px)
+  │   └── [zeichnet Frequenz-Skala + Major/Minor Ticks + Beschriftungen]
+  │       [zeichnet auch das grüne Trapez (envelope) auf Canvas]
+  │
+  ├── .class-passband-adjust-lo (position: absolute; z-index: 102; height: 20px)
+  │   └── [DIV für linke Kante des Passbands — drag zum Ändern von low_cut]
+  │
+  ├── .class-passband-adjust-hi (position: absolute; z-index: 103; height: 20px)
+  │   └── [DIV für rechte Kante des Passbands — drag zum Ändern von high_cut]
+  │
+  ├── .class-passband-adjust-cf (position: absolute; z-index: 101; height: 20px)
+  │   └── [DIV für gesamten Passband-Bereich zwischen lo/hi — drag zum Verschieben]
+  │
+  └── .class-passband-adjust-car (position: absolute; z-index: 105; height: 20px)
+      └── [DIV für Trägerlinie (Mitte) — drag zum Ändern der Frequenz]
+```
+
+**Kritische Erkenntnisse:**
+
+| Aspekt | KiwiSDR (Original) | Unser VST |
+|--------|-------------------|-----------|
+| Scale-Höhe | **47px** | **22px** |
+| Cursor/Höhe | **20px** (separate DIVs, `z-index: 101-105`) | **22px** (gleiche Höhe wie Scale) |
+| DOM-Layer | Handle-DIVs sind **separate Kinder** im Scale-Container | Cursor-SVG liegt **im selben Parent** wie Scale-Ticks |
+| Z-Index | Canvas=100, Handles=101-105 | Keine Trennung |
+| Maus-Events | Handles: `add_scale_listener` → `env_drag_start` | Scale: `@mousedown`, Cursor: `@pointerdown` (unterschiedliche Events!) |
+| Event-Kollision | Unmöglich — Events auf Handle-DIVs werden VOR der Canvas abgefangen | **Fast immer** — `pointerdown` stoppt nicht `mousedown` auf Scale |
+
+#### Ursache des Pan-versus-Cursor-Konflikts
+
+1. Der Cursor ist ein SVG-Polygon mit `pointer-events: all`
+2. Die Scale hat einen separaten `@mousedown`-Handler
+3. `pointerdown` (Polygon) und `mousedown` (Scale) sind **verschiedene Event-Typen**
+4. `@pointerdown.prevent` auf dem Polygon verhindert NICHT das `mousedown` auf dem Scale-DIV
+5. **Ergebnis:** Ein Klick auf den Cursor startet parallel Cursor-Drag **UND** Scale-Pan
+
+### ⚠️ Fix-Plan Bug 16
+
+**Schritt 1 — Cursor aus FrequencyRuler extrahieren:**
+- Neue Komponente `CursorBar.vue` (20px hoch, analog zu KiwiSDRs `.class-passband-adjust-*`)
+- CursorBar enthält die 4 interaktiven Zonen (lo/hi/cf/carrier) als separate DIVs mit `pointer-events: all`
+- Frequenz-Logik (`freqToPx`, `getZone`, Drag-State-Machine) bleibt erhalten, wandert aber in CursorBar
+
+**Schritt 2 — FrequencyRuler auf Scale-only reduzieren:**
+- FrequencyRuler wird **47px** hoch (KiwiSDR `#id-scale-container: 47px`)
+- Cursor-SVG + Trapezoid + Carrier-Line + Drag-Logik **entfernen**
+- Behält: Tick-Berechnung (Major/Minor), Scale-Maus-Pan
+
+**Schritt 3 — CursorBar als Overlay über FrequencyRuler:**
+```html
+<div class="scale-area" style="position: relative; height: 47px">
+  <FrequencyRuler ... />
+  <CursorBar ... />
+</div>
+```
+- `position: absolute; top: 0; z-index: 10` über dem Scale-Canvas
+
+**Schritt 4 — CursorBar Event-Handling:**
+- Nur `@pointerdown/move/up` — KEIN `@mousedown`
+- Drei Zonen (lo/hi/center) wie bereits implementiert (KiwiSDR-Konform)
+- Beim Ziehen in 'center'-Zone: `emit('tune', freqKhz)` — ändert Frequenz, KEIN Pan
+- Scale-Pan bleibt allein bei FrequencyRulers `@mousedown`
+
+**Schritt 5 — Pan-Verhalten:**
+- Pan (Scale verschieben) → `viewLowKhz`/`viewHighKhz` ändern sich
+- CursorBar liest dieselben Props → Cursor wandert automatisch mit
+- Umgekehrt: Cursor-Verschiebung → `cursorKhz` ändert → Frequenz ändert, keine View-Änderung
+
+---
+
+## Bug 17 — Cursor-Edges lassen sich nicht anfassen / ändern
+
+**Direkte Ursache:** Selbe Root-Cause wie Bug 16.
+
+| Problem | Mechanismus |
+|---------|-------------|
+| Edge-Resize funktioniert nicht | `@pointerdown` auf Polygon vs `@mousedown` auf Scale → beide Events feuern → Drag-State kämpft |
+| Hit-Zonen (lo/hi) werden nicht getroffen | Cursor-Polygon ist dünn (besonders gelb/collapsed → < 50px Breite) → Klick fällt daneben auf Scale |
+| `getZone()`-Logik korrekt, aber Events gehen verloren | Polygon hat `pointer-events: all`, aber die Umgebung ist Scale → Scale fängt Events |
+
+**Fix:** Identisch mit Bug 16 — Cursor in separate Leiste auslagern.
+
+### Fix-Plan Bug 17
+
+**Schritt 1:** Wie Bug 16 — CursorBar.vue mit 4 separaten Zonen:
+- `pb_adj_lo` (linke Kante): `cursor: ew-resize`, 20px hoch
+- `pb_adj_hi` (rechte Kante): `cursor: ew-resize`, 20px hoch
+- `pb_adj_cf` (Mitte/Body): `cursor: grab`, 20px hoch
+- `pb_adj_car` (Trägerlinie): `cursor: ew-resize`, 20px hoch
+
+**Schritt 2:** Jede Zone ist ein eigenes DIV mit `pointer-events: all`
+→ Klick auf eine Zone wird VOR dem Scale-Canvas abgefangen
+
+**Schritt 3:** Event-Routing:
+- `zone === 'lo'` → `emit('update:lowCut', ...)`
+- `zone === 'hi'` → `emit('update:highCut', ...)`
+- `zone === 'center'` → `emit('tune', ...)`
+- KEINE Events an die Scale durchgereicht
+
+### Akzeptanzkriterium (Bug 16 + 17)
+
+1. Cursor liegt auf **eigener 20px-Leiste** ÜBER der 47px-Frequenz-Scale
+2. Klick + Drag auf Cursor ändert **Frequenz**, nicht Pan
+3. Klick + Drag auf Scale-Leiste macht **Pan**
+4. Pan verschiebt Cursor (weil Cursor an absoluter Frequenz bleibt)
+5. Edges (lo/hi) lassen sich anfassen und ändern → lowCut/highCut
+6. Gelber Cursor (collapsed < 50px) hat keine Edges, nur Center-Drag
+7. vue-tsc clean, alle E2E + Vitest grün
 
 ### Problem 1: Playwright sieht nur sichtbare Elemente
 
@@ -2182,6 +2768,9 @@ Die E2E-Tests aus M4b-Zeiten (`.kiwi-control-panel`, `[data-testid="..."]`) wurd
 | 2026-08-29 | **Bug 11 erfasst:** AGC-Tab beinhaltet eventuell nicht alle Parameter (Research-Pflicht vor Fix) — Analyse + Fix-Plan dokumentiert, noch offen |
 | 2026-08-29 | **Bug 12 erfasst:** Header-Bereich entspricht nicht der Web UI (Station-Info, Credits, Collapse/Expand + Bild-Bereich fehlen; Connect-Funktionalität muss erhalten bleiben) — Analyse + Fix-Plan dokumentiert, noch offen |
 | 2026-08-29 | **Bug 13 erfasst:** "Spec RF"-Button soll funktionieren (Spektrumanalysator-Top-View fehlt) — Analyse + Fix-Plan dokumentiert, noch offen |
-| 2026-08-29 | **Bug 14 erfasst:** "Spec AF"-Button soll funktionieren (AF-Spektrumanalysator mit Center-Linie + Filtergrenzen fehlt) — Analyse + Fix-Plan dokumentiert, noch offen |
+| 2026-08-29 | **Bug 12 implementiert:** HeaderBar.vue mit 4-Spalten-Grid-Layout (67px), Chevron-Collapse (43×12px SVG), Panorama-Bereich (max-height-Animation), UTC/Local-Zeit-Anzeige, Callsign-Input. StationInput in separate Connection-Bar ausgelagert. |
+| 2026-08-29 | **Bug 13 implementiert:** SpectrumRf.vue Canvas-basierter RF-Spektrumanalysator (200px Höhe, dBm Y-Achse -10..-110, 256-Farb-Colormap, Grid-Lines alle 10 dB, Passband-Overlay auf separatem Canvas). Datenquelle: store.waterfallBins. |
+| 2026-08-29 | **Bug 14 implementiert:** SpectrumAf.vue Canvas-basierter AF-Spektrumanalysator mit 50px Marge links/rechts, vertikalem 1kHz-Grid, grüner Center-Linie (lime, 3px), roten Rand-Markern (red, 3px), Passband-Overlay um Träger zentriert. Datenquelle: store.waterfallBins. |
+| 2026-08-29 | **Bug 15 implementiert:** DrmPanel.vue mit Schedule/Services-Overlay (3-spaltig: Status-Checkboxen, Stationsliste+Zeitleiste, UTC/Local+Legende) + Decoder-Panel (Dream 2.2.1, Stop/Monitor IQ/Test/LPF). Mode-Index von 12 auf 8 korrigiert. Sichtbar bei `store.mode === 8`. |
 | 2026-08-29 | **Bug 15 erfasst:** DRM-Tab (Button) funktioniert nicht (Schedule/Services-Overlay + Decoder-Panel + DRM-Bandbreite fehlen; Research-Pflicht) — Analyse + Fix-Plan dokumentiert, noch offen |
 | 2026-08-29 | **Bug 7 umgesetzt:** Research (openwebrx.js, Port 8074) + Cursor als SVG-Overlay (passband_visible-Zustand, drei Hit-Zonen, MIN/MAX-Clamp) + Pan-Zone im Wasserfall — vue-tsc + Vitest 112/112 + E2E 85/85 grün |
