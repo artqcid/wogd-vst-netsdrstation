@@ -79,11 +79,13 @@ private:
         if (GetTempPathA(MAX_PATH, tempPath) == 0) {
             return;  // no temp dir -> logger disabled (file_ stays null)
         }
-        const std::string logPath = std::string(tempPath) + "netsdrstation.log";
-        fopen_s(&file_, logPath.c_str(), "a");
+        logPath_ = std::string(tempPath) + "netsdrstation.log";
+        backupPath_ = std::string(tempPath) + "netsdrstation.log.1";
+        fopen_s(&file_, logPath_.c_str(), "a");
         if (file_ == nullptr) {
             return;  // cannot open -> logger disabled
         }
+        rotateIfNeeded(true);  // rotate if existing log is already too large
 #ifdef NDEBUG
         writeLine(INFO, "=== NetSDRStation Log Started (Release) ===");
 #else
@@ -118,6 +120,7 @@ private:
             if (file_ && (wroteInfo || since >= 500)) {
                 std::fflush(file_);
                 lastFlush = now;
+                rotateIfNeeded(false);  // check size cap after flush
             }
 
             if (stop_.load(std::memory_order_acquire)) {
@@ -125,6 +128,48 @@ private:
             }
             std::this_thread::sleep_for(std::chrono::milliseconds(20));
         }
+    }
+
+    // Rotates the log file when it exceeds kMaxLogBytes. Must run only on the
+    // logger thread or in the constructor — never on the producer (log()) path.
+    // When startup == true we are in the constructor and skip the INFO rotation
+    // message (the start header is written right after this call).
+    bool rotateIfNeeded(bool startup) {
+        if (!file_) {
+            return false;
+        }
+        std::fflush(file_);
+        const long long size = _ftelli64(file_);
+        if (size < 0 || static_cast<std::size_t>(size) <= kMaxLogBytes) {
+            return false;
+        }
+
+        // Current log is too large: rotate.
+        const char* logPath = logPath_.c_str();
+        const char* backupPath = backupPath_.c_str();
+
+        std::fclose(file_);
+        file_ = nullptr;
+
+        // Remove any existing backup (overwrite).
+        DeleteFileA(backupPath);
+
+        // Rename current log -> backup.
+        if (!MoveFileA(logPath, backupPath)) {
+            // Rename failed (file may have been deleted/moved); try std::rename.
+            std::rename(logPath, backupPath);
+        }
+
+        // Reopen a fresh log.
+        fopen_s(&file_, logPath, "a");
+        if (file_ == nullptr) {
+            return false;  // logging disabled
+        }
+
+        if (!startup) {
+            writeLine(INFO, "=== NetSDRStation Log Rotated (size cap) ===");
+        }
+        return true;
     }
 
     // Writes one timestamped `[HH:MM:SS.mmm] [LEVEL] message` line. Only called
@@ -149,6 +194,7 @@ private:
 
     static constexpr std::size_t kSlotCount = 2048;
     static constexpr std::size_t kSlotSize = 256;
+    static constexpr std::size_t kMaxLogBytes = 10 * 1024 * 1024;  // 10 MB cap
 
     std::array<char, kSlotCount * kSlotSize> buffer_{};
     std::atomic<std::size_t> writePos_{0};  // producer-only
@@ -156,6 +202,8 @@ private:
     std::atomic<bool> stop_{false};
     std::thread thread_;
     std::FILE* file_ = nullptr;
+    std::string logPath_;
+    std::string backupPath_;
 };
 
 // Convenience macros

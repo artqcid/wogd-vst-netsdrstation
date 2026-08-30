@@ -3,6 +3,37 @@
 _Append-only, newest first. Parseable with `grep "^## "`. Entries use
 `**Creation**`, `**Update**` or `**Deprecation**` prefix + linked concept file._
 
+## 2026-08-30 — SDK-Pfade in CMakePresets.json fest verdrahtet (VST3_SDK_ROOT / WEBVIEW2_SDK_ROOT)
+
+**Anlass (Folge-Fix):** `cmake --preset win-msvc` scheiterte in frischen Shells immer wieder mit `VST3 SDK not found` bzw. `WebView2 SDK headers not found`, weil `CMakePresets.json` die Pfade nur über `$env{VST3_SDK_ROOT}` / `$env{WEBVIEW2_SDK_ROOT}` bezog (dokumentiert in M4c.7-bugs.md Task 1).
+
+**Änderung (`CMakePresets.json`):** Windows-Presets verdrahten die SDK-Pfade jetzt fest:
+- `base`: `WEBVIEW2_SDK_ROOT: C:/Users/marku/Documents/GitHub/thirdParty/WebView2SDK`
+- `win-msvc`, `win-clang`, `win-analyze`, `win-clangd`: `VST3_SDK_ROOT: C:/Users/marku/Documents/GitHub/thirdParty/vst3sdk`
+- `mac-clang` + `linux-gcc` unverändert (`$env{VST3_SDK_ROOT}`), da ein Windows-Pfad dort falsch wäre.
+
+**Beweis:** Configure nach Cache-DELETE und ohne Env-Vars erfolgreich; Debug + UI + Release Build ✅; ctest 1/1 ✅.
+
+**Hinweis (bewusste Entscheidung des Users):** Kein GitHub-CI gewünscht, daher sind die machine-spezifischen Pfade im committeten Preset akzeptiert. Bei Maschinenwechsel: 5 Stellen im Preset anpassen oder auf `CMakeUserPresets.json` umstellen.
+
+**Status:** Fix via Subagent (`ses_fab7185aaffeGXHOtAolvrKgb0`), Builds + Tests ✅.
+
+## 2026-08-30 — Log-Rotation (10-MB-Cap) für `netsdrstation.log` + `netsdrstation_diag.log`
+
+**Anlass (User-Report):** C: fast voll (9,1 GB frei). Analyse ergab: Temp-Ordner unschuldig (0,71 GB), aber `netsdrstation.log` (55,8 MB / 628k Zeilen) und `netsdrstation_diag.log` (15,5 MB / 324k Zeilen) wachsen **unbegrenzt** — beide Logger hatten keine Größenbegrenzung.
+
+**Implementiert:**
+- `source/util/file_logger.h` — `kMaxLogBytes = 10 MB`, `rotateIfNeeded(bool startup)`: prüft Größe nach Flush, rotiert via `DeleteFileA`/`MoveFileA` zu `netsdrstation.log.1` (max. 1 Backup), öffnet frisch. Aufrufe nur im Constructor (Startup) + `loggerLoop()` (Hintergrund-Thread) — **Producer-Pfad `log()` bleibt komplett I/O-frei** (Real-Time-Safety). Guard: `_ftelli64`-Fehler (-1) → keine Rotation (kein Churn).
+- `source/common/diag.h` — Rotation (10 MB → `.1`) direkt in `diagLog()` innerhalb des bestehenden Mutex, per `_ftelli64` Größencheck; keine Signatur-/Threading-Änderung.
+
+**Beweis:** Testlauf rotierte die 55,8-MB-Datei bereits live beim Logger-Start (Feature funktioniert); alte Logs manuell rotiert. Debug + Release Build ✅, ctest 1/1 ✅, Wiki + lint ✅ (keine neuen Issues).
+
+**Kontext Disk-Bereinigung (nicht Code):** npm-Cache 7,8 GB → 21 MB (`npm cache clean --force` + `_npx` manuell, da npm ≥9 `_npx` nicht mit-reinigt), uv-Cache 1,1 GB → 0 (`uv cache clean`), pip 44 MB → 0. C: frei: 9,1 → **37,0 GB**. HuggingFace-Cache: **Qwen3-TTS (3,68 GB) gelöscht** (User-Entscheidung); verbleiben whisper-base (281 MB) + all-MiniLM-L6-v2 (87 MB).
+
+**Bekanntes Build-Hindernis (erneut aufgetreten):** `cmake --preset win-msvc` braucht `VST3_SDK_ROOT` + `WEBVIEW2_SDK_ROOT` als Env-Variablen (dokumentiert in M4c.7-bugs.md Task 1): `C:/Users/marku/Documents/GitHub/thirdParty/vst3sdk` bzw. `.../WebView2SDK`.
+
+**Status:** Cleanup ✅, Rotation-Code via Subagenten (file_logger.h: `ses_fab7cf6cfffeIcYCrl3OlN7dC7`, diag.h: `ses_fab7ce914ffescf9o3N1W5dvKU`), Builds + Tests ✅.
+
 ## 2026-08-30 — 5 UI/Connection-Bugs behoben (Default-Port, Cursor-Kiwi-Semantik, Ruler-Höhe)
 
 **User-Report (Release-Build-Test):** (1) Connection `kphsdr.com:8072` schlägt fehl, (2) Cursor immer grün + Edges in jeder Zoomstufe änderbar, (3) Edges unendlich auseinanderziehbar, (4) Frequenzleiste doppelt so hoch, (5) Cursor-Trapez komplett gefüllt.

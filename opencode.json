@@ -52,6 +52,20 @@
     "webfetch": "allow"
   },
   "agent": {
+    "general": {
+      "permission": {
+        "netsdr_rag_query_code_wiki": "allow",
+        "netsdr_rag_query_code_rag": "allow",
+        "netsdr_rag_get_rag_chunk": "allow"
+      }
+    },
+    "explore": {
+      "permission": {
+        "netsdr_rag_query_code_wiki": "allow",
+        "netsdr_rag_query_code_rag": "allow",
+        "netsdr_rag_get_rag_chunk": "allow"
+      }
+    },
     "sec-explorer-agent": {
       "hidden": true
     },

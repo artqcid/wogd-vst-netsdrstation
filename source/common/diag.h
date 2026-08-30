@@ -45,6 +45,16 @@ inline void diagLog(const char* fmt, ...) {
     if (_wfopen_s(&f, path.c_str(), L"a") != 0 || f == nullptr) {
         return;
     }
+    constexpr long long kMaxDiagBytes = 10LL * 1024 * 1024;
+    long long pos = _ftelli64(f);
+    if (pos != -1 && pos > kMaxDiagBytes) {
+        std::fclose(f);
+        DeleteFileW((path + L".1").c_str());
+        MoveFileW(path.c_str(), (path + L".1").c_str());
+        if (_wfopen_s(&f, path.c_str(), L"a") != 0 || f == nullptr) {
+            return;
+        }
+    }
     fputs(buf, f);
     fputc('\n', f);
     fclose(f);
