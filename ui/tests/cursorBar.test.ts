@@ -89,12 +89,24 @@ describe('CursorBar.vue', () => {
     wrapper.unmount()
   })
 
-  it('collapsed cursor has NO lo/hi zones', async () => {
-    const wrapper = await mountBar({ lowCutHz: -100, highCutHz: 100 })
+  it('cursor outside the window hides lo/hi zones but keeps center', async () => {
+    const wrapper = await mountBar({ cursorKhz: 1000 })  // outside [6950, 7050]
     expect(wrapper.get('[data-testid="cursor-bar"]').exists()).toBe(true)
     expect(wrapper.find('[data-testid="cursor-zone-lo"]').exists()).toBe(false)
     expect(wrapper.find('[data-testid="cursor-zone-hi"]').exists()).toBe(false)
     expect(wrapper.get('[data-testid="cursor-zone-center"]').exists()).toBe(true)
+    teardown()
+    wrapper.unmount()
+  })
+
+  it('narrow passband hides lo/hi zones (collapsed cursor) when passband < 50px', async () => {
+    // ±100 Hz passband in a 100 kHz window → ~1.6px rendered → allowResize=false
+    const wrapper = await mountBar({ lowCutHz: -100, highCutHz: 100 })
+    expect(wrapper.find('[data-testid="cursor-zone-lo"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="cursor-zone-hi"]').exists()).toBe(false)
+    expect(wrapper.get('[data-testid="cursor-zone-center"]').exists()).toBe(true)
+    // collapsed cursor is yellow even though the cursor is inside the window
+    expect(wrapper.get('[data-testid="cursor-bar"]').attributes('data-cursor-color')).toBe('yellow')
     teardown()
     wrapper.unmount()
   })
@@ -153,19 +165,46 @@ describe('CursorBar.vue', () => {
     wrapper.unmount()
   })
 
-  it('carrier colour rule: wide passband → lime, narrow → yellow', async () => {
-    // Wide passband → lime
-    const wideWrapper = await mountBar({ lowCutHz: -4900, highCutHz: 4900 })
-    const wideBar = wideWrapper.get('[data-testid="cursor-bar"]')
-    expect(wideBar.attributes('data-cursor-color')).toBe('lime')
+  it('lo zone drag clamps to Kiwi limits (±6000 Hz, min passband 4 Hz)', async () => {
+    const wrapper = await mountBar()
+    const loZone = wrapper.get('[data-testid="cursor-zone-lo"]').element as HTMLElement
+    // Drag far left: startLo=-4900, freqPerPx=100kHz/800px=0.125 kHz/px
+    // dx=-20000 → deltaHz=-20000*0.125*1000 = -2,500,000 Hz → clamped to -6000
+    await drag(loZone, -20000)
+    const lowCutEmitted = wrapper.emitted('update:lowCut')
+    expect(lowCutEmitted).toBeTruthy()
+    const lowCutValue = lowCutEmitted![0][0] as number
+    expect(lowCutValue).toBe(-6000)
     teardown()
-    wideWrapper.unmount()
+    wrapper.unmount()
+  })
 
-    // Narrow passband → yellow
-    const narrowWrapper = await mountBar({ lowCutHz: -100, highCutHz: 100 })
-    const narrowBar = narrowWrapper.get('[data-testid="cursor-bar"]')
-    expect(narrowBar.attributes('data-cursor-color')).toBe('yellow')
+  it('hi zone drag clamps to Kiwi limits (±6000 Hz, min passband 4 Hz)', async () => {
+    const wrapper = await mountBar()
+    const hiZone = wrapper.get('[data-testid="cursor-zone-hi"]').element as HTMLElement
+    // Drag far right: startHi=4900 → deltaHz=+2,500,000 Hz → clamped to +6000
+    await drag(hiZone, 20000)
+    const highCutEmitted = wrapper.emitted('update:highCut')
+    expect(highCutEmitted).toBeTruthy()
+    const highCutValue = highCutEmitted![0][0] as number
+    expect(highCutValue).toBe(6000)
     teardown()
-    narrowWrapper.unmount()
+    wrapper.unmount()
+  })
+
+  it('carrier colour: lime when cursor inside window, yellow when outside', async () => {
+    // Inside window → lime
+    const insideWrapper = await mountBar()
+    const insideBar = insideWrapper.get('[data-testid="cursor-bar"]')
+    expect(insideBar.attributes('data-cursor-color')).toBe('lime')
+    teardown()
+    insideWrapper.unmount()
+
+    // Outside window → yellow
+    const outsideWrapper = await mountBar({ cursorKhz: 1000 })
+    const outsideBar = outsideWrapper.get('[data-testid="cursor-bar"]')
+    expect(outsideBar.attributes('data-cursor-color')).toBe('yellow')
+    teardown()
+    outsideWrapper.unmount()
   })
 })

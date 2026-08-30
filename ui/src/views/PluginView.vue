@@ -31,7 +31,7 @@
     <!-- MAIN WORKSPACE: frequency ruler + waterfall + floating panel -->
     <main class="kiwi-main">
       <!-- Frequency ruler + cursor bar (KiwiSDR: cursor on its own 20px bar above the 47px scale) -->
-      <div class="scale-area" style="position: relative">
+      <div class="scale-area">
         <CursorBar
           :view-low-khz="loKhz"
           :view-high-khz="hiKhz"
@@ -681,6 +681,7 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  min-height: 55px;
   padding: 4px 10px;
   background: #222;
   border-bottom: 1px solid #444;
@@ -750,6 +751,12 @@ onMounted(() => {
   white-space: nowrap;
   line-height: 16px;
   color: black;
+}
+
+.scale-area {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
 }
 
 /* ===== MAIN WORKSPACE ===== */

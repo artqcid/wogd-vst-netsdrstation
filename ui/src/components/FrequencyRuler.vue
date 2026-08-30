@@ -18,10 +18,10 @@
         position: 'absolute',
         top: 0, left: 0,
         width: '100%',
-        height: '22px',
+        height: '26px',
         pointerEvents: 'none',
       }"
-      :viewBox="`0 0 ${rulerWidthPx} 22`"
+      :viewBox="`0 0 ${rulerWidthPx} 26`"
       preserveAspectRatio="none"
     >
       <!-- Minor ticks -->
@@ -237,7 +237,7 @@ onMounted(() => {
   top: 0;
   left: 0;
   width: 100%;
-  height: 22px;
+  height: 26px;
   z-index: 1;
   pointer-events: none;
 }

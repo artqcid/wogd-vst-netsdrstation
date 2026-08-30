@@ -21,7 +21,7 @@ const props = withDefaults(
     station: string
     status?: string
   }>(),
-  { label: 'Station', station: 'kphsdr.com:8072', status: '' }
+  { label: 'Station', station: 'kphsdr.com:8073', status: '' }
 )
 
 const emit = defineEmits<{

@@ -23,7 +23,7 @@ const BOOLEAN_PARAMS: ReadonlySet<ParamId> = new Set<ParamId>([
 ])
 
 /** Default station preloaded in the UI (until the M5 station tab lands). */
-export const DEFAULT_STATION = 'kphsdr.com:8072'
+export const DEFAULT_STATION = 'kphsdr.com:8073'
 
 /** Minimal validation: "host" or "host:port", no whitespace/empty. */
 export function isValidStation(hostPort: string): boolean {

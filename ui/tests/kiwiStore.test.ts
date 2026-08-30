@@ -13,7 +13,7 @@ describe('kiwiStore', () => {
   it('preloads the default station', () => {
     const store = useKiwiStore()
     expect(store.station).toBe(DEFAULT_STATION)
-    expect(DEFAULT_STATION).toBe('kphsdr.com:8072')
+    expect(DEFAULT_STATION).toBe('kphsdr.com:8073')
   })
 
   it('setParam forwards to pluginService and applies an optimistic update', () => {

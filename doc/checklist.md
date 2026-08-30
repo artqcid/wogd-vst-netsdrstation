@@ -1342,6 +1342,14 @@ implementation plans: `doc/M3-implementation-plan.md` (M3),
   — panels are present, decoders are stubbed until a later DSP milestone.
 - Admin / mfg configuration pages (KiwiSDR admin.html).
 
+> **⚠ M4 hat weiterhin Bugs (Stand 2026-08-30).** Die M4-UI-Parität ist noch
+> nicht vollständig erreicht; weitere Bugs werden später erfasst und hier bzw.
+> in `doc/log.md` dokumentiert. Bekannte, bereits behobene M4-Bugs (letzter
+> Schwung): Default-Station-Port 8072→8073 (Server-seitige Änderung bei
+> kphsdr.com), Cursor-Farbe/Edges an `allowResize` (≥50px) statt `isZoomedIn`
+> gekoppelt, Kiwi-Max-Bandbreite ±6000 Hz, FrequencyRuler-Höhe 47px→26px,
+> Cursor-Trapez fill=none (Kontur statt Füllung).**
+
 ## Milestone M5 - Station selection tab
 
 > **Implementation plan:** `doc/M5-implementation-plan.md`

@@ -2,6 +2,14 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { ENV_BL, ENV_ATT, ENV_H1, ENV_H2, ENV_SLOPE, ENV_ADJ, freqToPx } from '@/components/frequencyRulerLogic'
 
+const MIN_PASSBAND_HZ = 4
+const LOW_CUT_LIMIT_HZ = -6000
+const HIGH_CUT_LIMIT_HZ = 6000
+
+function clamp(v: number, lo: number, hi: number): number {
+  return Math.min(hi, Math.max(lo, v))
+}
+
 const props = defineProps<{
   viewLowKhz: number
   viewHighKhz: number
@@ -31,16 +39,24 @@ const drawTo = computed(() => {
 
 const allowResize = computed(() => (drawTo.value - drawFrom.value) >= 50)
 
-const cursorColor = computed(() => (allowResize.value ? 'lime' : 'yellow'))
+const isZoomedIn = computed(() =>
+  props.cursorKhz >= props.viewLowKhz && props.cursorKhz <= props.viewHighKhz
+)
+
+const canResize = computed(() => isZoomedIn.value && allowResize.value)
+
+const cursorColor = computed(() => (canResize.value ? 'lime' : 'yellow'))
 
 const trapezoidPoints = computed(() => {
-  const w = rulerWidthPx.value
-  if (w === 0) return '0,0 0,0 0,0 0,0'
+  if (rulerWidthPx.value === 0) return '0,0 0,0 0,0 0,0'
+  if (!isZoomedIn.value) return '' // collapsed → no full-width polygon
+  const left = drawFrom.value
+  const right = drawTo.value
   return [
-    `${ENV_BL},${ENV_H2}`,
-    `${w - ENV_BL},${ENV_H2}`,
-    `${w - ENV_BL + ENV_ATT},${ENV_H1}`,
-    `${ENV_BL - ENV_ATT},${ENV_H1}`,
+    `${left},${ENV_H2}`,
+    `${right},${ENV_H2}`,
+    `${right + ENV_ATT},${ENV_H1}`,
+    `${left - ENV_ATT},${ENV_H1}`,
   ].join(' ')
 })
 
@@ -82,11 +98,11 @@ function onPointerMove(e: PointerEvent) {
   if (zone === 'center') {
     emit('tune', startFreqKhz + dx * freqPerPx)
   } else if (zone === 'lo') {
-    const val = Math.min(0, startLoHz + dx * freqPerPx * 1000)
-    emit('update:lowCut', val)
+    const newLo = clamp(startLoHz + dx * freqPerPx * 1000, LOW_CUT_LIMIT_HZ, startHiHz - MIN_PASSBAND_HZ)
+    emit('update:lowCut', newLo)
   } else if (zone === 'hi') {
-    const val = Math.max(0, startHiHz + dx * freqPerPx * 1000)
-    emit('update:highCut', val)
+    const newHi = clamp(startHiHz + dx * freqPerPx * 1000, startLoHz + MIN_PASSBAND_HZ, HIGH_CUT_LIMIT_HZ)
+    emit('update:highCut', newHi)
   }
 }
 
@@ -154,7 +170,12 @@ onUnmounted(() => {
       :fill="cursorColor"
       :stroke="cursorColor"
     >
-      <polygon :points="trapezoidPoints" />
+      <polygon
+        :points="trapezoidPoints"
+        fill="none"
+        :stroke="cursorColor"
+        stroke-width="1.5"
+      />
       <line
         :x1="carrierX"
         :y1="0"
@@ -167,22 +188,22 @@ onUnmounted(() => {
     </svg>
 
     <div
-      v-if="allowResize"
+      v-if="canResize"
       class="cursor-bar__zone cursor-bar__zone--lo"
       data-testid="cursor-zone-lo"
       :style="{
-        left: `${drawFrom + ENV_ADJ}px`,
+        left: `${drawFrom - ENV_SLOPE}px`,
         width: `${ENV_SLOPE}px`,
       }"
       @pointerdown.prevent.stop="(e: PointerEvent) => startDrag(e, 'lo', props.cursorKhz + props.lowCutHz / 1000, props.lowCutHz, props.highCutHz)"
     />
 
     <div
-      v-if="allowResize"
+      v-if="canResize"
       class="cursor-bar__zone cursor-bar__zone--hi"
       data-testid="cursor-zone-hi"
       :style="{
-        left: `${drawTo - ENV_SLOPE - ENV_ADJ}px`,
+        left: `${drawTo}px`,
         width: `${ENV_SLOPE}px`,
       }"
       @pointerdown.prevent.stop="(e: PointerEvent) => startDrag(e, 'hi', props.cursorKhz + props.highCutHz / 1000, props.lowCutHz, props.highCutHz)"
@@ -192,10 +213,8 @@ onUnmounted(() => {
       class="cursor-bar__zone cursor-bar__zone--center"
       data-testid="cursor-zone-center"
       :style="{
-        left: allowResize ? `${drawFrom + ENV_SLOPE + ENV_ADJ}px` : `${ENV_BL - ENV_ATT}px`,
-        width: allowResize
-          ? `${drawTo - ENV_SLOPE - ENV_ADJ - (drawFrom + ENV_SLOPE + ENV_ADJ)}px`
-          : `${rulerWidthPx - 2 * (ENV_BL - ENV_ATT)}px`,
+        left: `${drawFrom}px`,
+        width: `${Math.max(drawTo - drawFrom, 40)}px`,
       }"
       @pointerdown.prevent.stop="(e: PointerEvent) => startDrag(e, 'center', props.cursorKhz, props.lowCutHz, props.highCutHz)"
     />
@@ -204,12 +223,10 @@ onUnmounted(() => {
 
 <style scoped>
 .cursor-bar {
-  position: absolute;
-  top: 0;
-  left: 0;
+  position: relative;
   width: 100%;
   height: 20px;
-  z-index: 10;
+  flex-shrink: 0;
   pointer-events: all;
   cursor: default;
   overflow: visible;

@@ -3,6 +3,27 @@
 _Append-only, newest first. Parseable with `grep "^## "`. Entries use
 `**Creation**`, `**Update**` or `**Deprecation**` prefix + linked concept file._
 
+## 2026-08-30 — 5 UI/Connection-Bugs behoben (Default-Port, Cursor-Kiwi-Semantik, Ruler-Höhe)
+
+**User-Report (Release-Build-Test):** (1) Connection `kphsdr.com:8072` schlägt fehl, (2) Cursor immer grün + Edges in jeder Zoomstufe änderbar, (3) Edges unendlich auseinanderziehbar, (4) Frequenzleiste doppelt so hoch, (5) Cursor-Trapez komplett gefüllt.
+
+**Beweise / Root-Causes:**
+1. **Default-Port falsch:** `Test-NetConnection kphsdr.com` → 8072 **geschlossen**, 8073 **offen**. `DEFAULT_STATION = 'kphsdr.com:8072'` (kiwiStore + StationInput) war der HTTP-/WebUI-Port; KiwiSDR-WebSocket läuft auf **8073** (`kiwiDefaultPort{8073}`). Log: `Unable to connect to kphsdr.com on port 8072`.
+2. **Farbe/Edges an falscher Bedingung:** `cursorColor` + Zonen hingen an `isZoomedIn` (Cursor im Fenster — fast immer true). Kiwi-Regel: grün + Edges NUR wenn das Passband ≥ 50px gerendert wird (`allowResize`), sonst gelber kollabierter Cursor (nur Center-Zone zum Tunen). Fix: neues `canResize = isZoomedIn && allowResize`.
+3. **Keine Max-Bandbreite:** `onPointerMove` clampte nur auf 0. Kiwi-Konstanten ergänzt: `MIN_PASSBAND_HZ=4`, `LOW_CUT_LIMIT_HZ=-6000`, `HIGH_CUT_LIMIT_HZ=6000` + `clamp()` (Referenz 22cfa08).
+4. **Ruler-Höhe:** Früherer Fix hatte `.freq-ruler` auf 47px erhöht — Kiwi-Referenz ist **26px** (viewBox `0 0 100 26`, Ticks 8/11px, Labels y=20). Ticks/Labels hingen in der oberen Hälfte, unten leer (Caption "database: stored" mittig im Leerraum). Fix: 47px → 26px + viewBox/y-Koordinaten.
+5. **Trapez gefüllt:** `<polygon>` erbte `fill` vom SVG. Kiwi zeichnet nur die Kontur + Carrier-Linie, Innenraum transparent. Fix: `fill="none"` + `stroke` + `stroke-width=1.5`.
+
+**Tests gestärkt:** Unit: Clamp-Tests für lo/hi (±6000, MIN_PASSBAND), kollabierter-Zustand-Test (schmales Passband → gelb, keine Zonen). E2E: Zonen-Test zoomt jetzt erst 8x rein (Zonen erscheinen erst ab ≥50px), neuer "collapsed at default zoom" (keine Zonen + gelb), Ruler-Höhe 26px statt 47px.
+
+**Gleaning:** KiwiSDR-Cursor-Verhalten ist zoom-abhängig (allowResize ≥ 50px), nicht nur fenster-abhängig; E2E-Tests, die Zonen bei Default-Zoom erwarten, müssen erst zoomen. Default-Station muss den WS-Port (8073) nutzen, nicht den HTTP-Port (8072).
+
+**Status:** Vitest 145/145 ✅, E2E 107 passed/1 skipped ✅, vue-tsc clean ✅, Release+Debug Build ✅, ctest 1/1 ✅, Wiki + lint ✅.
+
+## 2026-08-30 — M4-Bug-Vermerk (weitere Erfassung geplant)
+
+**Update:** [`checklist.md`](./checklist.md) — Vermerk ergänzt: **M4 hat weiterhin Bugs** (Stand 2026-08-30), weitere werden später erfasst; bekannte behobene M4-Bugs (letzter Schwung) dort referenziert. Port-Entscheidung: Default `kphsdr.com:8073` (Server antwortet auf 8072 nicht mehr, TCP-Timeout; 8073 → HTTP 200). Kein C++-Port-Fallback implementiert — M5 leitet den Port aus der dynamischen Stationsliste ab.
+
 ## 2026-08-30 — M4c.7 Bugs 16+17 implementiert: CursorBar + Pan/Cursor-Separation
 
 **Update:** [`M4c.7-bugs.md`](./M4c.7-bugs.md) — Bugs 16 (Cursor liegt auf Frequenzleiste statt eigener Leiste) + 17 (Cursor-Edges lassen sich nicht anfassen) implementiert.
@@ -46,6 +67,30 @@ _Append-only, newest first. Parseable with `grep "^## "`. Entries use
 **Gleaning:** Das CMake-UI-Target (`netsdrstation_ui`) führt `type-check` (vue-tsc) als Custom-Build-Step aus — strikter als das reine `vue-tsc --noEmit` im UI-Ordner (fehlte in der UI-Local-Verifikation). Release-/Debug-Build inkl. UI-Target ist Pflicht vor Commit.
 
 **Status:** Release + Debug Build ✅, ctest 1/1 ✅, 142/142 Vitest ✅, 104/105 E2E ✅, vue-tsc clean.
+
+## 2026-08-30 — Cursor-Layout-Regression behoben (CursorBar überdeckte FrequencyRuler, Trapezoid volle Breite)
+
+**Problem (User-Report):** Nach Bug 16/17 war die Anzeige kaputt — der Cursor war so breit wie das Fenster und überdeckte die Frequenzleiste. Die E2E-Tests waren grün, weil sie nur `toBeAttached()` prüften statt des Pixel-Layouts.
+
+**Root-Causes (per Layout-Messung `getBoundingClientRect` verifiziert):**
+1. **Trapezoid volle Breite:** `trapezoidPoints` zeichnete `0..rulerWidthPx` statt Passband `drawFrom..drawTo` (Original 22cfa08: grünes Passband nur in Passband-Breite, gelbe 40px-T-Form bei kollabiert)
+2. **CursorBar als absolutes Overlay:** `position: absolute; top: 0; z-index: 10` schwebte ÜBER der 26px-FrequencyRuler (beide y=238) statt eigener 20px-Leiste über 47px-Scale
+3. **lo/hi-Zonen fehlten:** `v-if="allowResize"` — Passband (±4900 Hz) ist bei Span 30000 nur ~21px < 50px-Schwelle → Zonen verschwanden komplett
+4. **Zonen vertauscht:** lo bei `drawFrom + ENV_ADJ` (rechts von Cursor), hi bei `drawTo - ENV_SLOPE - ENV_ADJ` (links)
+5. **Connection-Bar 107px statt 55px** (min-height-Regression)
+
+**Fixes:**
+- CursorBar: Trapezoid = Passband (drawFrom..drawTo), Farbe via `isZoomedIn` (lime drin / gelb außerhalb), lo/hi-Zonen an `isZoomedIn`, center immer, Zonen-Positionen korrigiert (lo bei `drawFrom-ENV_SLOPE`, hi bei `drawTo`), `position: relative`
+- PluginView: scale-area als Flex-Column-Stack (kein absolute), Connection-Bar `min-height: 55px`
+- FrequencyRuler: 47px hoch, Ticks/Labels unten (y=34/38/40)
+
+**Tests gestärkt (damit Regression auffliegt):**
+- E2E: `CursorBar is its own 20px bar stacked ABOVE the 47px ruler (no overlap)` (echte Bounding-Box-Assertions), `Cursor trapezoid spans the passband NOT the full window width`, `All three cursor drag zones rendered and positioned correctly`
+- Unit: Zonen/Farbe-Tests auf `isZoomedIn`-Semantik umgestellt (Cursor außerhalb Fenster → gelb, keine lo/hi)
+
+**Gleaning:** E2E-Tests für visuelle Komponenten müssen Pixel-Geometrie prüfen (boundingBox, Punkt-Koordinaten), nicht nur Existenz/Attached — `toBeAttached()` erkennt Layout-Überlappungen nicht.
+
+**Status:** Release + Debug Build ✅, ctest 1/1 ✅, 143/143 Vitest ✅, 106/107 E2E ✅, vue-tsc clean.
 
 ## 2026-08-29 — M4c.7 Bugs 14+15 implementiert: Spectrum AF + DRM Panel
 

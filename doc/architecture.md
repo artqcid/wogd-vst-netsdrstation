@@ -121,10 +121,13 @@ _Files: `source/network/kiwi_client.h` (StateCallback), `source/vst/processor/pl
 > Server-Policy-Analyse des ~11-s-Kicks.
 
 Connection via WebSocket (the default API-ready test station is
-`kphsdr.com:8072`; the port is configurable via
-`setServer()`, e.g. some Kiwis use non-standard ports). The protocol is ASCII
-`SET ...` text frames (reference: `jks-prv/kiwiclient` and the KiwiSDR server
-`rx/rx_cmd.cpp`).
+`kphsdr.com:8073`; the port is configurable via
+`setServer()`, e.g. some Kiwis use non-standard ports). Note: `kphsdr.com:8072`
+was the original UI default and worked until 2026-08-27 (verified FIX-43), but
+the server no longer answers on 8072 (TCP timeout, 2026-08-30); 8073 answers
+with HTTP 200. M5 will derive the port from a dynamic station list. The protocol
+is ASCII `SET ...` text frames (reference: `jks-prv/kiwiclient` and the KiwiSDR
+server `rx/rx_cmd.cpp`).
 
 **Phase 1 (on open):**
 - `SET options=1` — marks the connection as external/non-local. **Must be sent

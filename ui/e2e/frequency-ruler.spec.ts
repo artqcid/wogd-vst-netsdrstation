@@ -89,13 +89,13 @@ test.describe('Frequency ruler', () => {
     expect(isLime).toBe(true)
   })
 
-  test('Cursor is yellow when passband is narrow (< 50px rendered width)', async ({ page }) => {
-    // Set a very narrow passband: CW mode = 300..700 Hz — likely < 50px at default zoom
+  test('Cursor is yellow when the cursor is outside the visible window', async ({ page }) => {
+    // Pan the window far away so cursorKhz (14100) is outside [viewLowKhz, viewHighKhz]
     await page.evaluate(() => {
-      // @ts-ignore
-      window.__vueStore?.setParam?.('lowCut', 300)
-      // @ts-ignore
-      window.__vueStore?.setParam?.('highCut', 700)
+      const s = window.__vueStore
+      if (!s) throw new Error('__vueStore not exposed')
+      s.setParam('freqKhz', 14100)
+      s.panOffsetKhz = 20000 // view centre = 34100, viewLow = 19100 > 14100 → cursor outside
     })
     await page.waitForTimeout(100)
     const cursorSvg = page.locator('.cursor-bar__trapezoid').first()
@@ -279,14 +279,70 @@ test.describe('Frequency ruler', () => {
     expect(x1After).not.toBe(x1Before)
   })
 
-  test('CursorBar sits above the ruler (scale-area layout)', async ({ page }) => {
+  test('CursorBar is its own 20px bar stacked ABOVE the 26px ruler (no overlap)', async ({ page }) => {
     const rulerBox = await page.locator('.freq-ruler').boundingBox()
     const barBox = await page.locator('.cursor-bar').boundingBox()
     expect(rulerBox).toBeTruthy()
     expect(barBox).toBeTruthy()
-    if (rulerBox && barBox) {
-      // CursorBar vertically overlaps the TOP of the ruler area
-      expect(barBox.y).toBeLessThan(rulerBox.y + rulerBox.height)
+    if (!rulerBox || !barBox) return
+    // Bar sits fully above the ruler: bar.y + bar.height <= ruler.y
+    expect(barBox.y + barBox.height).toBeLessThanOrEqual(rulerBox.y + 1)
+    // Ruler is 26px tall (KiwiSDR reference height)
+    expect(rulerBox.height).toBeGreaterThanOrEqual(24)
+    expect(rulerBox.height).toBeLessThanOrEqual(28)
+    // Bar is ~20px tall
+    expect(barBox.height).toBeGreaterThanOrEqual(18)
+    expect(barBox.height).toBeLessThanOrEqual(24)
+  })
+
+  test('Cursor trapezoid spans the passband, NOT the full window width', async ({ page }) => {
+    const barBox = await page.locator('.cursor-bar').boundingBox()
+    const polygon = page.locator('.cursor-bar__trapezoid polygon').first()
+    await expect(polygon).toBeVisible()
+    const points = await polygon.getAttribute('points')
+    expect(points).toBeTruthy()
+    if (!points || !barBox) return
+    const nums = points.trim().split(/[\s,]+/).map(Number)
+    const xs = nums.filter((_, i) => i % 2 === 0)
+    const width = Math.max(...xs) - Math.min(...xs)
+    // Passband width must be a fraction of the full bar width, not the whole bar
+    expect(width).toBeGreaterThan(0)
+    expect(width).toBeLessThan(barBox.width * 0.5)
+  })
+
+  test('All three cursor drag zones are rendered and positioned correctly (zoomed in)', async ({ page }) => {
+    // Zones only appear when the passband renders >= 50px (Kiwi allowResize rule).
+    // At default zoom (span 30000 kHz) the passband is ~0.1px → collapsed.
+    for (let i = 0; i < 8; i++) {
+      await page.click('.kiwi-cpanel__icon-btn--zoom')
     }
+    await page.waitForTimeout(200)
+    const lo = page.locator('[data-testid="cursor-zone-lo"]')
+    const center = page.locator('[data-testid="cursor-zone-center"]')
+    const hi = page.locator('[data-testid="cursor-zone-hi"]')
+    await expect(lo).toBeVisible()
+    await expect(center).toBeVisible()
+    await expect(hi).toBeVisible()
+    // lo left of center, center left of hi
+    const loBox = await lo.boundingBox()
+    const cBox = await center.boundingBox()
+    const hiBox = await hi.boundingBox()
+    expect(loBox && cBox && hiBox).toBeTruthy()
+    if (loBox && cBox && hiBox) {
+      expect(loBox.x).toBeLessThan(cBox.x)
+      expect(cBox.x).toBeLessThan(hiBox.x)
+    }
+  })
+
+  test('At default zoom the cursor is collapsed (no lo/hi zones, yellow)', async ({ page }) => {
+    // No zoom: span 30000 kHz → passband ~0.1px → collapsed Kiwi cursor.
+    const lo = page.locator('[data-testid="cursor-zone-lo"]')
+    const hi = page.locator('[data-testid="cursor-zone-hi"]')
+    await expect(lo).toHaveCount(0)
+    await expect(hi).toHaveCount(0)
+    // Center zone always exists (tuning)
+    await expect(page.locator('[data-testid="cursor-zone-center"]')).toBeVisible()
+    const cursorBar = page.locator('[data-testid="cursor-bar"]')
+    await expect(cursorBar).toHaveAttribute('data-cursor-color', 'yellow')
   })
 })
